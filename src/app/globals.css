@@ -115,16 +115,16 @@ body {
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 34%,
-    rgb(0 0 0 / 42%) 62%,
-    transparent 90%
+    #000 44%,
+    rgb(0 0 0 / 46%) 70%,
+    transparent 95%
   );
   mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 34%,
-    rgb(0 0 0 / 42%) 62%,
-    transparent 90%
+    #000 44%,
+    rgb(0 0 0 / 46%) 70%,
+    transparent 95%
   );
 }
 
@@ -135,18 +135,18 @@ body {
     -webkit-mask-image: linear-gradient(
       to right,
       #000 0%,
-      #000 28%,
-      rgb(0 0 0 / 50%) 52%,
-      rgb(0 0 0 / 12%) 74%,
-      transparent 90%
+      #000 38%,
+      rgb(0 0 0 / 55%) 62%,
+      rgb(0 0 0 / 14%) 80%,
+      transparent 95%
     );
     mask-image: linear-gradient(
       to right,
       #000 0%,
-      #000 28%,
-      rgb(0 0 0 / 50%) 52%,
-      rgb(0 0 0 / 12%) 74%,
-      transparent 90%
+      #000 38%,
+      rgb(0 0 0 / 55%) 62%,
+      rgb(0 0 0 / 14%) 80%,
+      transparent 95%
     );
   }
 }

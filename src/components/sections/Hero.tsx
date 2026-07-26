@@ -10,14 +10,19 @@ export default function Hero() {
   return (
     <section id="top" data-tone="sand" className="relative overflow-hidden">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="hero-photo absolute left-0 top-0 h-[46%] w-full md:inset-y-0 md:h-full md:w-[56%]">
+        {/*
+         * The photo is nudged left inside its panel rather than by moving the
+         * panel: the mask lives on the panel, so shifting that would drag the
+         * fade along with it. Scale and vertical crop stay as they are.
+         */}
+        <div className="hero-photo absolute left-0 top-0 h-[52%] w-full md:inset-y-0 md:h-full md:w-[70%]">
           <Image
             src="/capitol.png"
             alt=""
             fill
             priority
-            sizes="(max-width: 768px) 100vw, 56vw"
-            className="object-cover object-[50%_38%] saturate-[0.82]"
+            sizes="(max-width: 768px) 100vw, 70vw"
+            className="object-cover object-[50%_38%] saturate-[0.82] md:-translate-x-[4%]"
           />
         </div>
         <div className="hero-veil absolute inset-0" />
