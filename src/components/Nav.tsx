@@ -40,18 +40,18 @@ export default function Nav() {
           <a
             href="#top"
             onClick={() => setMenuOpen(false)}
-            className="font-display text-base tracking-[0.02em] text-foreground"
+            className="font-display text-xl tracking-[0.02em] text-foreground"
           >
             {conference.shortName}
           </a>
 
-          <nav aria-label="Sections" className="hidden items-center gap-5 md:flex lg:gap-8">
+          <nav aria-label="Sections" className="hidden items-center gap-4 md:flex lg:gap-8">
             {navItems.map(({ id, label }) => (
               <a
                 key={id}
                 href={`#${id}`}
                 aria-current={active === id ? "true" : undefined}
-                className={`relative py-1 font-display text-xs uppercase tracking-[0.16em] transition-colors hover:text-foreground ${
+                className={`relative py-1 font-display text-sm uppercase tracking-[0.14em] transition-colors hover:text-foreground ${
                   active === id ? "text-foreground" : "text-muted"
                 }`}
               >
@@ -93,7 +93,7 @@ export default function Nav() {
                   <a
                     href={`#${id}`}
                     onClick={() => setMenuOpen(false)}
-                    className={`block py-3 font-display text-sm uppercase tracking-[0.16em] ${
+                    className={`block py-3 font-display text-base uppercase tracking-[0.14em] ${
                       active === id ? "text-foreground" : "text-muted"
                     }`}
                   >
