@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { past } from "@/content/site";
-import { Card, Eyebrow, Section, SectionHeading } from "@/components/ui";
+import { Card, Section, SectionHeading } from "@/components/ui";
 
 /** Social proof from the first conference: photos, partner orgs, testimonials. */
 export default function Past() {
@@ -19,7 +19,6 @@ export default function Past() {
     <Section id="past" tone="surface">
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end">
         <div>
-          <Eyebrow>Last time</Eyebrow>
           <SectionHeading>{past.heading}</SectionHeading>
         </div>
         <p className="max-w-xl text-base leading-[1.75] text-muted lg:pb-2">{past.intro}</p>

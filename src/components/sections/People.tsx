@@ -1,6 +1,6 @@
 import { organizers, speakers } from "@/content/site";
 import PersonGrid from "@/components/PersonGrid";
-import { Eyebrow, Section, SectionHeading, Subheading } from "@/components/ui";
+import { Section, SectionHeading, Subheading } from "@/components/ui";
 
 /** Speakers, with the organizing team directly beneath. */
 export default function People() {
@@ -8,7 +8,6 @@ export default function People() {
     <Section id="speakers" tone="sand">
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-end">
         <div>
-          <Eyebrow>Speakers</Eyebrow>
           <SectionHeading>Who you&rsquo;ll hear from</SectionHeading>
         </div>
         <p className="max-w-xl text-base leading-[1.75] text-muted lg:pb-2">

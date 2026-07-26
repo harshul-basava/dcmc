@@ -1,11 +1,10 @@
 import { conference, contact, links, PLACEHOLDER_LINK } from "@/content/site";
-import { CTA, Eyebrow, Section, SectionHeading } from "@/components/ui";
+import { CTA, Section, SectionHeading } from "@/components/ui";
 
 /** Closing band: the apply call, then the two ways to get in touch. */
 export default function Contact() {
   return (
     <Section id="contact" tone="ink" className="pb-20 sm:pb-24">
-      <Eyebrow>{contact.heading}</Eyebrow>
       <SectionHeading>Come help write the rules.</SectionHeading>
 
       <div className="mt-10 flex flex-wrap items-center gap-4">

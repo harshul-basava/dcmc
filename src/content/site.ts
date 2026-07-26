@@ -29,7 +29,7 @@ export const hero = {
 } as const;
 
 export const about = {
-  heading: "Why this conference",
+  heading: "There aren’t enough people working on policy to make sure AI goes well.",
   /** Two paragraphs so the dark band can set them side by side without a
       column break landing mid-sentence. Text is verbatim from the brief. */
   body: [
@@ -39,7 +39,6 @@ export const about = {
 } as const;
 
 export const whoShouldApply = {
-  heading: "Who should apply",
   intro:
     "We're looking for college students who want to spend their careers making AI go well, whatever their starting discipline.",
   columns: [
@@ -120,7 +119,6 @@ export const past = {
 } as const;
 
 export const contact = {
-  heading: "Contact",
   policymakerPrompt:
     "Work in policy and interested in speaking or attending? We'd like to hear from you.",
 } as const;

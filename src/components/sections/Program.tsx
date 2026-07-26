@@ -1,11 +1,10 @@
 import { program, timeline } from "@/content/site";
-import { ComingSoon, Eyebrow, Section, SectionHeading, Subheading } from "@/components/ui";
+import { ComingSoon, Section, SectionHeading, Subheading } from "@/components/ui";
 
 /** Program overview on the left, the run-up dates as a rail on the right. */
 export default function Program() {
   return (
     <Section id="program" tone="surface">
-      <Eyebrow>Program</Eyebrow>
       <SectionHeading>{program.heading}</SectionHeading>
 
       <div className="mt-14 grid gap-16 lg:grid-cols-2 lg:gap-20">

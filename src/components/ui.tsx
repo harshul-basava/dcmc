@@ -45,19 +45,6 @@ export function Section({
   );
 }
 
-/**
- * Small uppercase label above a section heading, prefixed with a gold rule so
- * every section opens the same way.
- */
-export function Eyebrow({ children }: { children: ReactNode }) {
-  return (
-    <p className="mb-5 flex items-center gap-3 text-xs font-medium uppercase tracking-[0.2em] text-muted">
-      <span aria-hidden="true" className="h-px w-8 bg-gold" />
-      {children}
-    </p>
-  );
-}
-
 export function SectionHeading({
   children,
   className = "",

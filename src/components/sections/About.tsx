@@ -1,5 +1,5 @@
 import { about, whoShouldApply } from "@/content/site";
-import { Eyebrow, Section, SectionHeading } from "@/components/ui";
+import { Section, SectionHeading } from "@/components/ui";
 
 /**
  * The mission, on the dark band — the visual centerpiece of the page — followed
@@ -9,7 +9,6 @@ export default function About() {
   return (
     <>
       <Section id="about" tone="ink">
-        <Eyebrow>About</Eyebrow>
         <SectionHeading>{about.heading}</SectionHeading>
 
         {/* Two columns on desktop keeps dense copy from becoming a wall. */}
@@ -21,7 +20,6 @@ export default function About() {
       </Section>
 
       <Section id="who" tone="surface">
-        <Eyebrow>{whoShouldApply.heading}</Eyebrow>
         <SectionHeading>{whoShouldApply.intro}</SectionHeading>
 
         <ul className="mt-14 grid gap-8 sm:grid-cols-3">
