@@ -34,14 +34,13 @@ export default function Hero() {
             {conference.name.replace(" 2.0", "")}
           </h1>
 
-          <p className="mt-5 max-w-xl font-display sm:mt-7 text-xl leading-[1.4] text-foreground sm:text-2xl md:ml-auto">
+          <p className="mt-3 max-w-xl font-display text-xl leading-[1.4] text-foreground sm:mt-4 sm:text-2xl md:ml-auto">
             {hero.headline}
           </p>
 
-          <p className="mt-5 font-display text-sm uppercase sm:mt-7 tracking-[0.16em] text-muted">
-            {conference.dates} <span aria-hidden="true">·</span> {conference.location}
+          <p className="mt-3 font-display text-sm uppercase tracking-[0.16em] text-muted sm:mt-4">
+            {conference.dates}. {conference.location}
           </p>
-
 
           <div className="mt-9 flex flex-wrap sm:mt-12 items-center gap-4 md:justify-end">
             <CTA href={links.apply}>Apply now</CTA>
