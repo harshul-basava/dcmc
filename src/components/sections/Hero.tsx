@@ -42,7 +42,6 @@ export default function Hero() {
             {conference.dates} <span aria-hidden="true">·</span> {conference.location}
           </p>
 
-          <p className="mt-5 font-display text-base italic sm:mt-7 text-muted">{hero.subhead}</p>
 
           <div className="mt-9 flex flex-wrap sm:mt-12 items-center gap-4 md:justify-end">
             <CTA href={links.apply}>Apply now</CTA>

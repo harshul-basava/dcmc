@@ -25,8 +25,7 @@ export const links = {
 } as const;
 
 export const hero = {
-  headline: "There aren't enough people working on policy to make sure AI goes well.",
-  subhead: `With ${conference.name}, we aim to change that.`,
+  headline: "A three-day workshop on making AI policy go well.",
 } as const;
 
 export const about = {
