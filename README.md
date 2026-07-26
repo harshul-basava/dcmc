@@ -12,11 +12,25 @@ npm run dev          # http://localhost:3000
 ## Build
 
 ```bash
-npm run build        # static HTML/CSS/JS into out/
+npm run build
+npm start            # serve the production build locally
 ```
 
-`next.config.ts` sets `output: "export"`, so `out/` can be dropped on Netlify,
-Vercel, GitHub Pages, or any static host.
+## Deploy (Vercel)
+
+The project runs on Next's defaults, so Vercel needs no configuration:
+
+1. Push to GitHub (already at `harshul-basava/dcmc`).
+2. On vercel.com, **Add New → Project** and import the repo.
+3. Accept the detected settings — framework Next.js, build `next build`,
+   install `npm install` — and deploy.
+
+There are no environment variables to set. Every push to `main` redeploys; other
+branches get preview URLs.
+
+To host on a plain static file server instead (GitHub Pages, S3), add
+`output: "export"` and `images: { unoptimized: true }` to `next.config.ts` and
+`npm run build` will emit `out/`. That trades away image optimization.
 
 ## Editing the site
 

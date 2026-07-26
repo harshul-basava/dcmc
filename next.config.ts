@@ -1,11 +1,13 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  // Emits a plain HTML/CSS/JS bundle to `out/`, deployable to Netlify, Vercel,
-  // GitHub Pages, or any static host.
-  output: "export",
-  // Static export has no image optimization server, so images are served as-is.
-  images: { unoptimized: true },
-};
+/*
+ * Left on Next's defaults so Vercel runs the app natively: zero config on
+ * import, and next/image serves resized, modern-format versions of the hero
+ * photograph instead of the full 486KB original.
+ *
+ * To go back to a portable static bundle for GitHub Pages or any plain file
+ * host, add `output: "export"` and `images: { unoptimized: true }`.
+ */
+const nextConfig: NextConfig = {};
 
 export default nextConfig;
