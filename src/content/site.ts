@@ -72,6 +72,9 @@ export const speakers: Person[] = [];
 /** Empty renders "Organizers announced soon". Add entries to render the grid. */
 export const organizers: Person[] = [];
 
+/** The organizers block is hidden for now. Flip to true to show it again. */
+export const showOrganizers = false;
+
 export const program = {
   heading: "What the weekend looks like",
   body: "Attendees for DCMC 2.0 will be provided lodging starting Thursday evening, October 15th. Programming will run from Friday morning, October 16th to midday Sunday, October 18th, with attendees leaving on Sunday. Specific details about the conference program will be announced as they become available.",
