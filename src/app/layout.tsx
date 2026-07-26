@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 import { conference } from "@/content/site";
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+});
+
+/** Display face for the wordmark, nav, and section headings. */
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
 });
 
 const description = `${conference.name} brings together college students and guest speakers working on AI policy. ${conference.dates} in ${conference.location}.`;
@@ -26,7 +33,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${newsreader.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col">
         <a
           href="#top"

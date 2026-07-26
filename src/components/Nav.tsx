@@ -40,18 +40,18 @@ export default function Nav() {
           <a
             href="#top"
             onClick={() => setMenuOpen(false)}
-            className="text-sm font-semibold tracking-[-0.01em] text-foreground"
+            className="font-display text-base tracking-[0.02em] text-foreground"
           >
             {conference.shortName}
           </a>
 
-          <nav aria-label="Sections" className="hidden items-center gap-8 md:flex">
+          <nav aria-label="Sections" className="hidden items-center gap-5 md:flex lg:gap-8">
             {navItems.map(({ id, label }) => (
               <a
                 key={id}
                 href={`#${id}`}
                 aria-current={active === id ? "true" : undefined}
-                className={`relative py-1 text-sm transition-colors hover:text-foreground ${
+                className={`relative py-1 font-display text-xs uppercase tracking-[0.16em] transition-colors hover:text-foreground ${
                   active === id ? "text-foreground" : "text-muted"
                 }`}
               >
@@ -67,7 +67,7 @@ export default function Nav() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <CTA href={links.apply} className="hidden px-5 py-2.5 sm:inline-flex">
+            <CTA href={links.apply} variant="secondary" className="hidden px-5 py-2.5 sm:inline-flex">
               Apply
             </CTA>
             <button
@@ -93,7 +93,7 @@ export default function Nav() {
                   <a
                     href={`#${id}`}
                     onClick={() => setMenuOpen(false)}
-                    className={`block py-3 text-sm ${
+                    className={`block py-3 font-display text-sm uppercase tracking-[0.16em] ${
                       active === id ? "text-foreground" : "text-muted"
                     }`}
                   >

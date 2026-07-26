@@ -67,7 +67,7 @@ export function SectionHeading({
 }) {
   return (
     <h2
-      className={`max-w-3xl text-[clamp(1.85rem,3.6vw,2.9rem)] font-semibold leading-[1.12] tracking-[-0.02em] text-foreground ${className}`}
+      className={`max-w-3xl font-display text-[clamp(2rem,3.8vw,3.1rem)] font-normal leading-[1.14] tracking-[-0.015em] text-foreground ${className}`}
     >
       {children}
     </h2>
@@ -76,7 +76,7 @@ export function SectionHeading({
 
 export function Subheading({ children }: { children: ReactNode }) {
   return (
-    <h3 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+    <h3 className="font-display text-xl font-normal tracking-tight text-foreground sm:text-2xl">
       {children}
     </h3>
   );
@@ -122,7 +122,7 @@ export function CTA({
   className?: string;
 }) {
   const base =
-    "group inline-flex items-center justify-center gap-2 rounded-card px-6 py-3.5 text-sm font-medium tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+    "group inline-flex items-center justify-center gap-2 rounded-card px-7 py-3.5 font-display text-sm uppercase tracking-[0.12em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
   const styles =
     variant === "primary"
       ? "bg-accent text-on-accent hover:bg-accent-hover"

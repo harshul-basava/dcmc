@@ -9,7 +9,7 @@ export default function Contact() {
       <SectionHeading>Come help write the rules.</SectionHeading>
 
       <div className="mt-10 flex flex-wrap items-center gap-4">
-        <CTA href={links.apply}>APPLY NOW</CTA>
+        <CTA href={links.apply}>Apply now</CTA>
         <CTA href={links.refer} variant="secondary">
           Refer an applicant <span aria-hidden="true">→</span>
         </CTA>

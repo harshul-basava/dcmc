@@ -65,6 +65,7 @@
   --color-gold: var(--gold);
   --color-card: var(--card);
   --font-sans: var(--font-inter);
+  --font-display: var(--font-newsreader), ui-serif, Georgia, serif;
   --radius-card: var(--radius);
 }
 
@@ -118,17 +119,77 @@ body {
   }
 }
 
-/* Faint node-and-line motif behind the hero — a nod to the network the
-   conference is trying to build. Purely decorative. */
-.hero-motif {
-  background-image:
-    radial-gradient(
-      circle at 1px 1px,
-      color-mix(in srgb, var(--accent) 26%, transparent) 1px,
-      transparent 0
+/*
+ * Hero photograph. The image is masked so it dissolves into the page colour
+ * rather than ending at a hard edge: downward on narrow screens, where the
+ * photo sits above the text, and rightward on wide ones, where it sits beside
+ * it. Both axes then get a softening overlay (.hero-veil) so the top, bottom,
+ * and leading edges settle into the background too.
+ */
+.hero-photo {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 34%,
+    rgb(0 0 0 / 42%) 62%,
+    transparent 90%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 34%,
+    rgb(0 0 0 / 42%) 62%,
+    transparent 90%
+  );
+}
+
+@media (min-width: 768px) {
+  /* Fades out well before the title's left edge, so the type sits on clean
+     page colour and only its approach overlaps the dissolving photo. */
+  .hero-photo {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #000 0%,
+      #000 30%,
+      rgb(0 0 0 / 52%) 56%,
+      rgb(0 0 0 / 14%) 78%,
+      transparent 94%
     );
-  background-size: 34px 34px;
-  mask-image: radial-gradient(ellipse 78% 62% at 72% 32%, #000 0%, transparent 72%);
+    mask-image: linear-gradient(
+      to right,
+      #000 0%,
+      #000 30%,
+      rgb(0 0 0 / 52%) 56%,
+      rgb(0 0 0 / 14%) 78%,
+      transparent 94%
+    );
+  }
+}
+
+/* Settles the photo's top and bottom edges into the page colour. */
+.hero-veil {
+  background-image: linear-gradient(
+    to bottom,
+    var(--sand) 0%,
+    rgb(0 0 0 / 0%) 22%,
+    rgb(0 0 0 / 0%) 68%,
+    var(--sand) 100%
+  );
+}
+
+/* Faint surveyor's grid over the photo, as on the reference layout. */
+.hero-grid {
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      rgb(255 255 255 / 34%) 0 1px,
+      transparent 1px 172px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgb(255 255 255 / 34%) 0 1px,
+      transparent 1px 172px
+    );
 }
 
 /* Stand-in for photography we don't have yet. Deliberately flat and labelled so

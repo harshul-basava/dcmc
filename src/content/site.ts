@@ -27,12 +27,6 @@ export const links = {
 export const hero = {
   headline: "There aren't enough people working on policy to make sure AI goes well.",
   subhead: `With ${conference.name}, we aim to change that.`,
-  /** Fact rail under the hero. Keep to three — it's a rhythm, not a list. */
-  facts: [
-    { label: "When", value: conference.dates },
-    { label: "Where", value: conference.location },
-    { label: "Lodging", value: "Provided from Thursday evening" },
-  ],
 } as const;
 
 export const about = {

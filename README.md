@@ -45,11 +45,23 @@ Nav links are anchors into `page.tsx` sections. To add a section, create the
 component, add it to `page.tsx`, and add its `id` to `navItems` in `site.ts` —
 the header and scroll-spy pick it up automatically.
 
+## Hero
+
+The landing hero follows the Generator Residency layout: `public/capitol.png`
+fills the left side and dissolves into the page colour, with the title block set
+right against it. The dissolve is a CSS mask on `.hero-photo` in `globals.css` —
+rightward above 768px, downward below it, where the photo moves above the text.
+`.hero-veil` softens the top and bottom edges; `.hero-grid` lays the faint
+surveyor's grid over the photo.
+
 ## Design
 
 Warm sand `#F5F0E6` base, near-black `#1A1818` text, deep navy ink `#14212E` for
 the dark bands, navy `#1E3A5F` for buttons, and gold `#C08A2E` used only for
-small markers (eyebrow rules, timeline dots, numerals). Inter throughout.
+small markers (eyebrow rules, timeline dots, numerals).
+
+Two faces: **Newsreader** (`font-display`) for the wordmark, nav, headings, and
+buttons, and **Inter** for body copy.
 
 Sections are **full-bleed tone bands** rather than rule-separated blocks. Each
 `<Section>` takes `tone="sand" | "surface" | "ink"`; the tone sets the background
