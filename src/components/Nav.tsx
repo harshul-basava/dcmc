@@ -1,0 +1,136 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { conference, links, navItems } from "@/content/site";
+import { CTA, Container } from "@/components/ui";
+
+/**
+ * Sticky header. Highlights whichever section is currently in view and
+ * collapses to a disclosure menu on small screens.
+ */
+export default function Nav() {
+  const [active, setActive] = useState<string>(navItems[0].id);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const sections = navItems
+      .map(({ id }) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    // The top band of the viewport, just under the header, decides which link
+    // is active: a section counts as current once its heading reaches it.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (visible) setActive(visible.target.id);
+      },
+      { rootMargin: "-88px 0px -70% 0px", threshold: 0 },
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <header className="sticky top-0 z-50 border-b border-rule bg-background/85 backdrop-blur-md">
+      <Container>
+        <div className="flex h-16 items-center justify-between gap-6">
+          <a
+            href="#top"
+            onClick={() => setMenuOpen(false)}
+            className="text-sm font-semibold tracking-tight text-foreground"
+          >
+            {conference.shortName}
+          </a>
+
+          <nav aria-label="Sections" className="hidden items-center gap-7 md:flex">
+            {navItems.map(({ id, label }) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                aria-current={active === id ? "true" : undefined}
+                className={`text-sm transition-colors hover:text-foreground ${
+                  active === id ? "text-foreground" : "text-muted"
+                }`}
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <CTA href={links.apply} className="hidden px-5 py-2 sm:inline-flex">
+              Apply
+            </CTA>
+            <button
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-menu"
+              className="-mr-2 p-2 text-foreground md:hidden"
+            >
+              <span className="sr-only">{menuOpen ? "Close menu" : "Open menu"}</span>
+              <MenuIcon open={menuOpen} />
+            </button>
+          </div>
+        </div>
+      </Container>
+
+      {menuOpen ? (
+        <nav id="mobile-menu" aria-label="Sections" className="border-t border-rule md:hidden">
+          <Container>
+            <ul className="flex flex-col py-2">
+              {navItems.map(({ id, label }) => (
+                <li key={id}>
+                  <a
+                    href={`#${id}`}
+                    onClick={() => setMenuOpen(false)}
+                    className={`block py-3 text-sm ${
+                      active === id ? "text-foreground" : "text-muted"
+                    }`}
+                  >
+                    {label}
+                  </a>
+                </li>
+              ))}
+              <li className="py-3">
+                <CTA href={links.apply} className="w-full">
+                  Apply now
+                </CTA>
+              </li>
+            </ul>
+          </Container>
+        </nav>
+      ) : null}
+    </header>
+  );
+}
+
+function MenuIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="22"
+      height="22"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      {open ? (
+        <>
+          <line x1="5" y1="5" x2="19" y2="19" />
+          <line x1="19" y1="5" x2="5" y2="19" />
+        </>
+      ) : (
+        <>
+          <line x1="3" y1="8" x2="21" y2="8" />
+          <line x1="3" y1="16" x2="21" y2="16" />
+        </>
+      )}
+    </svg>
+  );
+}
