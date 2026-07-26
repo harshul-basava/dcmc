@@ -16,7 +16,7 @@ export default function Past() {
     past.testimonials.length > 0 ? past.testimonials : [null, null];
 
   return (
-    <Section id="past" tone="surface">
+    <Section id="past" tone="sand">
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end">
         <div>
           <SectionHeading>{past.heading}</SectionHeading>
