@@ -76,9 +76,8 @@ export const organizers: Person[] = [];
 export const showOrganizers = false;
 
 export const program = {
-  heading: "What the weekend looks like",
+  heading: "Timeline",
   body: "Attendees for DCMC 2.0 will be provided lodging starting Thursday evening, October 15th. Programming will run from Friday morning, October 16th to midday Sunday, October 18th, with attendees leaving on Sunday. Specific details about the conference program will be announced as they become available.",
-  scheduleNote: "Full schedule coming soon",
 } as const;
 
 export type TimelineItem = {
@@ -90,10 +89,9 @@ export type TimelineItem = {
 };
 
 export const timeline = {
-  heading: "Key dates",
   items: [
-    { date: "TBA", label: "Applications open", tba: true },
-    { date: "TBA", label: "Application deadline", tba: true },
+    { date: "Aug 3, 2026", label: "Applications open" },
+    { date: "Sep 12, 2026", label: "Application deadline" },
     { date: "TBA", label: "Decisions released", tba: true },
     { date: "Oct 15, 2026", label: "Arrival", note: "Lodging provided from Thursday evening." },
     { date: "Oct 16–18, 2026", label: "DC Mini-Conference 2.0", note: "Washington, DC" },
@@ -125,7 +123,7 @@ export const contact = {
 export const navItems = [
   { id: "about", label: "About" },
   { id: "speakers", label: "Speakers" },
-  { id: "program", label: "Program" },
+  { id: "timeline", label: "Timeline" },
   { id: "past", label: "DCMC 1.0" },
   { id: "contact", label: "Contact" },
 ] as const;

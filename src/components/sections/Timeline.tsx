@@ -1,29 +1,23 @@
 import { program, timeline } from "@/content/site";
-import { ComingSoon, Section, SectionHeading, Subheading } from "@/components/ui";
+import { Section, SectionHeading } from "@/components/ui";
 
-/** Program overview, then the run-up dates as a horizontal track beneath it. */
-export default function Program() {
+/** What the weekend is, then the run-up dates as a horizontal track. */
+export default function Timeline() {
   return (
-    <Section id="program" tone="surface">
+    <Section id="timeline" tone="surface">
       <SectionHeading>{program.heading}</SectionHeading>
 
       <p className="mt-10 max-w-3xl text-base leading-[1.8] text-muted sm:text-lg">
         {program.body}
       </p>
 
-      <div className="mt-10 max-w-3xl">
-        <ComingSoon>{program.scheduleNote}</ComingSoon>
-      </div>
-
-      <div className="mt-24">
-        <Subheading>{timeline.heading}</Subheading>
-
+      <div className="mt-20">
         {/*
          * One column per date on desktop, with the rule carried by the list so
          * it runs unbroken behind the markers. Stacks to a plain dated list on
          * narrow screens, where each row carries its own rule instead.
          */}
-        <ol className="mt-10 grid gap-x-6 gap-y-8 sm:grid-cols-5 sm:border-t sm:border-rule">
+        <ol className="grid gap-x-6 gap-y-8 sm:grid-cols-5 sm:border-t sm:border-rule">
           {timeline.items.map((item) => (
             <li
               key={item.label}

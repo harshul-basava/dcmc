@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import Hero from "@/components/sections/Hero";
 import About from "@/components/sections/About";
 import People from "@/components/sections/People";
-import Program from "@/components/sections/Program";
+import Timeline from "@/components/sections/Timeline";
 import Past from "@/components/sections/Past";
 import Contact from "@/components/sections/Contact";
 
@@ -15,7 +15,7 @@ export default function Home() {
         <Hero />
         <About />
         <People />
-        <Program />
+        <Timeline />
         <Past />
         <Contact />
       </main>

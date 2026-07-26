@@ -11,15 +11,14 @@ Everything below lives in **`src/content/site.ts`**. No component edits needed.
 
 ## Content to fill in as it firms up
 
-- [ ] `timeline.items` — the first three entries are `TBA`. Replace `date` with a
-      real date and drop `tba: true` once each is set.
+- [ ] `timeline.items` — "Decisions released" is still `TBA`. Replace `date` with
+      a real date and drop `tba: true` once it is set.
 - [ ] `speakers` — empty array renders "Speakers coming soon". Add
       `{ name, role, affiliation?, photo?, bio? }` entries to render the grid.
       People without `photo` get a monogram tile, so a partly-filled roster still
       looks intentional.
 - [ ] `organizers` — same shape, renders "Organizers announced soon" while empty.
-- [ ] `program.body` / `program.scheduleNote` — replace the coming-soon panel with
-      the real schedule when it exists.
+- [ ] `program.body` — replace with the real schedule when it exists.
 - [ ] `past.photos` — DCMC 1.0 photos. Put files in `public/dcmc1/` and add
       `{ src: "/dcmc1/foo.jpg", caption: "..." }`. Three placeholder frames show
       until then.

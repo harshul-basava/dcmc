@@ -38,7 +38,7 @@ src/
     Footer.tsx
     ui.tsx        Container / Section / headings / CTA / ComingSoon
     PersonGrid.tsx
-    sections/     Hero, About, People, Program, Past, Contact
+    sections/     Hero, About, People, Timeline, Past, Contact
 ```
 
 Nav links are anchors into `page.tsx` sections. To add a section, create the
