@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { conference, links, navItems } from "@/content/site";
 import { CTA, Container } from "@/components/ui";
 
@@ -41,17 +40,9 @@ export default function Nav() {
           <a
             href="#top"
             onClick={() => setMenuOpen(false)}
-            className="flex items-center gap-2.5 font-display text-base tracking-[0.02em] text-foreground"
+            className="font-display text-base tracking-[0.02em] text-foreground"
           >
-            <Image
-              src={conference.logo}
-              alt="DCMC"
-              width={604}
-              height={610}
-              priority
-              className="h-9 w-auto rounded-[3px]"
-            />
-            {conference.version}
+            {conference.shortName}
           </a>
 
           <nav aria-label="Sections" className="hidden items-center gap-5 md:flex lg:gap-8">

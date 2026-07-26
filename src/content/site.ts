@@ -12,9 +12,6 @@ export const PLACEHOLDER_LINK = "#";
 export const conference = {
   name: "DC Mini-Conference 2.0",
   shortName: "DCMC 2.0",
-  /** Header mark. The image already reads "DCMC"; the nav sets "2.0" beside it. */
-  logo: "/temp_logo.png",
-  version: "2.0",
   dates: "October 16–18, 2026",
   location: "Washington, DC",
   email: "contact@dcminiconf.com",
