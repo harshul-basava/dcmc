@@ -40,7 +40,7 @@ export const about = {
 
 export const whoShouldApply = {
   intro:
-    "We're looking for college students who want to spend their careers making AI go well, whatever their starting discipline.",
+    "For students who want their career to shape how AI is governed.",
   columns: [
     {
       title: "Students with policy ambition",

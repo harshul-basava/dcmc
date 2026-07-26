@@ -2,34 +2,19 @@ import Image from "next/image";
 import type { Person } from "@/content/site";
 
 /**
- * Renders a roster of people. While the list is empty it shows ghost tiles with
- * a single caption, so the section keeps its shape instead of collapsing to a
- * line of text. People without a `photo` get a monogram tile, so a half-filled
- * roster still looks deliberate.
+ * Renders a roster of people, or a single line while the list is empty. People
+ * without a `photo` get a monogram tile, so a half-filled roster still looks
+ * deliberate.
  */
 export default function PersonGrid({
   people,
   emptyMessage,
-  ghostCount = 4,
 }: {
   people: readonly Person[];
   emptyMessage: string;
-  ghostCount?: number;
 }) {
   if (people.length === 0) {
-    return (
-      <div>
-        <ul aria-hidden="true" className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-          {Array.from({ length: ghostCount }, (_, index) => (
-            <li
-              key={index}
-              className="aspect-[4/5] rounded-card border border-dashed border-rule"
-            />
-          ))}
-        </ul>
-        <p className="mt-6 text-sm tracking-[0.08em] text-muted">{emptyMessage}</p>
-      </div>
-    );
+    return <p className="text-base tracking-[0.02em] text-muted">{emptyMessage}</p>;
   }
 
   return (

@@ -23,12 +23,9 @@ export default function About() {
         <SectionHeading>{whoShouldApply.intro}</SectionHeading>
 
         <ul className="mt-14 grid gap-8 sm:grid-cols-3">
-          {whoShouldApply.columns.map((column, index) => (
+          {whoShouldApply.columns.map((column) => (
             <li key={column.title} className="border-t border-rule pt-6">
-              <span className="text-sm font-medium tabular-nums text-gold">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <h4 className="mt-4 text-lg font-semibold tracking-tight text-foreground">
+              <h4 className="text-lg font-semibold tracking-tight text-foreground">
                 {column.title}
               </h4>
               <p className="mt-3 text-[15px] leading-[1.7] text-muted">{column.body}</p>
