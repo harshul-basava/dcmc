@@ -151,14 +151,17 @@ body {
   }
 }
 
-/* Settles the photo's top and bottom edges into the page colour. */
+/*
+ * Settles the photo's top edge into the page colour. The bottom is left alone:
+ * the hero simply ends at the next band, so fading there only washed out the
+ * base of the building.
+ */
 .hero-veil {
   background-image: linear-gradient(
     to bottom,
     var(--sand) 0%,
     rgb(0 0 0 / 0%) 22%,
-    rgb(0 0 0 / 0%) 68%,
-    var(--sand) 100%
+    rgb(0 0 0 / 0%) 100%
   );
 }
 
