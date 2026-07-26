@@ -1,16 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { conference, links, navItems } from "@/content/site";
+import { links, navItems } from "@/content/site";
 import { CTA, Container } from "@/components/ui";
 
+/** Fraction of the hero scrolled past by the time the header chrome is solid. */
+const CHROME_FADE_AT = 0.12;
+
 /**
- * Sticky header. Highlights whichever section is currently in view and
- * collapses to a disclosure menu on small screens.
+ * Sticky header. Sits fully transparent over the top of the hero and fades its
+ * background and hairline in as the page scrolls, reaching solid a little
+ * before the reader is 15% through the hero. Highlights whichever section is in
+ * view, and collapses to a disclosure menu on small screens.
  */
 export default function Nav() {
   const [active, setActive] = useState<string>(navItems[0].id);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [chrome, setChrome] = useState(0);
 
   useEffect(() => {
     const sections = navItems
@@ -33,19 +39,49 @@ export default function Nav() {
     return () => observer.disconnect();
   }, []);
 
-  return (
-    <header className="sticky top-0 z-50 border-b border-rule bg-sand/80 backdrop-blur-md">
-      <Container>
-        <div className="flex h-16 items-center justify-between gap-6">
-          <a
-            href="#top"
-            onClick={() => setMenuOpen(false)}
-            className="font-display text-xl tracking-[0.02em] text-foreground"
-          >
-            {conference.shortName}
-          </a>
+  useEffect(() => {
+    const hero = document.getElementById("top");
+    let frame = 0;
 
-          <nav aria-label="Sections" className="hidden items-center gap-4 md:flex lg:gap-8">
+    const measure = () => {
+      frame = 0;
+      const heroHeight = hero?.offsetHeight ?? window.innerHeight;
+      const distance = Math.max(heroHeight * CHROME_FADE_AT, 1);
+      setChrome(Math.min(window.scrollY / distance, 1));
+    };
+
+    // Coalesce scroll events into one measurement per frame.
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+
+    measure();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
+  // The open mobile menu needs a readable backdrop even at the top of the page.
+  const chromeOpacity = menuOpen ? 1 : chrome;
+
+  return (
+    <header className="sticky top-0 z-50">
+      <div
+        aria-hidden="true"
+        style={{ opacity: chromeOpacity }}
+        className="absolute inset-0 border-b border-rule bg-sand/80 backdrop-blur-md"
+      />
+
+      <Container className="relative">
+        <div className="flex h-16 items-center gap-6">
+          <nav
+            aria-label="Sections"
+            className="hidden items-center gap-4 md:flex lg:gap-8"
+          >
             {navItems.map(({ id, label }) => (
               <a
                 key={id}
@@ -66,8 +102,12 @@ export default function Nav() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
-            <CTA href={links.apply} variant="secondary" className="hidden px-5 py-2.5 sm:inline-flex">
+          <div className="ml-auto flex items-center gap-3">
+            <CTA
+              href={links.apply}
+              variant="secondary"
+              className="hidden px-5 py-2.5 sm:inline-flex"
+            >
               Apply
             </CTA>
             <button
@@ -85,7 +125,11 @@ export default function Nav() {
       </Container>
 
       {menuOpen ? (
-        <nav id="mobile-menu" aria-label="Sections" className="border-t border-rule md:hidden">
+        <nav
+          id="mobile-menu"
+          aria-label="Sections"
+          className="relative border-t border-rule bg-sand md:hidden"
+        >
           <Container>
             <ul className="flex flex-col py-2">
               {navItems.map(({ id, label }) => (
