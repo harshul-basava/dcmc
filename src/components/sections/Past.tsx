@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { past } from "@/content/site";
-import { Eyebrow, Section, SectionHeading } from "@/components/ui";
+import { Card, Eyebrow, Section, SectionHeading } from "@/components/ui";
 
 /** Social proof from the first conference: photos, partner orgs, testimonials. */
 export default function Past() {
@@ -12,29 +12,39 @@ export default function Past() {
     past.partners.length > 0
       ? past.partners
       : Array.from({ length: past.partnerPlaceholderCount }, () => null);
+  const testimonialSlots =
+    past.testimonials.length > 0 ? past.testimonials : [null, null];
 
   return (
-    <Section id="past">
-      <Eyebrow>Last time</Eyebrow>
-      <SectionHeading>{past.heading}</SectionHeading>
-      <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">{past.intro}</p>
+    <Section id="past" tone="surface">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end">
+        <div>
+          <Eyebrow>Last time</Eyebrow>
+          <SectionHeading>{past.heading}</SectionHeading>
+        </div>
+        <p className="max-w-xl text-base leading-[1.75] text-muted lg:pb-2">{past.intro}</p>
+      </div>
 
-      <ul className="mt-12 grid gap-4 sm:grid-cols-3">
+      {/* Mosaic: the first photo runs large, the rest stack beside it. The
+          explicit height gives the two grid rows something to divide. */}
+      <ul className="mt-14 grid gap-4 sm:h-[30rem] sm:grid-cols-3 sm:grid-rows-2">
         {photoSlots.map((photo, index) => (
           <li
             key={photo?.src ?? `photo-${index}`}
-            className="placeholder-frame relative aspect-[4/3] overflow-hidden rounded-sm border border-rule"
+            className={`placeholder-frame relative aspect-[4/3] overflow-hidden rounded-card border border-rule sm:aspect-auto sm:h-full ${
+              index === 0 ? "sm:col-span-2 sm:row-span-2" : ""
+            }`}
           >
             {photo ? (
               <Image
                 src={photo.src}
                 alt={photo.caption}
                 fill
-                sizes="(max-width: 640px) 90vw, 30vw"
+                sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 400px"
                 className="object-cover"
               />
             ) : (
-              <span className="absolute inset-0 flex items-center justify-center text-xs uppercase tracking-[0.18em] text-muted">
+              <span className="absolute inset-0 flex items-center justify-center text-xs uppercase tracking-[0.2em] text-muted">
                 Photo to come
               </span>
             )}
@@ -42,26 +52,26 @@ export default function Past() {
         ))}
       </ul>
 
-      <div className="mt-20">
-        <h3 className="text-sm font-medium uppercase tracking-[0.18em] text-muted">
+      <div className="mt-24">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
           Organizations we&rsquo;ve worked with
-        </h3>
-        <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
+        </p>
+        <ul className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-rule bg-rule sm:grid-cols-5">
           {partnerSlots.map((partner, index) => (
             <li
               key={partner?.name ?? `partner-${index}`}
-              className="flex h-16 items-center justify-center rounded-sm border border-dashed border-rule px-3"
+              className="flex h-24 items-center justify-center bg-surface px-4"
             >
               {partner?.logo ? (
                 <Image
                   src={partner.logo}
                   alt={partner.name}
-                  width={120}
-                  height={40}
-                  className="max-h-8 w-auto object-contain"
+                  width={140}
+                  height={48}
+                  className="max-h-9 w-auto object-contain"
                 />
               ) : (
-                <span className="text-center text-xs text-muted">
+                <span className="text-center text-sm text-muted">
                   {partner?.name ?? "Logo"}
                 </span>
               )}
@@ -70,36 +80,36 @@ export default function Past() {
         </ul>
       </div>
 
-      <div className="mt-20">
-        <h3 className="text-sm font-medium uppercase tracking-[0.18em] text-muted">
+      <div className="mt-24">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
           What attendees said
-        </h3>
-        {past.testimonials.length > 0 ? (
-          <ul className="mt-8 grid gap-8 sm:grid-cols-2">
-            {past.testimonials.map((testimonial) => (
-              <li key={testimonial.name} className="border-t border-rule pt-6">
-                <blockquote className="text-base leading-relaxed text-foreground">
-                  &ldquo;{testimonial.quote}&rdquo;
-                </blockquote>
-                <p className="mt-4 text-sm text-muted">
-                  {testimonial.name}
-                  {testimonial.affiliation ? `, ${testimonial.affiliation}` : ""}
-                </p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <ul className="mt-8 grid gap-8 sm:grid-cols-2">
-            {[0, 1].map((index) => (
-              <li
-                key={index}
-                className="rounded-sm border border-dashed border-rule px-6 py-10 text-center text-sm text-muted"
-              >
-                Testimonial to come
-              </li>
-            ))}
-          </ul>
-        )}
+        </p>
+        <ul className="mt-8 grid gap-6 sm:grid-cols-2">
+          {testimonialSlots.map((testimonial, index) => (
+            <li key={testimonial?.name ?? `testimonial-${index}`}>
+              <Card className="h-full">
+                <span aria-hidden="true" className="block text-3xl leading-none text-gold">
+                  &ldquo;
+                </span>
+                {testimonial ? (
+                  <>
+                    <blockquote className="mt-4 text-base leading-[1.7] text-foreground">
+                      {testimonial.quote}
+                    </blockquote>
+                    <p className="mt-5 text-sm text-muted">
+                      {testimonial.name}
+                      {testimonial.affiliation ? `, ${testimonial.affiliation}` : ""}
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-4 text-base leading-[1.7] text-muted">
+                    Testimonial to come.
+                  </p>
+                )}
+              </Card>
+            </li>
+          ))}
+        </ul>
       </div>
     </Section>
   );

@@ -1,32 +1,48 @@
 import Image from "next/image";
 import type { Person } from "@/content/site";
-import { ComingSoon } from "@/components/ui";
 
 /**
- * Renders a roster of people, or a "coming soon" panel while the list is empty.
- * People without a `photo` get a monogram tile so a half-filled roster still
- * looks deliberate.
+ * Renders a roster of people. While the list is empty it shows ghost tiles with
+ * a single caption, so the section keeps its shape instead of collapsing to a
+ * line of text. People without a `photo` get a monogram tile, so a half-filled
+ * roster still looks deliberate.
  */
 export default function PersonGrid({
   people,
   emptyMessage,
+  ghostCount = 4,
 }: {
   people: readonly Person[];
   emptyMessage: string;
+  ghostCount?: number;
 }) {
-  if (people.length === 0) return <ComingSoon>{emptyMessage}</ComingSoon>;
+  if (people.length === 0) {
+    return (
+      <div>
+        <ul aria-hidden="true" className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+          {Array.from({ length: ghostCount }, (_, index) => (
+            <li
+              key={index}
+              className="aspect-[4/5] rounded-card border border-dashed border-rule"
+            />
+          ))}
+        </ul>
+        <p className="mt-6 text-sm tracking-[0.08em] text-muted">{emptyMessage}</p>
+      </div>
+    );
+  }
 
   return (
     <ul className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
       {people.map((person) => (
         <li key={person.name}>
-          <div className="placeholder-frame relative mb-4 aspect-[4/5] overflow-hidden rounded-sm border border-rule">
+          <div className="placeholder-frame relative mb-4 aspect-[4/5] overflow-hidden rounded-card border border-rule">
             {person.photo ? (
               <Image
                 src={person.photo}
                 alt={person.name}
                 fill
-                sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 220px"
+                sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 240px"
                 className="object-cover"
               />
             ) : (
@@ -35,8 +51,8 @@ export default function PersonGrid({
               </span>
             )}
           </div>
-          <p className="text-sm font-medium text-foreground">{person.name}</p>
-          <p className="text-sm text-muted">{person.role}</p>
+          <p className="text-[15px] font-semibold text-foreground">{person.name}</p>
+          <p className="mt-0.5 text-sm text-muted">{person.role}</p>
           {person.affiliation ? (
             <p className="text-sm text-muted">{person.affiliation}</p>
           ) : null}

@@ -1,32 +1,43 @@
 import { about, whoShouldApply } from "@/content/site";
 import { Eyebrow, Section, SectionHeading } from "@/components/ui";
 
+/**
+ * The mission, on the dark band — the visual centerpiece of the page — followed
+ * by the "who should apply" cards back on a light band.
+ */
 export default function About() {
   return (
-    <Section id="about" divided={false}>
-      <Eyebrow>About</Eyebrow>
-      <SectionHeading>{about.heading}</SectionHeading>
-      <p className="mt-8 max-w-3xl text-base leading-[1.75] text-muted sm:text-lg">
-        {about.body}
-      </p>
+    <>
+      <Section id="about" tone="ink">
+        <Eyebrow>About</Eyebrow>
+        <SectionHeading>{about.heading}</SectionHeading>
 
-      <div className="mt-20">
-        <h3 className="text-xl font-semibold tracking-tight text-foreground">
-          {whoShouldApply.heading}
-        </h3>
-        <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted">
-          {whoShouldApply.intro}
-        </p>
+        {/* Two columns on desktop keeps dense copy from becoming a wall. */}
+        <div className="mt-12 grid gap-8 text-base leading-[1.8] text-muted sm:text-lg lg:grid-cols-2 lg:gap-14">
+          {about.body.map((paragraph) => (
+            <p key={paragraph.slice(0, 24)}>{paragraph}</p>
+          ))}
+        </div>
+      </Section>
 
-        <ul className="mt-10 grid gap-10 sm:grid-cols-3 sm:gap-8">
-          {whoShouldApply.columns.map((column) => (
-            <li key={column.title} className="border-t border-rule pt-5">
-              <h4 className="text-base font-medium text-foreground">{column.title}</h4>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{column.body}</p>
+      <Section id="who" tone="surface">
+        <Eyebrow>{whoShouldApply.heading}</Eyebrow>
+        <SectionHeading>{whoShouldApply.intro}</SectionHeading>
+
+        <ul className="mt-14 grid gap-8 sm:grid-cols-3">
+          {whoShouldApply.columns.map((column, index) => (
+            <li key={column.title} className="border-t border-rule pt-6">
+              <span className="text-sm font-medium tabular-nums text-gold">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <h4 className="mt-4 text-lg font-semibold tracking-tight text-foreground">
+                {column.title}
+              </h4>
+              <p className="mt-3 text-[15px] leading-[1.7] text-muted">{column.body}</p>
             </li>
           ))}
         </ul>
-      </div>
-    </Section>
+      </Section>
+    </>
   );
 }

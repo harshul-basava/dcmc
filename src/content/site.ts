@@ -27,11 +27,22 @@ export const links = {
 export const hero = {
   headline: "There aren't enough people working on policy to make sure AI goes well.",
   subhead: `With ${conference.name}, we aim to change that.`,
+  /** Fact rail under the hero. Keep to three — it's a rhythm, not a list. */
+  facts: [
+    { label: "When", value: conference.dates },
+    { label: "Where", value: conference.location },
+    { label: "Lodging", value: "Provided from Thursday evening" },
+  ],
 } as const;
 
 export const about = {
   heading: "Why this conference",
-  body: "Mandating responsible AI development, deployment, and usage is a difficult challenge we must navigate soon. A limiting bottleneck is that there is a disconnect between the technical expertise of AI researchers and the regulatory machinery of DC, resulting in a critical lack of awareness of issues that will be too late to fix when we need it most. By bringing together motivated college students and knowledgeable guest speakers who all share an interest in AI policy, we hope to catalyze our generation to write policy for a future with safe AI that is used to empower—not to exploit.",
+  /** Two paragraphs so the dark band can set them side by side without a
+      column break landing mid-sentence. Text is verbatim from the brief. */
+  body: [
+    "Mandating responsible AI development, deployment, and usage is a difficult challenge we must navigate soon. A limiting bottleneck is that there is a disconnect between the technical expertise of AI researchers and the regulatory machinery of DC, resulting in a critical lack of awareness of issues that will be too late to fix when we need it most.",
+    "By bringing together motivated college students and knowledgeable guest speakers who all share an interest in AI policy, we hope to catalyze our generation to write policy for a future with safe AI that is used to empower—not to exploit.",
+  ],
 } as const;
 
 export const whoShouldApply = {
@@ -70,7 +81,7 @@ export const speakers: Person[] = [];
 export const organizers: Person[] = [];
 
 export const program = {
-  heading: "Program",
+  heading: "What the weekend looks like",
   body: "Attendees for DCMC 2.0 will be provided lodging starting Thursday evening, October 15th. Programming will run from Friday morning, October 16th to midday Sunday, October 18th, with attendees leaving on Sunday. Specific details about the conference program will be announced as they become available.",
   scheduleNote: "Full schedule coming soon",
 } as const;
@@ -95,7 +106,7 @@ export const timeline = {
 } as const;
 
 export const venue = {
-  heading: "Venue",
+  heading: "Where you'll be",
   body: "DCMC 2.0 will take place in Washington DC. Details about the conference venue and accommodations will be announced as they become available.",
 } as const;
 
@@ -117,7 +128,6 @@ export const past = {
 
 export const contact = {
   heading: "Contact",
-  body: `Please contact ${conference.email} with any questions or feedback.`,
   policymakerPrompt:
     "Work in policy and interested in speaking or attending? We'd like to hear from you.",
 } as const;

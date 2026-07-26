@@ -1,59 +1,115 @@
 @import "tailwindcss";
 
+/*
+ * Palette. Warm sand base with a deep navy "ink" for high-contrast bands and a
+ * gold used only as a marker/underline accent. Sections alternate between the
+ * three tones (sand / surface / ink) rather than being separated by rules.
+ */
 :root {
-  --background: #fafaf8;
+  --sand: #f5f0e6;
+  --sand-deep: #ece4d4;
   --surface: #ffffff;
-  --foreground: #14161a;
-  --muted: #5b6068;
+  --ink: #14212e;
+
+  --foreground: #1a1818;
+  --muted: #5f5c55;
+  --rule: #e0d8c8;
+
+  /* On the ink band, foreground/muted/rule flip. See [data-tone="ink"] below. */
+  --ink-foreground: #f7f3ea;
+  --ink-muted: #b3b9c2;
+  --ink-rule: #33404e;
+
   --accent: #1e3a5f;
-  --accent-hover: #162c48;
+  --accent-hover: #16293f;
   --on-accent: #ffffff;
-  --rule: #e4e2dc;
+  --gold: #c08a2e;
+  --card: var(--surface);
+
+  --radius: 6px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0f1113;
-    --surface: #16191c;
-    --foreground: #f2f1ed;
-    --muted: #a3a9b1;
+    --sand: #16171a;
+    --sand-deep: #1d1f23;
+    --surface: #202226;
+    --ink: #0d1520;
+
+    --foreground: #f2efe8;
+    --muted: #a5a199;
+    --rule: #313338;
+
+    --ink-foreground: #f2efe8;
+    --ink-muted: #adb4bd;
+    --ink-rule: #2b3846;
+
     --accent: #9dbbdd;
     --accent-hover: #c0d5ee;
-    --on-accent: #0f1113;
-    --rule: #272b30;
+    --on-accent: #0d1520;
+    --gold: #dfb668;
   }
 }
 
 @theme inline {
-  --color-background: var(--background);
+  --color-sand: var(--sand);
+  --color-sand-deep: var(--sand-deep);
   --color-surface: var(--surface);
+  --color-ink: var(--ink);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
+  --color-rule: var(--rule);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-on-accent: var(--on-accent);
-  --color-rule: var(--rule);
+  --color-gold: var(--gold);
+  --color-card: var(--card);
   --font-sans: var(--font-inter);
+  --radius-card: var(--radius);
+}
+
+/*
+ * A section sets data-tone; everything inside reads --foreground/--muted/--rule,
+ * so the same components work on any band without tone-aware props.
+ */
+[data-tone="ink"] {
+  --foreground: var(--ink-foreground);
+  --muted: var(--ink-muted);
+  --rule: var(--ink-rule);
+  --accent: #9dbbdd;
+  --accent-hover: #c3d7ef;
+  --on-accent: var(--ink);
+  --gold: #dfb668;
+  --card: rgb(255 255 255 / 5%);
+  color: var(--ink-foreground);
+  background-color: var(--ink);
+}
+
+[data-tone="sand"] {
+  background-color: var(--sand);
+  --card: var(--surface);
+}
+
+[data-tone="surface"] {
+  background-color: var(--surface);
+  --card: var(--sand);
 }
 
 html {
-  scroll-behavior: smooth;
+  /* Anchor clicks jump straight to the section — no animated scroll. */
+  scroll-behavior: auto;
   /* Keeps section headings clear of the sticky header when anchor-scrolling. */
-  scroll-padding-top: 6rem;
+  scroll-padding-top: 5rem;
 }
 
 body {
-  background: var(--background);
+  background: var(--sand);
   color: var(--foreground);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
   *,
   *::before,
   *::after {
@@ -62,12 +118,25 @@ body {
   }
 }
 
+/* Faint node-and-line motif behind the hero — a nod to the network the
+   conference is trying to build. Purely decorative. */
+.hero-motif {
+  background-image:
+    radial-gradient(
+      circle at 1px 1px,
+      color-mix(in srgb, var(--accent) 26%, transparent) 1px,
+      transparent 0
+    );
+  background-size: 34px 34px;
+  mask-image: radial-gradient(ellipse 78% 62% at 72% 32%, #000 0%, transparent 72%);
+}
+
 /* Stand-in for photography we don't have yet. Deliberately flat and labelled so
    nobody mistakes one for a finished asset. */
 .placeholder-frame {
   background-image: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--accent) 10%, var(--background)),
-    color-mix(in srgb, var(--accent) 3%, var(--background))
+    color-mix(in srgb, var(--accent) 14%, var(--surface)),
+    color-mix(in srgb, var(--gold) 10%, var(--surface))
   );
 }

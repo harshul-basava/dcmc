@@ -47,6 +47,15 @@ the header and scroll-spy pick it up automatically.
 
 ## Design
 
-Ivory `#FAFAF8` / near-black `#14161A` / navy `#1E3A5F` accent, Inter throughout,
-sections separated by whitespace and hairline rules. Colors are CSS variables in
-`globals.css` with a dark-mode block. Respects `prefers-reduced-motion`.
+Warm sand `#F5F0E6` base, near-black `#1A1818` text, deep navy ink `#14212E` for
+the dark bands, navy `#1E3A5F` for buttons, and gold `#C08A2E` used only for
+small markers (eyebrow rules, timeline dots, numerals). Inter throughout.
+
+Sections are **full-bleed tone bands** rather than rule-separated blocks. Each
+`<Section>` takes `tone="sand" | "surface" | "ink"`; the tone sets the background
+and, for `ink`, flips `--foreground` / `--muted` / `--rule` / `--card` so the same
+components work on a dark band with no tone-aware props. The running order is
+sand → ink → surface → sand → surface → sand → surface → ink.
+
+All colors are CSS variables in `globals.css` with a dark-mode block. Respects
+`prefers-reduced-motion`; anchor clicks jump instantly (no smooth scroll).

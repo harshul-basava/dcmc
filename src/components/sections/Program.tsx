@@ -1,48 +1,51 @@
 import { program, timeline } from "@/content/site";
-import { ComingSoon, Eyebrow, Section, SectionHeading } from "@/components/ui";
+import { ComingSoon, Eyebrow, Section, SectionHeading, Subheading } from "@/components/ui";
 
-/** Program overview and the key dates leading up to it, in one section. */
+/** Program overview on the left, the run-up dates as a rail on the right. */
 export default function Program() {
   return (
-    <Section id="program">
+    <Section id="program" tone="surface">
       <Eyebrow>Program</Eyebrow>
       <SectionHeading>{program.heading}</SectionHeading>
-      <p className="mt-8 max-w-3xl text-base leading-[1.75] text-muted sm:text-lg">
-        {program.body}
-      </p>
 
-      <div className="mt-10 max-w-3xl">
-        <ComingSoon>{program.scheduleNote}</ComingSoon>
-      </div>
+      <div className="mt-14 grid gap-16 lg:grid-cols-2 lg:gap-20">
+        <div>
+          <p className="text-base leading-[1.8] text-muted sm:text-lg">{program.body}</p>
+          <div className="mt-10">
+            <ComingSoon>{program.scheduleNote}</ComingSoon>
+          </div>
+        </div>
 
-      <div className="mt-20">
-        <h3 className="text-xl font-semibold tracking-tight text-foreground">
-          {timeline.heading}
-        </h3>
-        <ol className="mt-8 max-w-2xl">
-          {timeline.items.map((item) => (
-            <li
-              key={item.label}
-              className="grid grid-cols-[8.5rem_1fr] gap-4 border-t border-rule py-5 last:border-b sm:grid-cols-[11rem_1fr]"
-            >
-              <span
-                className={`text-sm tabular-nums ${
-                  item.tba ? "text-muted/70" : "text-foreground"
-                }`}
-              >
-                {item.date}
-              </span>
-              <span>
-                <span className="block text-sm font-medium text-foreground">
+        <div>
+          <Subheading>{timeline.heading}</Subheading>
+          <ol className="mt-8 border-l border-rule">
+            {timeline.items.map((item) => (
+              <li key={item.label} className="relative py-5 pl-8">
+                <span
+                  aria-hidden="true"
+                  className={`absolute left-0 top-7 h-2 w-2 -translate-x-1/2 rounded-full ${
+                    item.tba ? "bg-rule" : "bg-gold"
+                  }`}
+                />
+                <span
+                  className={`block text-xs font-medium uppercase tracking-[0.16em] tabular-nums ${
+                    item.tba ? "text-muted/70" : "text-gold"
+                  }`}
+                >
+                  {item.date}
+                </span>
+                <span className="mt-2 block text-base font-medium text-foreground">
                   {item.label}
                 </span>
                 {item.note ? (
-                  <span className="mt-1 block text-sm text-muted">{item.note}</span>
+                  <span className="mt-1 block text-sm leading-relaxed text-muted">
+                    {item.note}
+                  </span>
                 ) : null}
-              </span>
-            </li>
-          ))}
-        </ol>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </Section>
   );

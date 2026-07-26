@@ -34,34 +34,40 @@ export default function Nav() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-rule bg-background/85 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-rule bg-sand/80 backdrop-blur-md">
       <Container>
         <div className="flex h-16 items-center justify-between gap-6">
           <a
             href="#top"
             onClick={() => setMenuOpen(false)}
-            className="text-sm font-semibold tracking-tight text-foreground"
+            className="text-sm font-semibold tracking-[-0.01em] text-foreground"
           >
             {conference.shortName}
           </a>
 
-          <nav aria-label="Sections" className="hidden items-center gap-7 md:flex">
+          <nav aria-label="Sections" className="hidden items-center gap-8 md:flex">
             {navItems.map(({ id, label }) => (
               <a
                 key={id}
                 href={`#${id}`}
                 aria-current={active === id ? "true" : undefined}
-                className={`text-sm transition-colors hover:text-foreground ${
+                className={`relative py-1 text-sm transition-colors hover:text-foreground ${
                   active === id ? "text-foreground" : "text-muted"
                 }`}
               >
                 {label}
+                {active === id ? (
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-x-0 -bottom-0.5 h-px bg-gold"
+                  />
+                ) : null}
               </a>
             ))}
           </nav>
 
           <div className="flex items-center gap-3">
-            <CTA href={links.apply} className="hidden px-5 py-2 sm:inline-flex">
+            <CTA href={links.apply} className="hidden px-5 py-2.5 sm:inline-flex">
               Apply
             </CTA>
             <button
