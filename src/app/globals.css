@@ -29,28 +29,6 @@
   --radius: 6px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --sand: #16171a;
-    --sand-deep: #1d1f23;
-    --surface: #202226;
-    --ink: #0d1520;
-
-    --foreground: #f2efe8;
-    --muted: #a5a199;
-    --rule: #313338;
-
-    --ink-foreground: #f2efe8;
-    --ink-muted: #adb4bd;
-    --ink-rule: #2b3846;
-
-    --accent: #9dbbdd;
-    --accent-hover: #c0d5ee;
-    --on-accent: #0d1520;
-    --gold: #dfb668;
-  }
-}
-
 @theme inline {
   --color-sand: var(--sand);
   --color-sand-deep: var(--sand-deep);
@@ -97,6 +75,13 @@
 }
 
 html {
+  /*
+   * The site is light-only by design. The cream palette has no honest dark
+   * translation — and because the hero photo is masked rather than cropped, a
+   * dark page background would bleed through it as black. Declaring the scheme
+   * keeps form controls and scrollbars light on a dark OS too.
+   */
+  color-scheme: light;
   /* Anchor clicks jump straight to the section — no animated scroll. */
   scroll-behavior: auto;
   /* Keeps section headings clear of the sticky header when anchor-scrolling. */
@@ -150,18 +135,18 @@ body {
     -webkit-mask-image: linear-gradient(
       to right,
       #000 0%,
-      #000 30%,
-      rgb(0 0 0 / 52%) 56%,
-      rgb(0 0 0 / 14%) 78%,
-      transparent 94%
+      #000 28%,
+      rgb(0 0 0 / 50%) 52%,
+      rgb(0 0 0 / 12%) 74%,
+      transparent 90%
     );
     mask-image: linear-gradient(
       to right,
       #000 0%,
-      #000 30%,
-      rgb(0 0 0 / 52%) 56%,
-      rgb(0 0 0 / 14%) 78%,
-      transparent 94%
+      #000 28%,
+      rgb(0 0 0 / 50%) 52%,
+      rgb(0 0 0 / 12%) 74%,
+      transparent 90%
     );
   }
 }
@@ -175,21 +160,6 @@ body {
     rgb(0 0 0 / 0%) 68%,
     var(--sand) 100%
   );
-}
-
-/* Faint surveyor's grid over the photo, as on the reference layout. */
-.hero-grid {
-  background-image:
-    repeating-linear-gradient(
-      to right,
-      rgb(255 255 255 / 34%) 0 1px,
-      transparent 1px 172px
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      rgb(255 255 255 / 34%) 0 1px,
-      transparent 1px 172px
-    );
 }
 
 /* Stand-in for photography we don't have yet. Deliberately flat and labelled so

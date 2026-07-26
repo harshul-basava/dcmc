@@ -69,5 +69,15 @@ and, for `ink`, flips `--foreground` / `--muted` / `--rule` / `--card` so the sa
 components work on a dark band with no tone-aware props. The running order is
 sand → ink → surface → sand → surface → sand → surface → ink.
 
-All colors are CSS variables in `globals.css` with a dark-mode block. Respects
-`prefers-reduced-motion`; anchor clicks jump instantly (no smooth scroll).
+All colors are CSS variables in `globals.css`. **The site is light-only**: it
+declares `color-scheme: light` and has no `prefers-color-scheme: dark` block, so
+it renders identically whatever the viewer's OS is set to. That is deliberate —
+the cream palette has no honest dark translation, and because the hero photo is
+masked rather than cropped, a dark page background bleeds through it as black.
+Both reference sites are light-only for the same reason.
+
+The dark bands in the middle of the page come from `tone="ink"`, which is a
+design choice, not a theme.
+
+Respects `prefers-reduced-motion`; anchor clicks jump instantly (no smooth
+scroll).

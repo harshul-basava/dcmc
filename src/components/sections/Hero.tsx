@@ -10,16 +10,15 @@ export default function Hero() {
   return (
     <section id="top" data-tone="sand" className="relative overflow-hidden">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="hero-photo absolute left-0 top-0 h-[46%] w-full md:inset-y-0 md:h-full md:w-[62%]">
+        <div className="hero-photo absolute left-0 top-0 h-[46%] w-full md:inset-y-0 md:h-full md:w-[56%]">
           <Image
             src="/capitol.png"
             alt=""
             fill
             priority
-            sizes="(max-width: 768px) 100vw, 64vw"
+            sizes="(max-width: 768px) 100vw, 56vw"
             className="object-cover object-[50%_38%] saturate-[0.82]"
           />
-          <div className="hero-grid absolute inset-0" />
         </div>
         <div className="hero-veil absolute inset-0" />
       </div>
