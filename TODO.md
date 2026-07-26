@@ -20,8 +20,6 @@ Everything below lives in **`src/content/site.ts`**. No component edits needed.
 - [ ] `organizers` — same shape, renders "Organizers announced soon" while empty.
 - [ ] `program.body` / `program.scheduleNote` — replace the coming-soon panel with
       the real schedule when it exists.
-- [ ] `venue.body` — swap in the actual venue once booked. The placeholder image
-      block in `src/components/sections/Venue.tsx` should get a real photo then.
 - [ ] `past.photos` — DCMC 1.0 photos. Put files in `public/dcmc1/` and add
       `{ src: "/dcmc1/foo.jpg", caption: "..." }`. Three placeholder frames show
       until then.

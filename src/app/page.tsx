@@ -4,7 +4,6 @@ import Hero from "@/components/sections/Hero";
 import About from "@/components/sections/About";
 import People from "@/components/sections/People";
 import Program from "@/components/sections/Program";
-import Venue from "@/components/sections/Venue";
 import Past from "@/components/sections/Past";
 import Contact from "@/components/sections/Contact";
 
@@ -17,7 +16,6 @@ export default function Home() {
         <About />
         <People />
         <Program />
-        <Venue />
         <Past />
         <Contact />
       </main>

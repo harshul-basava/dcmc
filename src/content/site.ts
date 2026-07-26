@@ -100,11 +100,6 @@ export const timeline = {
   ] satisfies TimelineItem[],
 } as const;
 
-export const venue = {
-  heading: "Where you'll be",
-  body: "DCMC 2.0 will take place in Washington DC. Details about the conference venue and accommodations will be announced as they become available.",
-} as const;
-
 export type Testimonial = { quote: string; name: string; affiliation?: string };
 
 export const past = {
@@ -131,7 +126,6 @@ export const navItems = [
   { id: "about", label: "About" },
   { id: "speakers", label: "Speakers" },
   { id: "program", label: "Program" },
-  { id: "venue", label: "Venue" },
   { id: "past", label: "DCMC 1.0" },
   { id: "contact", label: "Contact" },
 ] as const;
