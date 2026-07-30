@@ -41,7 +41,11 @@ export default function Past() {
                 src={photo.src}
                 alt={photo.caption}
                 fill
-                sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 400px"
+                quality={85}
+                /* The large slot renders ~2/3 of the container wide; the tall
+                   column crops, so it needs full-height resolution. */
+                sizes={index === 0 ? "(max-width: 640px) 100vw, 60vw" : "(max-width: 640px) 100vw, 40vw"}
+                style={photo.position ? { objectPosition: photo.position } : undefined}
                 className="object-cover"
               />
             ) : (

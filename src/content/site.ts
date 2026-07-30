@@ -78,7 +78,8 @@ export type Testimonial = {
 
 export const past = {
   heading: "DCMC 1.0",
-  /** Paths under /public. The first photo takes the large mosaic slot. */
+  /** Paths under /public. The first photo takes the large mosaic slot;
+      `position` is a CSS object-position for slots that crop the image. */
   photos: [
     {
       src: "/dcmc1/main.jpg",
@@ -87,8 +88,14 @@ export const past = {
     {
       src: "/dcmc1/side.jpg",
       caption: "A small-group session with a guest speaker at DCMC 1.0",
+      /* The mosaic cell crops this 4:3 shot; bias right to keep the speaker. */
+      position: "82% 50%",
     },
-  ] as { src: string; caption: string }[],
+    {
+      src: "/dcmc1/rooftop.jpg",
+      caption: "Attendees at lunch on a DC rooftop during DCMC 1.0",
+    },
+  ] as { src: string; caption: string; position?: string }[],
   /** Orgs whose people joined DCMC 1.0 — rendered as a logo row. */
   partners: [
     { name: "Institute for Progress", logo: "/partners/ifp.svg" },
