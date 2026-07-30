@@ -38,9 +38,9 @@ export const about = {
   callout: {
     lead: "If you are:",
     bullets: [
-      "an undergraduate or recent graduate who is considering a career in AI governance, law, or public service,",
-      "a young professional with valuable skills looking to pivot to policy concerning the near future,",
-      "a researcher or engineer who can explain what today's systems actually do, and who wants to translate that understanding to lawmakers,",
+      "an undergraduate or recent graduate who is considering a career in AI governance, law, or public service",
+      "a young professional with valuable skills looking to pivot to an impactful AI policy career",
+      "a researcher or engineer who can explain what today's systems actually do, and who wants to translate that understanding to lawmakers",
     ],
     /** Rendered as: prefix, then the application link, then the period. */
     closingPrefix: "then this conference is for you: ",
