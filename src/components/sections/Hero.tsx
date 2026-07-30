@@ -34,7 +34,7 @@ export default function Hero() {
             {conference.name.replace(" 2.0", "")}
           </h1>
 
-          <p className="mt-3 max-w-xl font-display text-xl leading-[1.4] text-foreground sm:mt-4 sm:text-2xl md:ml-auto">
+          <p className="mt-3 max-w-2xl font-display text-xl leading-[1.4] text-foreground sm:mt-4 sm:text-2xl md:ml-auto">
             {hero.headline}
           </p>
 
