@@ -30,7 +30,7 @@ export const hero = {
 
 export const about = {
   heading: "There aren’t enough people working on policy to make sure AI goes well.",
-  body: "Policy mandating responsible AI development, deployment, and usage will decide the future. A major bottleneck is the disconnect between the technical expertise of AI researchers and Washington, leaving pressing issues that require early attention unaddressed. By bringing together motivated students, young professionals, and knowledgeable guest speakers who all share an interest in AI policy, we hope to develop the next generation of policymakers working towards safe AI.",
+  body: "Policy mandating responsible AI development, deployment, and usage will decide the future. A major bottleneck on impactful, informed policy work is the disconnect between the technical expertise of AI researchers and Washington’s policy landscape, leaving pressing issues that require early attention unaddressed. By bringing together motivated students, young professionals, and knowledgeable guest speakers who all share an interest in AI policy, we hope to develop the next generation of policymakers working towards safe AI.",
   /** The who-this-is-for callout beside the mission paragraph. */
   callout: {
     lead: "If you are:",
@@ -40,7 +40,7 @@ export const about = {
       "a researcher or engineer who can explain what today's systems actually do, and who wants to translate that understanding to lawmakers,",
     ],
     /** Rendered as: prefix, then the application link, then the period. */
-    closingPrefix: "then this conference is for you — ",
+    closingPrefix: "then this conference is for you: ",
     closingLink: "apply here",
   },
 } as const;
