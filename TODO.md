@@ -13,11 +13,9 @@ Everything below lives in **`src/content/site.ts`**. No component edits needed.
 
 - [ ] `timeline.items` — "Decisions released" is still `TBA`. Replace `date` with
       a real date and drop `tba: true` once it is set.
-- [ ] `speakers` — empty array renders "Speakers coming soon". Add
-      `{ name, role, affiliation?, photo?, bio? }` entries to render the grid.
-      People without `photo` get a monogram tile, so a partly-filled roster still
-      looks intentional.
-- [ ] `organizers` — same shape, renders "Organizers announced soon" while empty.
+- [ ] Speakers & organizers — both sections were removed on 2026-07-29 while
+      empty (recoverable from git history) and will need rebuilding once there
+      are real people to show.
 - [ ] Schedule — the Timeline section shows dates only. Add the day-by-day
       programme here once it exists.
 - [ ] `past.photos` — DCMC 1.0 photos. Put files in `public/dcmc1/` and add

@@ -2,7 +2,6 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import Hero from "@/components/sections/Hero";
 import About from "@/components/sections/About";
-import People from "@/components/sections/People";
 import Timeline from "@/components/sections/Timeline";
 import Past from "@/components/sections/Past";
 import Contact from "@/components/sections/Contact";
@@ -14,7 +13,6 @@ export default function Home() {
       <main className="flex-1">
         <Hero />
         <About />
-        <People />
         <Timeline />
         <Past />
         <Contact />

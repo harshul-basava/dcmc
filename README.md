@@ -34,10 +34,10 @@ To host on a plain static file server instead (GitHub Pages, S3), add
 
 ## Editing the site
 
-**All copy, links, dates, and people live in [`src/content/site.ts`](src/content/site.ts).**
+**All copy, links, and dates live in [`src/content/site.ts`](src/content/site.ts).**
 Change that one file to update the site; components read from it. Sections whose
-data is still empty (speakers, organizers, photos, testimonials) render an
-explicit "coming soon" state rather than disappearing.
+data is still empty (photos, testimonials) render an explicit "coming soon"
+state rather than disappearing.
 
 See [TODO.md](TODO.md) for what still needs real values before launch.
 
@@ -52,7 +52,7 @@ src/
     Footer.tsx
     ui.tsx        Container / Section / headings / CTA / ComingSoon
     PersonGrid.tsx
-    sections/     Hero, About, People, Timeline, Past, Contact
+    sections/     Hero, About, Timeline, Past, Contact
 ```
 
 Nav links are anchors into `page.tsx` sections. To add a section, create the

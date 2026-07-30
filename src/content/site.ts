@@ -38,43 +38,6 @@ export const about = {
   ],
 } as const;
 
-export const whoShouldApply = {
-  intro:
-    "For students who want their career to shape how AI is governed.",
-  columns: [
-    {
-      title: "Students with policy ambition",
-      body: "Undergraduates and recent graduates who are seriously considering a career in AI governance, law, or public service — not just curious about it.",
-    },
-    {
-      title: "Technical people willing to translate",
-      body: "Researchers and engineers who can explain what today's systems actually do, and who want that understanding to reach the people writing the rules.",
-    },
-    {
-      title: "Builders of the next network",
-      body: "People who will leave with collaborators, mentors, and a clearer next step — and who will bring others in behind them.",
-    },
-  ],
-} as const;
-
-export type Person = {
-  name: string;
-  role: string;
-  affiliation?: string;
-  /** Path under /public, e.g. "/speakers/jane-doe.jpg". Omit for a monogram. */
-  photo?: string;
-  bio?: string;
-};
-
-/** Empty renders "Speakers coming soon". Add entries to render the grid. */
-export const speakers: Person[] = [];
-
-/** Empty renders "Organizers announced soon". Add entries to render the grid. */
-export const organizers: Person[] = [];
-
-/** The organizers block is hidden for now. Flip to true to show it again. */
-export const showOrganizers = false;
-
 export type TimelineItem = {
   date: string;
   label: string;
@@ -118,7 +81,6 @@ export const contact = {
 /** Nav order drives both the header links and the scroll-spy. */
 export const navItems = [
   { id: "about", label: "About" },
-  { id: "speakers", label: "Speakers" },
   { id: "timeline", label: "Timeline" },
   { id: "past", label: "DCMC 1.0" },
   { id: "contact", label: "Contact" },
