@@ -1,0 +1,106 @@
+/* ============================================================
+   BRAND COLORS — Red, White & Blue palette (warm neutrals)
+   Drop this file into your site and reference the variables.
+   Two layers below:
+     1. RAW SCALES  — every shade, named by number (50 = lightest)
+     2. SEMANTIC    — friendly names that say what a color is FOR
+   When building, prefer the SEMANTIC names.
+   ============================================================ */
+
+:root {
+
+  /* ---------- 1. RAW SCALES ---------- */
+
+  /* Primary — Sky Blue (base is --blue-400) */
+  --blue-50:  #F0F9FE;
+  --blue-100: #D9ECFD;
+  --blue-200: #B7DAFA;
+  --blue-300: #91C3F8;
+  --blue-400: #68A8F5;  /* your original brand blue */
+  --blue-500: #3988EF;
+  --blue-600: #1768E3;
+  --blue-700: #1651B6;
+  --blue-800: #173E8C;
+  --blue-900: #142A5D;
+
+  /* Secondary — Indigo / deep blue (base is --indigo-700) */
+  --indigo-50:  #EEF1FC;
+  --indigo-100: #DCE1F9;
+  --indigo-200: #B9C1F4;
+  --indigo-300: #909AEA;
+  --indigo-400: #606CDC;
+  --indigo-500: #3B47CE;
+  --indigo-600: #2F3BBC;
+  --indigo-700: #2933A1;  /* your original indigo */
+  --indigo-800: #1D227C;
+  --indigo-900: #141453;
+
+  /* Accent — Brick Red (base is --red-700) */
+  --red-50:  #FBF0EF;
+  --red-100: #F6E2DF;
+  --red-200: #EBC5C1;
+  --red-300: #DB9994;
+  --red-400: #C76461;
+  --red-500: #B54040;
+  --red-600: #A23939;
+  --red-700: #933333;  /* your original brick red */
+  --red-800: #732629;
+  --red-900: #4E181C;
+
+  /* Neutrals — WARM cream through near-black */
+  --neutral-50:  #FAF8F5;
+  --neutral-100: #F4F1EC;
+  --neutral-200: #E7E2DA;
+  --neutral-300: #D1C9BD;
+  --neutral-400: #B0A596;
+  --neutral-500: #938676;
+  --neutral-600: #776C5F;
+  --neutral-700: #5B5348;
+  --neutral-800: #453E35;
+  --neutral-900: #2F2923;
+  --neutral-950: #201C18;
+
+  /* Functional — status colors (solid + light background tint) */
+  --success:     #2C9E5E;
+  --success-bg:  #E8F6EE;
+  --warning:     #E5A020;
+  --warning-bg:  #FCF4E2;
+  --error:       #DD3E3E;
+  --error-bg:    #FBEAEA;
+
+
+  /* ---------- 2. SEMANTIC (use these) ---------- */
+
+  /* Brand */
+  --color-primary:         var(--blue-400);   /* the brand "face": logo, hero areas, big fills */
+  --color-primary-strong:  var(--blue-600);   /* use for TEXT, LINKS & BUTTONS — the light blue is too pale to read */
+  --color-secondary:       var(--indigo-700); /* depth, section accents, headings */
+  --color-accent:          var(--red-700);    /* main call-to-action buttons — white text sits fine on this */
+  --color-accent-hover:    var(--red-800);    /* darker red for button hover state */
+
+  /* Text */
+  --text-body:     var(--neutral-900);  /* normal body text */
+  --text-muted:    var(--neutral-600);  /* captions, secondary text */
+  --text-on-dark:  #FFFFFF;             /* text on top of blue/red/indigo fills */
+
+  /* Surfaces */
+  --bg-page:       var(--neutral-50);   /* warm cream page background */
+  --surface:       #FFFFFF;             /* cards, panels */
+  --border:        var(--neutral-200);  /* hairline dividers, input borders */
+  --border-strong: var(--neutral-300);  /* emphasized borders / hover */
+
+  /* Status (aliases so intent is obvious in markup) */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error:   var(--error);
+}
+
+/* ------------------------------------------------------------
+   QUICK USAGE NOTES
+   - Backgrounds / tints:      50–200 of any color
+   - Big fills / hero:         --color-primary (light blue)
+   - Readable text & buttons:  --color-primary-strong, --color-secondary, --color-accent
+   - Body text:                --text-body   Muted text: --text-muted
+   - Red buttons (on-brand):   background --color-accent, text --text-on-dark
+   - Keep --color-accent (brand red) separate from --color-error (bright warning red)
+   ------------------------------------------------------------ */

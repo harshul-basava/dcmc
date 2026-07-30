@@ -1,29 +1,34 @@
 @import "tailwindcss";
+@import "./brand.css";
 
 /*
- * Palette. Warm sand base with a deep navy "ink" for high-contrast bands and a
- * gold used only as a marker/underline accent. Sections alternate between the
- * three tones (sand / surface / ink) rather than being separated by rules.
+ * Site tokens, mapped onto the brand palette's semantic layer (brand.css).
+ * Warm cream base with a deep navy "ink" for high-contrast bands and the
+ * brick-red accent used for CTAs and small markers. Sections alternate between
+ * the three tones (sand / surface / ink) rather than being separated by rules.
  */
 :root {
-  --sand: #f5f0e6;
-  --sand-deep: #ece4d4;
-  --surface: #ffffff;
-  --ink: #14212e;
+  --sand: var(--bg-page);
+  --sand-deep: var(--neutral-100);
+  --ink: var(--blue-900);
 
-  --foreground: #1a1818;
-  --muted: #5f5c55;
-  --rule: #e0d8c8;
+  --foreground: var(--text-body);
+  --muted: var(--text-muted);
+  --rule: var(--border);
 
   /* On the ink band, foreground/muted/rule flip. See [data-tone="ink"] below. */
-  --ink-foreground: #f7f3ea;
-  --ink-muted: #b3b9c2;
-  --ink-rule: #33404e;
+  --ink-foreground: var(--neutral-50);
+  --ink-muted: var(--blue-200);
+  --ink-rule: var(--blue-800);
 
-  --accent: #1e3a5f;
-  --accent-hover: #16293f;
-  --on-accent: #ffffff;
-  --gold: #c08a2e;
+  --accent: var(--color-accent);
+  --accent-hover: var(--color-accent-hover);
+  --on-accent: var(--text-on-dark);
+  /* Heading accent — the hero title and other brand-colored display type. */
+  --heading: var(--color-secondary);
+  /* Small markers: timeline dots, active-nav underline, numerals, quote marks.
+     Named "gold" for historical reasons; now the brand red. */
+  --gold: var(--color-accent);
   --card: var(--surface);
 
   --radius: 6px;
@@ -42,6 +47,7 @@
   --color-on-accent: var(--on-accent);
   --color-gold: var(--gold);
   --color-card: var(--card);
+  --color-heading: var(--heading);
   --font-sans: var(--font-inter);
   --font-display: var(--font-newsreader), ui-serif, Georgia, serif;
   --radius-card: var(--radius);
@@ -55,10 +61,12 @@
   --foreground: var(--ink-foreground);
   --muted: var(--ink-muted);
   --rule: var(--ink-rule);
-  --accent: #9dbbdd;
-  --accent-hover: #c3d7ef;
-  --on-accent: var(--ink);
-  --gold: #dfb668;
+  /* Brighter red steps so buttons and markers hold up against the navy. */
+  --accent: var(--red-500);
+  --accent-hover: var(--red-400);
+  --on-accent: var(--text-on-dark);
+  --heading: var(--ink-foreground);
+  --gold: var(--red-300);
   --card: rgb(255 255 255 / 5%);
   color: var(--ink-foreground);
   background-color: var(--ink);
@@ -170,7 +178,7 @@ body {
 .placeholder-frame {
   background-image: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--accent) 14%, var(--surface)),
-    color-mix(in srgb, var(--gold) 10%, var(--surface))
+    color-mix(in srgb, var(--color-primary) 16%, var(--surface)),
+    color-mix(in srgb, var(--color-accent) 8%, var(--surface))
   );
 }
