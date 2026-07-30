@@ -15,9 +15,6 @@ Everything below lives in **`src/content/site.ts`**. No component edits needed.
       are real people to show.
 - [ ] Schedule — the Timeline section shows dates only. Add the day-by-day
       programme here once it exists.
-- [ ] `past.photos` — DCMC 1.0 photos. Put files in `public/dcmc1/` and add
-      `{ src: "/dcmc1/foo.jpg", caption: "..." }`. Three placeholder frames show
-      until then.
 - [ ] `links.policymakerInterest` — if you make an interest form for policymakers,
       set it here; the Contact section currently falls back to a mailto link.
 

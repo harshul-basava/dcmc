@@ -17,10 +17,7 @@ function emphasize(quote: string, highlight?: string) {
 
 /** Social proof from the first conference: photos, partner orgs, testimonials. */
 export default function Past() {
-  const photoSlots =
-    past.photos.length > 0
-      ? past.photos
-      : Array.from({ length: past.photoPlaceholderCount }, () => null);
+  const photoSlots = past.photos.length > 0 ? past.photos : [null, null, null];
   const testimonialSlots =
     past.testimonials.length > 0 ? past.testimonials : [null, null];
 
@@ -28,15 +25,16 @@ export default function Past() {
     <Section id="past" tone="sand">
       <SectionHeading>{past.heading}</SectionHeading>
 
-      {/* Mosaic: the first photo runs large, the rest stack beside it. The
-          explicit height gives the two grid rows something to divide. */}
+      {/* Mosaic: the first photo runs large; with exactly two, the second
+          fills the whole right column. The explicit height gives the grid
+          rows something to divide. */}
       <ul className="mt-14 grid gap-4 sm:h-[30rem] sm:grid-cols-3 sm:grid-rows-2">
         {photoSlots.map((photo, index) => (
           <li
             key={photo?.src ?? `photo-${index}`}
             className={`placeholder-frame relative aspect-[4/3] overflow-hidden rounded-card border border-rule sm:aspect-auto sm:h-full ${
               index === 0 ? "sm:col-span-2 sm:row-span-2" : ""
-            }`}
+            } ${index > 0 && photoSlots.length === 2 ? "sm:row-span-2" : ""}`}
           >
             {photo ? (
               <Image

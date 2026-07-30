@@ -78,10 +78,17 @@ export type Testimonial = {
 
 export const past = {
   heading: "DCMC 1.0",
-  /** Paths under /public, e.g. "/dcmc1/opening-session.jpg". Empty renders placeholder frames. */
-  photos: [] as { src: string; caption: string }[],
-  /** Number of placeholder frames to show while `photos` is empty. */
-  photoPlaceholderCount: 3,
+  /** Paths under /public. The first photo takes the large mosaic slot. */
+  photos: [
+    {
+      src: "/dcmc1/main.jpg",
+      caption: "A guest speaker presenting on AI risk and policy at DCMC 1.0",
+    },
+    {
+      src: "/dcmc1/side.jpg",
+      caption: "A small-group session with a guest speaker at DCMC 1.0",
+    },
+  ] as { src: string; caption: string }[],
   /** Orgs whose people joined DCMC 1.0 — rendered as a logo row. */
   partners: [
     { name: "Institute for Progress", logo: "/partners/ifp.svg" },
