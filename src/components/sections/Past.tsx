@@ -30,12 +30,7 @@ export default function Past() {
 
   return (
     <Section id="past" tone="sand">
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end">
-        <div>
-          <SectionHeading>{past.heading}</SectionHeading>
-        </div>
-        <p className="max-w-xl text-base leading-[1.75] text-muted lg:pb-2">{past.intro}</p>
-      </div>
+      <SectionHeading>{past.heading}</SectionHeading>
 
       {/* Mosaic: the first photo runs large, the rest stack beside it. The
           explicit height gives the two grid rows something to divide. */}

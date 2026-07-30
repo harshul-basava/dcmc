@@ -78,8 +78,6 @@ export type Testimonial = {
 
 export const past = {
   heading: "DCMC 1.0",
-  intro:
-    "The first DC Mini-Conference brought students and policy practitioners into the same room for a weekend. Here's what came out of it.",
   /** Paths under /public, e.g. "/dcmc1/opening-session.jpg". Empty renders placeholder frames. */
   photos: [] as { src: string; caption: string }[],
   /** Number of placeholder frames to show while `photos` is empty. */
