@@ -25,7 +25,7 @@ export const links: Record<"apply" | "refer" | "policymakerInterest", string> = 
 };
 
 export const hero = {
-  headline: "A three-day workshop on making AI policy go well.",
+  headline: "A three-day workshop for aspiring AI policy professionals.",
 } as const;
 
 export const about = {
