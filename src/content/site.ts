@@ -113,8 +113,8 @@ export const past = {
     },
     {
       quote:
-        "I think it will prove to be a big inflection point for my future in AI safety. I gained so, so much context and knowledge in the field that I am not sure I could, or would, have found otherwise.",
-      highlight: "inflection point for my future in AI safety",
+        "I think it will prove to be a big inflection point for my future in AI policy. I gained so, so much context and knowledge in the field that I am not sure I could, or would, have found otherwise.",
+      highlight: "inflection point for my future in AI policy",
     },
   ] as Testimonial[],
 } as const;
