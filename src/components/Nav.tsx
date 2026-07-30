@@ -4,14 +4,15 @@ import { useEffect, useState } from "react";
 import { links, navItems } from "@/content/site";
 import { CTA, Container } from "@/components/ui";
 
-/** Fraction of the hero scrolled past by the time the header chrome is solid. */
+/** Fraction of the hero scrolled past by the time the header is solid. */
 const CHROME_FADE_AT = 0.12;
 
 /**
- * Sticky header. Sits fully transparent over the top of the hero and fades its
- * background and hairline in as the page scrolls, reaching solid a little
- * before the reader is 15% through the hero. Highlights whichever section is in
- * view, and collapses to a disclosure menu on small screens.
+ * Sticky header. Fully invisible at the top of the page — links, button, and
+ * backdrop alike — and fades in as one piece once the page scrolls, reaching
+ * solid at 12% of the hero. While invisible it also ignores the pointer, so
+ * there are no working links the eye can't see. Highlights whichever section
+ * is in view, and collapses to a disclosure menu on small screens.
  */
 export default function Nav() {
   const [active, setActive] = useState<string>(navItems[0].id);
@@ -65,14 +66,19 @@ export default function Nav() {
     };
   }, []);
 
-  // The open mobile menu needs a readable backdrop even at the top of the page.
-  const chromeOpacity = menuOpen ? 1 : chrome;
+  // The open mobile menu must stay readable even at the top of the page.
+  const barOpacity = menuOpen ? 1 : chrome;
 
   return (
-    <header className="sticky top-0 z-50">
+    <header
+      style={{
+        opacity: barOpacity,
+        pointerEvents: barOpacity < 0.05 ? "none" : undefined,
+      }}
+      className="sticky top-0 z-50"
+    >
       <div
         aria-hidden="true"
-        style={{ opacity: chromeOpacity }}
         className="absolute inset-0 border-b border-rule bg-sand/80 backdrop-blur-md"
       />
 

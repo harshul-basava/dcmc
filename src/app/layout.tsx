@@ -12,7 +12,7 @@ const inter = Inter({
 const newsreader = Newsreader({
   variable: "--font-newsreader",
   subsets: ["latin"],
-  weight: ["300", "400", "500"],
+  weight: ["300", "400", "500", "700"],
 });
 
 const description = `${conference.name} brings together college students and guest speakers working on AI policy. ${conference.dates} in ${conference.location}.`;

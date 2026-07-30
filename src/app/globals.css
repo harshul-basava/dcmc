@@ -25,7 +25,7 @@
   --accent-hover: var(--color-accent-hover);
   --on-accent: var(--text-on-dark);
   /* Heading accent — the hero title and other brand-colored display type. */
-  --heading: var(--color-secondary);
+  --heading: #0a3161;
   /* Small markers: timeline dots, active-nav underline, numerals, quote marks.
      Named "gold" for historical reasons; now the brand red. */
   --gold: var(--color-accent);
@@ -70,6 +70,15 @@
   --card: rgb(255 255 255 / 5%);
   color: var(--ink-foreground);
   background-color: var(--ink);
+}
+
+/*
+ * The hero band keeps the pre-brand warm cream: the photo's mask dissolves into
+ * var(--sand), and against the cooler neutral-50 the clouds read as white.
+ * Scoped to the band — the rest of the page uses the palette's bg-page.
+ */
+#top {
+  --sand: #f5f0e6;
 }
 
 [data-tone="sand"] {

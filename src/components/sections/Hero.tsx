@@ -8,7 +8,7 @@ import { CTA, Container } from "@/components/ui";
  */
 export default function Hero() {
   return (
-    <section id="top" data-tone="sand" className="relative overflow-hidden">
+    <section id="top" data-tone="sand" className="relative -mt-16 overflow-hidden">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         {/*
          * The photo is nudged left inside its panel rather than by moving the
@@ -29,8 +29,8 @@ export default function Hero() {
       </div>
 
       <Container className="relative">
-        <div className="flex min-h-[calc(100svh-4rem)] flex-col justify-end pb-14 pt-[30vh] md:min-h-[calc(100svh-4rem)] md:items-end md:justify-center md:pb-24 md:pt-24 md:text-right">
-          <h1 className="font-display text-[clamp(2.75rem,6.2vw,5.1rem)] font-light leading-[1.02] tracking-[-0.015em] text-heading">
+        <div className="flex min-h-svh flex-col justify-end pb-14 pt-[30vh] md:items-end md:justify-center md:pb-24 md:pt-28 md:text-right">
+          <h1 className="font-display text-[clamp(2.75rem,6.2vw,5.1rem)] font-medium leading-[1.02] tracking-[-0.015em] text-heading">
             {conference.name.replace(" 2.0", "")}
           </h1>
 
