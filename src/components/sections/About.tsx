@@ -11,7 +11,14 @@ export default function About() {
 
       {/* Mission on the left, the who-this-is-for callout beside it. */}
       <div className="mt-12 grid gap-12 text-base leading-[1.8] sm:text-lg lg:grid-cols-2 lg:gap-14">
-        <p className="text-muted">{about.body}</p>
+        {/* justify-between pins the second paragraph to the column's bottom,
+            so its last line shares a baseline with the closing line opposite
+            (grid items stretch to equal height on lg). */}
+        <div className="flex flex-col justify-between gap-8 text-muted">
+          {about.body.map((paragraph) => (
+            <p key={paragraph.slice(0, 24)}>{paragraph}</p>
+          ))}
+        </div>
 
         <div>
           <p className="text-foreground">{callout.lead}</p>
