@@ -17,12 +17,12 @@ export const conference = {
   email: "contact@dcminiconf.com",
 } as const;
 
-export const links = {
-  apply: PLACEHOLDER_LINK,
-  refer: PLACEHOLDER_LINK,
+export const links: Record<"apply" | "refer" | "policymakerInterest", string> = {
+  apply: "https://tinyurl.com/dcmcapp",
+  refer: "https://tinyurl.com/dcmcrefer",
   /** For policymakers / speakers who want to signal interest. */
   policymakerInterest: PLACEHOLDER_LINK,
-} as const;
+};
 
 export const hero = {
   headline: "A three-day workshop on making AI policy go well.",

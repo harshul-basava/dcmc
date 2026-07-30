@@ -4,9 +4,6 @@ Everything below lives in **`src/content/site.ts`**. No component edits needed.
 
 ## Blocking — the site can't launch without these
 
-- [ ] `links.apply` — real application URL. Until it's set, the APPLY NOW buttons
-      render greyed out and non-clickable (in the hero, header, and footer).
-- [ ] `links.refer` — real referral URL. Same disabled treatment.
 - [ ] Confirm `contact@dcminiconf.com` is live and monitored.
 
 ## Content to fill in as it firms up
