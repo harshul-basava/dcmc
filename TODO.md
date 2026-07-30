@@ -23,8 +23,6 @@ Everything below lives in **`src/content/site.ts`**. No component edits needed.
       until then.
 - [ ] `past.partners` — affiliated orgs. `{ name, logo? }`; logos go in
       `public/partners/`. Five placeholder tiles show until then.
-- [ ] `past.testimonials` — quotes from DCMC 1.0 attendees. Two placeholder cards
-      show until then.
 - [ ] `links.policymakerInterest` — if you make an interest form for policymakers,
       set it here; the Contact section currently falls back to a mailto link.
 

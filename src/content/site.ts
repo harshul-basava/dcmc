@@ -67,7 +67,8 @@ export const timeline = {
   ] satisfies TimelineItem[],
 } as const;
 
-export type Testimonial = { quote: string; name: string; affiliation?: string };
+/** Attribution is optional — DCMC 1.0 testimonials were collected anonymously. */
+export type Testimonial = { quote: string; name?: string; affiliation?: string };
 
 export const past = {
   heading: "DCMC 1.0",
@@ -80,7 +81,16 @@ export const past = {
   /** Org names (and optional logo paths under /public) we've worked with. */
   partners: [] as { name: string; logo?: string }[],
   partnerPlaceholderCount: 5,
-  testimonials: [] as Testimonial[],
+  testimonials: [
+    {
+      quote:
+        "I can't seem to stress how powerful, inspiring and well-designed this was to move people like me to act more within this field.",
+    },
+    {
+      quote:
+        "I think it will prove to be a big inflection point for my future in AI safety. I gained so, so much context and knowledge in the field that I am not sure I could, or would, have found otherwise.",
+    },
+  ] as Testimonial[],
 } as const;
 
 export const contact = {

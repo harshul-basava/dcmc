@@ -85,7 +85,7 @@ export default function Past() {
         </p>
         <ul className="mt-8 grid gap-6 sm:grid-cols-2">
           {testimonialSlots.map((testimonial, index) => (
-            <li key={testimonial?.name ?? `testimonial-${index}`}>
+            <li key={`testimonial-${index}`}>
               <Card className="h-full">
                 <span aria-hidden="true" className="block text-3xl leading-none text-gold">
                   &ldquo;
@@ -95,10 +95,14 @@ export default function Past() {
                     <blockquote className="mt-4 text-base leading-[1.7] text-foreground">
                       {testimonial.quote}
                     </blockquote>
-                    <p className="mt-5 text-sm text-muted">
-                      {testimonial.name}
-                      {testimonial.affiliation ? `, ${testimonial.affiliation}` : ""}
-                    </p>
+                    {testimonial.name ? (
+                      <p className="mt-5 text-sm text-muted">
+                        {testimonial.name}
+                        {testimonial.affiliation ? `, ${testimonial.affiliation}` : ""}
+                      </p>
+                    ) : (
+                      <p className="mt-5 text-sm text-muted">DCMC 1.0 attendee</p>
+                    )}
                   </>
                 ) : (
                   <p className="mt-4 text-base leading-[1.7] text-muted">
