@@ -1,17 +1,13 @@
-import { program, timeline } from "@/content/site";
+import { timeline } from "@/content/site";
 import { Section, SectionHeading } from "@/components/ui";
 
-/** What the weekend is, then the run-up dates as a horizontal track. */
+/** The run-up dates as a horizontal track. */
 export default function Timeline() {
   return (
     <Section id="timeline" tone="surface">
-      <SectionHeading>{program.heading}</SectionHeading>
+      <SectionHeading>{timeline.heading}</SectionHeading>
 
-      <p className="mt-10 max-w-3xl text-base leading-[1.8] text-muted sm:text-lg">
-        {program.body}
-      </p>
-
-      <div className="mt-20">
+      <div className="mt-14">
         {/*
          * One column per date on desktop, with the rule carried by the list so
          * it runs unbroken behind the markers. Stacks to a plain dated list on

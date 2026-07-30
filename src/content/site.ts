@@ -75,11 +75,6 @@ export const organizers: Person[] = [];
 /** The organizers block is hidden for now. Flip to true to show it again. */
 export const showOrganizers = false;
 
-export const program = {
-  heading: "Timeline",
-  body: "Attendees for DCMC 2.0 will be provided lodging starting Thursday evening, October 15th. Programming will run from Friday morning, October 16th to midday Sunday, October 18th, with attendees leaving on Sunday. Specific details about the conference program will be announced as they become available.",
-} as const;
-
 export type TimelineItem = {
   date: string;
   label: string;
@@ -89,6 +84,7 @@ export type TimelineItem = {
 };
 
 export const timeline = {
+  heading: "Timeline",
   items: [
     { date: "Aug 3, 2026", label: "Applications open" },
     { date: "Sep 12, 2026", label: "Application deadline" },

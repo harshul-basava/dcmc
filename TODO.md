@@ -18,7 +18,8 @@ Everything below lives in **`src/content/site.ts`**. No component edits needed.
       People without `photo` get a monogram tile, so a partly-filled roster still
       looks intentional.
 - [ ] `organizers` — same shape, renders "Organizers announced soon" while empty.
-- [ ] `program.body` — replace with the real schedule when it exists.
+- [ ] Schedule — the Timeline section shows dates only. Add the day-by-day
+      programme here once it exists.
 - [ ] `past.photos` — DCMC 1.0 photos. Put files in `public/dcmc1/` and add
       `{ src: "/dcmc1/foo.jpg", caption: "..." }`. Three placeholder frames show
       until then.
