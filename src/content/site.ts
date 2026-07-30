@@ -82,9 +82,15 @@ export const past = {
   photos: [] as { src: string; caption: string }[],
   /** Number of placeholder frames to show while `photos` is empty. */
   photoPlaceholderCount: 3,
-  /** Org names (and optional logo paths under /public) we've worked with. */
-  partners: [] as { name: string; logo?: string }[],
-  partnerPlaceholderCount: 5,
+  /** Orgs whose people joined DCMC 1.0 — rendered as a logo row. */
+  partners: [
+    { name: "Institute for Progress", logo: "/partners/ifp.svg" },
+    { name: "Center for a New American Security", logo: "/partners/cnas.png" },
+    { name: "Americans for Responsible Innovation", logo: "/partners/ari.svg" },
+    { name: "Center for Security and Emerging Technology", logo: "/partners/cset.svg" },
+    { name: "Foundation for American Innovation", logo: "/partners/fai.svg" },
+    { name: "RAND Corporation", logo: "/partners/rand.png" },
+  ] as { name: string; logo: string }[],
   testimonials: [
     {
       quote:

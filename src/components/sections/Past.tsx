@@ -21,10 +21,6 @@ export default function Past() {
     past.photos.length > 0
       ? past.photos
       : Array.from({ length: past.photoPlaceholderCount }, () => null);
-  const partnerSlots =
-    past.partners.length > 0
-      ? past.partners
-      : Array.from({ length: past.partnerPlaceholderCount }, () => null);
   const testimonialSlots =
     past.testimonials.length > 0 ? past.testimonials : [null, null];
 
@@ -60,34 +56,6 @@ export default function Past() {
       </ul>
 
       <div className="mt-24">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-          Organizations we&rsquo;ve worked with
-        </p>
-        <ul className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-rule bg-rule sm:grid-cols-5">
-          {partnerSlots.map((partner, index) => (
-            <li
-              key={partner?.name ?? `partner-${index}`}
-              className="flex h-24 items-center justify-center bg-surface px-4"
-            >
-              {partner?.logo ? (
-                <Image
-                  src={partner.logo}
-                  alt={partner.name}
-                  width={140}
-                  height={48}
-                  className="max-h-9 w-auto object-contain"
-                />
-              ) : (
-                <span className="text-center text-sm text-muted">
-                  {partner?.name ?? "Logo"}
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="mt-24">
         <ul className="grid gap-6 sm:grid-cols-2">
           {testimonialSlots.map((testimonial, index) => (
             <li key={`testimonial-${index}`}>
@@ -108,6 +76,29 @@ export default function Past() {
                   <p className="text-lg leading-[1.7] text-muted">Testimonial to come.</p>
                 )}
               </Card>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="mt-24">
+        <p className="text-center text-sm uppercase tracking-[0.2em] text-muted">
+          Including guests from
+        </p>
+        <ul className="mt-10 flex flex-wrap items-center justify-center gap-x-14 gap-y-10">
+          {past.partners.map((partner) => (
+            <li key={partner.name}>
+              {/* unoptimized: several of these are SVGs, which the image
+                  optimizer refuses; they're tiny files anyway. */}
+              <Image
+                src={partner.logo}
+                alt={partner.name}
+                title={partner.name}
+                width={200}
+                height={64}
+                unoptimized
+                className="h-9 w-auto object-contain sm:h-10"
+              />
             </li>
           ))}
         </ul>
