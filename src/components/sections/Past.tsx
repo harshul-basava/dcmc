@@ -2,6 +2,19 @@ import Image from "next/image";
 import { past } from "@/content/site";
 import { Card, Section, SectionHeading } from "@/components/ui";
 
+/** Bolds the highlighted phrase, if any, inside a testimonial quote. */
+function emphasize(quote: string, highlight?: string) {
+  if (!highlight || !quote.includes(highlight)) return quote;
+  const [before, after] = quote.split(highlight, 2);
+  return (
+    <>
+      {before}
+      <strong className="font-semibold">{highlight}</strong>
+      {after}
+    </>
+  );
+}
+
 /** Social proof from the first conference: photos, partner orgs, testimonials. */
 export default function Past() {
   const photoSlots =
@@ -80,34 +93,24 @@ export default function Past() {
       </div>
 
       <div className="mt-24">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-          What attendees said
-        </p>
-        <ul className="mt-8 grid gap-6 sm:grid-cols-2">
+        <ul className="grid gap-6 sm:grid-cols-2">
           {testimonialSlots.map((testimonial, index) => (
             <li key={`testimonial-${index}`}>
-              <Card className="h-full">
-                <span aria-hidden="true" className="block text-3xl leading-none text-gold">
-                  &ldquo;
-                </span>
+              {/* flex column + mt-auto pins the attribution to the card's
+                  bottom, so both cards' bylines align however long the quote. */}
+              <Card className="flex h-full flex-col">
                 {testimonial ? (
                   <>
-                    <blockquote className="mt-4 text-base leading-[1.7] text-foreground">
-                      {testimonial.quote}
+                    <blockquote className="text-lg leading-[1.7] text-foreground sm:text-xl">
+                      {emphasize(testimonial.quote, testimonial.highlight)}
                     </blockquote>
-                    {testimonial.name ? (
-                      <p className="mt-5 text-sm text-muted">
-                        {testimonial.name}
-                        {testimonial.affiliation ? `, ${testimonial.affiliation}` : ""}
-                      </p>
-                    ) : (
-                      <p className="mt-5 text-sm text-muted">DCMC 1.0 attendee</p>
-                    )}
+                    <p className="mt-auto pt-6 text-sm text-muted">
+                      {testimonial.name ?? "DCMC 1.0 attendee"}
+                      {testimonial.affiliation ? `, ${testimonial.affiliation}` : ""}
+                    </p>
                   </>
                 ) : (
-                  <p className="mt-4 text-base leading-[1.7] text-muted">
-                    Testimonial to come.
-                  </p>
+                  <p className="text-lg leading-[1.7] text-muted">Testimonial to come.</p>
                 )}
               </Card>
             </li>
