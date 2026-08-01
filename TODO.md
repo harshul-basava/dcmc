@@ -8,8 +8,6 @@ Everything below lives in **`src/content/site.ts`**. No component edits needed.
 
 ## Content to fill in as it firms up
 
-- [ ] `timeline.items` — "Decisions released" is still `TBA`. Replace `date` with
-      a real date and drop `tba: true` once it is set.
 - [ ] Speakers & organizers — both sections were removed on 2026-07-29 while
       empty (recoverable from git history) and will need rebuilding once there
       are real people to show.

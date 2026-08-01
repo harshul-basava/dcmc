@@ -61,10 +61,12 @@ export const timeline = {
   items: [
     { date: "Aug 3, 2026", label: "Applications open" },
     { date: "Sep 12, 2026", label: "Application deadline" },
-    { date: "TBA", label: "Decisions released", tba: true },
+    { date: "Sep 20, 2026", label: "Decisions released" },
     { date: "Oct 15, 2026", label: "Arrival", note: "Lodging provided from Thursday evening." },
     { date: "Oct 16–18, 2026", label: "DC Mini-Conference 2.0", note: "Washington, DC" },
-  ] satisfies TimelineItem[],
+  /* Annotated rather than inferred: with every date now confirmed, inference
+     would drop the optional `tba` flag from the type entirely. */
+  ] as TimelineItem[],
 } as const;
 
 /** Attribution is optional — DCMC 1.0 testimonials were collected anonymously.
