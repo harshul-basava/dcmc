@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { conference } from "@/content/site";
 
 /**
  * Bare landing image, full-bleed where the hero used to be. The text, CTAs,
@@ -9,6 +10,12 @@ import Image from "next/image";
 export default function Hero() {
   return (
     <section id="top" data-tone="sand" className="relative -mt-16 h-svh overflow-hidden">
+      {/* 10% side margins; the vw type size is tuned so the line spans the
+          remaining 80% of the page. */}
+      <h1 className="absolute inset-x-[10%] top-24 z-10 whitespace-nowrap text-center font-display text-[7.6vw] font-medium leading-none tracking-[-0.015em] text-white [text-shadow:0_2px_24px_rgb(0_0_0/45%)]">
+        {conference.name}
+      </h1>
+
       <Image
         src="/capitol2.jpg"
         alt="Aerial view of the United States Capitol"
