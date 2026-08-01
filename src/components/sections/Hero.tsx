@@ -20,7 +20,7 @@ export default function Hero() {
           20% beyond the text's bottom edge (~23% + 20% ≈ 45% of the band). */}
       <div
         aria-hidden="true"
-        className="absolute inset-x-0 top-0 z-[5] h-[46%] bg-[linear-gradient(to_bottom,rgb(255_255_255/0.95)_0%,rgb(255_255_255/0.82)_30%,rgb(255_255_255/0.45)_62%,rgb(255_255_255/0)_100%)]"
+        className="absolute inset-x-0 top-0 z-[5] h-[40%] bg-[linear-gradient(to_bottom,rgb(255_255_255/1)_0%,rgb(255_255_255/0.96)_45%,rgb(255_255_255/0.55)_75%,rgb(255_255_255/0)_100%)]"
       />
 
       <Image
