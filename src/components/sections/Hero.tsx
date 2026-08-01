@@ -12,9 +12,16 @@ export default function Hero() {
     <section id="top" data-tone="sand" className="relative -mt-16 h-svh overflow-hidden">
       {/* 10% side margins; the vw type size is tuned so the line spans the
           remaining 80% of the page. */}
-      <h1 className="absolute inset-x-[10%] top-24 z-10 whitespace-nowrap text-center font-display text-[7.6vw] font-medium leading-none tracking-[-0.015em] text-white [text-shadow:0_2px_24px_rgb(0_0_0/45%)]">
+      <h1 className="absolute inset-x-[10%] top-24 z-10 whitespace-nowrap text-center font-display text-[7.6vw] font-medium leading-none tracking-[-0.015em] text-heading">
         {conference.name}
       </h1>
+
+      {/* Cloudy haze: solid enough behind the title, then fades out over the
+          20% beyond the text's bottom edge (~23% + 20% ≈ 45% of the band). */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 z-[5] h-[46%] bg-[linear-gradient(to_bottom,rgb(255_255_255/0.95)_0%,rgb(255_255_255/0.82)_30%,rgb(255_255_255/0.45)_62%,rgb(255_255_255/0)_100%)]"
+      />
 
       <Image
         src="/capitol2.jpg"
