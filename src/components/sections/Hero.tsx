@@ -15,7 +15,7 @@ export default function Hero() {
         fill
         priority
         sizes="100vw"
-        className="scale-[1.06] object-cover translate-x-[2.5%]"
+        className="origin-top scale-[1.15] object-cover translate-x-[2.5%]"
       />
     </section>
   );
