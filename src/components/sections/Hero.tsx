@@ -8,7 +8,7 @@ import Image from "next/image";
  */
 export default function Hero() {
   return (
-    <section id="top" data-tone="sand" className="relative -mt-16 h-svh">
+    <section id="top" data-tone="sand" className="relative -mt-16 h-svh overflow-hidden">
       <Image
         src="/capitol2.jpg"
         alt="Aerial view of the United States Capitol"
