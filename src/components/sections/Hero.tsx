@@ -32,7 +32,7 @@ export default function Hero() {
           fill
           priority
           sizes="(max-width: 768px) 100vw, 39vw"
-          className="scale-125 object-cover opacity-70"
+          className="translate-y-[4%] scale-125 object-cover opacity-70"
         />
         <div
           aria-hidden="true"
