@@ -91,7 +91,7 @@ export default function Hero() {
 
 /**
  * Stripe call to action. "outline" is a white rule on a red stripe that fills
- * to white with red ink; "filled" is solid red on a white stripe. Padding is
+ * to white with red ink; "filled" is solid navy on a white stripe. Padding is
  * em-based so it tracks the container-sized type.
  */
 function StripeButton({
@@ -105,7 +105,7 @@ function StripeButton({
 }) {
   const styles =
     variant === "filled"
-      ? "border-flag-red bg-flag-red text-white hover:border-flag-red-dark hover:bg-flag-red-dark focus-visible:outline-flag-red"
+      ? "border-heading bg-heading text-white hover:border-ink hover:bg-ink focus-visible:outline-heading"
       : "border-white text-white hover:bg-white hover:text-flag-red focus-visible:outline-white";
 
   return (
