@@ -46,17 +46,18 @@ export default function Hero() {
           const onRed = index % 2 === 0;
           return (
             <div
-              key={line.cta ? "cta" : line.text || `blank-${index}`}
+              key={line.text || `blank-${index}`}
               className={`flex flex-1 items-center px-[3.5cqw] ${
                 onRed ? "bg-flag-red text-white" : "bg-white text-heading"
-              } ${line.align === "right" || line.cta ? "justify-end" : ""}`}
+              } ${
+                line.text && line.cta
+                  ? "justify-between"
+                  : line.align === "right" || line.cta
+                    ? "justify-end"
+                    : ""
+              }`}
             >
-              {line.cta ? (
-                <div className="landing-type flex items-center gap-[1.8cqw]">
-                  <StripeButton href={links.apply}>Apply now</StripeButton>
-                  <StripeButton href={links.refer}>Refer an applicant</StripeButton>
-                </div>
-              ) : (
+              {line.text ? (
                 /* leading-none centres the line box, which leaves the glyphs
                    riding high; the nudge drops the cap block onto the stripe's
                    centre line. Lines with a descender get a smaller drop so the
@@ -68,7 +69,16 @@ export default function Hero() {
                 >
                   {line.text}
                 </span>
-              )}
+              ) : null}
+
+              {line.cta === "apply" ? (
+                <StripeButton href={links.apply} variant="filled">
+                  Apply now
+                </StripeButton>
+              ) : null}
+              {line.cta === "refer" ? (
+                <StripeButton href={links.refer}>Refer an applicant</StripeButton>
+              ) : null}
             </div>
           );
         })}
@@ -80,15 +90,28 @@ export default function Hero() {
 }
 
 /**
- * Outline button for the empty stripe: white rule on the red ground, filling
- * to white with red ink on hover. Padding is em-based so it tracks the
- * container-sized type.
+ * Stripe call to action. "outline" is a white rule on a red stripe that fills
+ * to white with red ink; "filled" is solid red on a white stripe. Padding is
+ * em-based so it tracks the container-sized type.
  */
-function StripeButton({ href, children }: { href: string; children: string }) {
+function StripeButton({
+  href,
+  children,
+  variant = "outline",
+}: {
+  href: string;
+  children: string;
+  variant?: "outline" | "filled";
+}) {
+  const styles =
+    variant === "filled"
+      ? "border-flag-red bg-flag-red text-white hover:border-flag-red-dark hover:bg-flag-red-dark focus-visible:outline-flag-red"
+      : "border-white text-white hover:bg-white hover:text-flag-red focus-visible:outline-white";
+
   return (
     <a
       href={href}
-      className="whitespace-nowrap border border-white px-[1.7em] py-[0.75em] font-display text-[min(2.4cqw,2.9svh)] uppercase leading-none tracking-[0.12em] text-white transition-colors hover:bg-white hover:text-flag-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+      className={`landing-type whitespace-nowrap border px-[1.7em] py-[0.75em] font-display text-[min(2.4cqw,2.9svh)] uppercase leading-none tracking-[0.12em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${styles}`}
     >
       {children}
     </a>

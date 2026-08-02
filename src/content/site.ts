@@ -31,16 +31,17 @@ export const hero = {
    */
   lines: [
     { text: "AI Policy", descends: true },
-    { text: "DC" },
-    { text: "Mini" },
+    { text: "DC", cta: "apply" },
+    { text: "Mini", cta: "refer" },
     { text: "Conference" },
-    { text: "", cta: true },
+    { text: "" },
     { text: conference.dates.replace(/,\s*\d{4}$/, ""), align: "right" },
     { text: conference.location, align: "right", descends: true },
   ] as {
     text: string;
     align?: "right";
-    cta?: boolean;
+    /** Puts a call-to-action button at the right end of this stripe. */
+    cta?: "apply" | "refer";
     /** Line has a descender: ease the drop so it clears the stripe edge. */
     descends?: boolean;
   }[],
