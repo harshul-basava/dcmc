@@ -25,7 +25,20 @@ export const links: Record<"apply" | "refer" | "policymakerInterest", string> = 
 };
 
 export const hero = {
-  headline: "A three-day workshop for aspiring AI policy professionals.",
+  /**
+   * One line per flag stripe on the landing, top to bottom. An empty string
+   * leaves that stripe blank; `align` defaults to left.
+   */
+  lines: [
+    { text: "AI Policy" },
+    { text: "DC" },
+    { text: "Mini" },
+    { text: "Conference" },
+    { text: "" },
+    { text: conference.dates.replace(/,\s*\d{4}$/, ""), align: "right" },
+    { text: conference.location, align: "right" },
+  ] as { text: string; align?: "right" }[],
+  badge: "2.0",
 } as const;
 
 export const about = {

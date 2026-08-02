@@ -1,55 +1,88 @@
 import Image from "next/image";
-import { conference, hero, links } from "@/content/site";
-import { CTA, Container } from "@/components/ui";
+import { hero } from "@/content/site";
 
 /**
- * Split hero: the Capitol on the left bleeding into the page colour, the title
- * block set right against it. Below 768px the photo moves above the text.
+ * Landing: the Capitol-and-stars panel on the left, a flag-stripe field on the
+ * right carrying one line of the title per stripe. Proportions follow the
+ * approved artwork — a 38.2% photo panel and seven equal stripes, red first,
+ * with ink flipping white-on-red and navy-on-white.
+ *
+ * Type is sized `min(cqw, svh)` against the stripe field: the width term keeps
+ * long lines inside a narrow field, the height term keeps them inside their
+ * stripe on a short, wide viewport. Below 768px the panel moves above the
+ * stripes.
  */
 export default function Hero() {
   return (
-    <section id="top" data-tone="sand" className="relative -mt-16 overflow-hidden">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        {/*
-         * The photo is nudged left inside its panel rather than by moving the
-         * panel: the mask lives on the panel, so shifting that would drag the
-         * fade along with it. Scale and vertical crop stay as they are.
-         */}
-        <div className="hero-photo absolute left-0 top-0 h-[52%] w-full md:inset-y-0 md:h-full md:w-[70%]">
-          <Image
-            src="/capitol.png"
-            alt=""
-            fill
-            priority
-            sizes="(max-width: 768px) 100vw, 70vw"
-            className="object-cover object-[50%_38%] saturate-[0.82] md:-translate-x-[4%]"
-          />
-        </div>
-        <div className="hero-veil absolute inset-0" />
+    <section
+      id="top"
+      className="relative -mt-16 flex h-svh flex-col overflow-hidden md:flex-row"
+    >
+      <div className="relative h-[30%] w-full shrink-0 md:h-full md:w-[38.2%]">
+        <Image
+          src="/capitol_pattern.png"
+          alt="The United States Capitol behind a field of stars"
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 39vw"
+          className="object-cover"
+        />
       </div>
 
-      <Container className="relative">
-        <div className="flex min-h-svh flex-col justify-end pb-14 pt-[30vh] md:items-end md:justify-center md:pb-24 md:pt-28 md:text-right">
-          <h1 className="font-display text-[clamp(2.75rem,6.2vw,5.1rem)] font-medium leading-[1.02] tracking-[-0.015em] text-heading">
-            {conference.name.replace(" 2.0", "")}
-          </h1>
+      <div className="@container relative flex flex-1 flex-col">
+        {hero.lines.map((line, index) => {
+          const onRed = index % 2 === 0;
+          return (
+            <div
+              key={line.text || `blank-${index}`}
+              className={`flex flex-1 items-center px-[3.5cqw] ${
+                onRed ? "bg-flag-red text-white" : "bg-white text-heading"
+              } ${line.align === "right" ? "justify-end" : ""}`}
+            >
+              <span className="font-display text-[min(11cqw,12.7svh)] leading-none tracking-[-0.005em]">
+                {line.text}
+              </span>
+            </div>
+          );
+        })}
 
-          <p className="mt-3 max-w-2xl font-display text-xl leading-[1.4] text-foreground sm:mt-4 sm:text-2xl md:ml-auto">
-            {hero.headline}
-          </p>
-
-          <p className="mt-3 font-display text-sm uppercase tracking-[0.16em] text-muted sm:mt-4">
-            {conference.dates}. {conference.location}
-          </p>
-
-          <div className="mt-9 flex flex-wrap sm:mt-12 items-center gap-4 md:justify-end">
-            <CTA href={links.apply}>Apply now</CTA>
-            <CTA href={links.refer} variant="secondary">
-              Refer an applicant
-            </CTA>
-          </div>
-        </div>
-      </Container>
+        <Badge>{hero.badge}</Badge>
+      </div>
     </section>
   );
+}
+
+/** Navy starburst seal sitting across the second and third stripes. */
+function Badge({ children }: { children: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute left-[38.5%] top-[27%] w-[min(23.7svh,26cqw)] -translate-x-1/2 -translate-y-1/2"
+    >
+      <svg viewBox="0 0 100 100" className="w-full">
+        <polygon points={starburst(20, 50, 41)} fill="var(--heading)" />
+        <text
+          x="50"
+          y="50"
+          textAnchor="middle"
+          dominantBaseline="central"
+          fill="#ffffff"
+          fontFamily="var(--font-newsreader), serif"
+          fontSize="34"
+          fontStyle="italic"
+        >
+          {children}
+        </text>
+      </svg>
+    </div>
+  );
+}
+
+/** Points for a `count`-pointed star, alternating outer and inner radii. */
+function starburst(count: number, outer: number, inner: number) {
+  return Array.from({ length: count * 2 }, (_, i) => {
+    const radius = i % 2 === 0 ? outer : inner;
+    const angle = (Math.PI * i) / count - Math.PI / 2;
+    return `${50 + radius * Math.cos(angle)},${50 + radius * Math.sin(angle)}`;
+  }).join(" ");
 }

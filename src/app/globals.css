@@ -29,6 +29,8 @@
   /* Small markers: timeline dots, active-nav underline, numerals, quote marks.
      Named "gold" for historical reasons; now the brand red. */
   --gold: var(--color-accent);
+  /* Old Glory Red, for the landing's flag stripes. */
+  --flag-red: #b31942;
   --card: var(--surface);
 
   --radius: 6px;
@@ -46,6 +48,7 @@
   --color-accent-hover: var(--accent-hover);
   --color-on-accent: var(--on-accent);
   --color-gold: var(--gold);
+  --color-flag-red: var(--flag-red);
   --color-card: var(--card);
   --color-heading: var(--heading);
   --font-sans: var(--font-inter);
