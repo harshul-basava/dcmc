@@ -39,7 +39,10 @@ export default function Hero() {
                 onRed ? "bg-flag-red text-white" : "bg-white text-heading"
               } ${line.align === "right" ? "justify-end" : ""}`}
             >
-              <span className="font-display text-[min(11cqw,12.7svh)] leading-none tracking-[-0.005em]">
+              {/* leading-none centres the line box, which leaves the glyphs
+                  riding high; the nudge drops the cap block onto the stripe's
+                  centre line (measured against the artwork). */}
+              <span className="translate-y-[0.11em] font-display text-[min(11cqw,12.7svh)] leading-none tracking-[-0.005em]">
                 {line.text}
               </span>
             </div>
@@ -61,11 +64,16 @@ function Badge({ children }: { children: string }) {
     >
       <svg viewBox="0 0 100 100" className="w-full">
         <polygon points={starburst(20, 50, 41)} fill="var(--heading)" />
+        {/*
+          Explicit baseline rather than dominant-baseline, which browsers
+          disagree on: digits are cap-height 0.68em, so a baseline at 61.5
+          centres them on 50. x is pulled left of centre because textAnchor
+          balances the advance width, not the italic's visual mass.
+        */}
         <text
-          x="50"
-          y="50"
+          x="48"
+          y="61.5"
           textAnchor="middle"
-          dominantBaseline="central"
           fill="#ffffff"
           fontFamily="var(--font-newsreader), serif"
           fontSize="34"
