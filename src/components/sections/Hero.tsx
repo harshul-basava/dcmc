@@ -18,14 +18,26 @@ export default function Hero() {
       id="top"
       className="relative -mt-16 flex h-svh flex-col overflow-hidden md:flex-row"
     >
-      <div className="relative h-[30%] w-full shrink-0 md:h-full md:w-[38.2%]">
+      {/*
+        The stars-over-Capitol panel, composited here rather than baked into a
+        flat asset. Same stack as the source artwork: a white ground, the
+        photograph at 60%, then the star field at 20% — the white showing
+        through is what gives the panel its washed, pale cast. The tile is
+        sized to the panel width so five stars span it, as in the original.
+      */}
+      <div className="relative h-[30%] w-full shrink-0 overflow-hidden bg-white md:h-full md:w-[38.2%]">
         <Image
-          src="/capitol_pattern.png"
-          alt="The United States Capitol behind a field of stars"
+          src="/Capitol.webp"
+          alt="The United States Capitol"
           fill
           priority
           sizes="(max-width: 768px) 100vw, 39vw"
-          className="object-cover"
+          className="object-cover opacity-60"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-20"
+          style={{ backgroundImage: "url(/Stars.webp)", backgroundSize: "100% auto" }}
         />
       </div>
 
