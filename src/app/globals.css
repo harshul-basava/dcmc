@@ -168,6 +168,15 @@ body {
   animation: landing-stars 600ms ease 600ms both;
 }
 
+/* On phones the panel stays a full-strength star field — the canton to the
+   stripes below — so the settle is skipped and the opacity simply holds. */
+@media (max-width: 767px) {
+  .landing-stars {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 .landing-photo {
   animation: landing-photo 600ms ease 600ms both;
 }
