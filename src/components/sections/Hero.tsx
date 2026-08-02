@@ -75,7 +75,6 @@ export default function Hero() {
                 <StripeButton
                   href={line.cta === "apply" ? links.apply : links.refer}
                   variant={line.cta === "apply" ? "filled" : "outline"}
-                  showOn={line.ctaOn}
                 >
                   {line.cta === "apply" ? "Apply now" : "Refer an applicant"}
                 </StripeButton>
@@ -99,25 +98,20 @@ function StripeButton({
   href,
   children,
   variant = "outline",
-  showOn,
 }: {
   href: string;
   children: string;
   variant?: "outline" | "filled";
-  /** Restricts the button to one breakpoint; shown at both when omitted. */
-  showOn?: "mobile" | "desktop";
 }) {
   const styles =
     variant === "filled"
       ? "border-heading bg-heading text-white hover:border-ink hover:bg-ink focus-visible:outline-heading"
       : "border-white text-white hover:bg-white hover:text-flag-red focus-visible:outline-white";
-  const visibility =
-    showOn === "mobile" ? "md:hidden" : showOn === "desktop" ? "hidden md:block" : "";
 
   return (
     <a
       href={href}
-      className={`landing-type whitespace-nowrap border px-[1.1em] py-[0.7em] font-display text-[min(3.1cqw,2.4svh)] uppercase leading-none tracking-[0.1em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 md:px-[1.7em] md:py-[0.75em] md:text-[min(2.4cqw,2.9svh)] md:tracking-[0.12em] ${styles} ${visibility}`}
+      className={`landing-type whitespace-nowrap border px-[1.1em] py-[0.7em] font-display text-[min(3.1cqw,2.4svh)] uppercase leading-none tracking-[0.1em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 md:px-[1.7em] md:py-[0.75em] md:text-[min(2.4cqw,2.9svh)] md:tracking-[0.12em] ${styles}`}
     >
       {children}
     </a>

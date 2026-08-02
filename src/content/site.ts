@@ -30,9 +30,9 @@ export const hero = {
    * leaves that stripe blank; `align` defaults to left.
    */
   lines: [
-    { text: "AI Policy", descends: true, cta: "refer", ctaOn: "mobile" },
+    { text: "AI Policy", descends: true },
     { text: "DC", cta: "apply" },
-    { text: "Mini", cta: "refer", ctaOn: "desktop" },
+    { text: "Mini", cta: "refer" },
     { text: "Conference" },
     { text: "" },
     { text: conference.dates.replace(/,\s*\d{4}$/, ""), align: "right" },
@@ -42,8 +42,6 @@ export const hero = {
     align?: "right";
     /** Puts a call-to-action button at the right end of this stripe. */
     cta?: "apply" | "refer";
-    /** Limits that button to one breakpoint; shown at both when omitted. */
-    ctaOn?: "mobile" | "desktop";
     /** Line has a descender: ease the drop so it clears the stripe edge. */
     descends?: boolean;
   }[],
