@@ -21,7 +21,7 @@ export default function Hero() {
       {/*
         The stars-over-Capitol panel, composited here rather than baked into a
         flat asset. Same stack as the source artwork: a white ground, the
-        photograph at 60%, then the star field at 20% — the white showing
+        photograph at 70%, then the star field at 30% — the white showing
         through is what gives the panel its washed, pale cast. The tile is
         sized to the panel width so five stars span it, as in the original.
       */}
@@ -32,11 +32,11 @@ export default function Hero() {
           fill
           priority
           sizes="(max-width: 768px) 100vw, 39vw"
-          className="object-cover opacity-60"
+          className="scale-125 object-cover opacity-70"
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-30"
           style={{ backgroundImage: "url(/Stars.webp)", backgroundSize: "100% auto" }}
         />
       </div>
