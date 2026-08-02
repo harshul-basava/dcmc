@@ -30,14 +30,20 @@ export const hero = {
    * leaves that stripe blank; `align` defaults to left.
    */
   lines: [
-    { text: "AI Policy" },
+    { text: "AI Policy", descends: true },
     { text: "DC" },
     { text: "Mini" },
     { text: "Conference" },
-    { text: "" },
+    { text: "", cta: true },
     { text: conference.dates.replace(/,\s*\d{4}$/, ""), align: "right" },
-    { text: conference.location, align: "right" },
-  ] as { text: string; align?: "right" }[],
+    { text: conference.location, align: "right", descends: true },
+  ] as {
+    text: string;
+    align?: "right";
+    cta?: boolean;
+    /** Line has a descender: ease the drop so it clears the stripe edge. */
+    descends?: boolean;
+  }[],
   badge: "2.0",
 } as const;
 

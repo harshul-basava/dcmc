@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { hero } from "@/content/site";
+import { hero, links } from "@/content/site";
 
 /**
  * Landing: the Capitol-and-stars panel on the left, a flag-stripe field on the
@@ -34,17 +34,29 @@ export default function Hero() {
           const onRed = index % 2 === 0;
           return (
             <div
-              key={line.text || `blank-${index}`}
+              key={line.cta ? "cta" : line.text || `blank-${index}`}
               className={`flex flex-1 items-center px-[3.5cqw] ${
                 onRed ? "bg-flag-red text-white" : "bg-white text-heading"
-              } ${line.align === "right" ? "justify-end" : ""}`}
+              } ${line.align === "right" || line.cta ? "justify-end" : ""}`}
             >
-              {/* leading-none centres the line box, which leaves the glyphs
-                  riding high; the nudge drops the cap block onto the stripe's
-                  centre line (measured against the artwork). */}
-              <span className="translate-y-[0.11em] font-display text-[min(11cqw,12.7svh)] leading-none tracking-[-0.005em]">
-                {line.text}
-              </span>
+              {line.cta ? (
+                <div className="flex items-center gap-[1.8cqw]">
+                  <StripeButton href={links.apply}>Apply now</StripeButton>
+                  <StripeButton href={links.refer}>Refer an applicant</StripeButton>
+                </div>
+              ) : (
+                /* leading-none centres the line box, which leaves the glyphs
+                   riding high; the nudge drops the cap block onto the stripe's
+                   centre line. Lines with a descender get a smaller drop so the
+                   tail clears the stripe below. */
+                <span
+                  className={`font-display text-[min(11cqw,12.7svh)] leading-none tracking-[-0.005em] ${
+                    line.descends ? "translate-y-[0.04em]" : "translate-y-[0.11em]"
+                  }`}
+                >
+                  {line.text}
+                </span>
+              )}
             </div>
           );
         })}
@@ -52,6 +64,22 @@ export default function Hero() {
         <Badge>{hero.badge}</Badge>
       </div>
     </section>
+  );
+}
+
+/**
+ * Outline button for the empty stripe: white rule on the red ground, filling
+ * to white with red ink on hover. Padding is em-based so it tracks the
+ * container-sized type.
+ */
+function StripeButton({ href, children }: { href: string; children: string }) {
+  return (
+    <a
+      href={href}
+      className="whitespace-nowrap border border-white px-[1.7em] py-[0.75em] font-display text-[min(2.4cqw,2.9svh)] uppercase leading-none tracking-[0.12em] text-white transition-colors hover:bg-white hover:text-flag-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+    >
+      {children}
+    </a>
   );
 }
 
@@ -66,18 +94,16 @@ function Badge({ children }: { children: string }) {
         <polygon points={starburst(20, 50, 41)} fill="var(--heading)" />
         {/*
           Explicit baseline rather than dominant-baseline, which browsers
-          disagree on: digits are cap-height 0.68em, so a baseline at 61.5
-          centres them on 50. x is pulled left of centre because textAnchor
-          balances the advance width, not the italic's visual mass.
+          disagree on: digits are cap-height 0.68em, so at 44 a baseline of
+          64.9 centres them on 50.
         */}
         <text
-          x="48"
-          y="61.5"
+          x="50"
+          y="64.9"
           textAnchor="middle"
           fill="#ffffff"
           fontFamily="var(--font-newsreader), serif"
-          fontSize="34"
-          fontStyle="italic"
+          fontSize="44"
         >
           {children}
         </text>
