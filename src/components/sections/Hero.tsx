@@ -32,11 +32,11 @@ export default function Hero() {
           fill
           priority
           sizes="(max-width: 768px) 100vw, 39vw"
-          className="translate-x-[3%] translate-y-[4%] scale-125 object-cover opacity-70"
+          className="landing-photo translate-x-[3%] translate-y-[4%] scale-125 object-cover"
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 opacity-30"
+          className="landing-stars absolute inset-0"
           style={{ backgroundImage: "url(/Stars.webp)", backgroundSize: "100% auto" }}
         />
       </div>
@@ -52,7 +52,7 @@ export default function Hero() {
               } ${line.align === "right" || line.cta ? "justify-end" : ""}`}
             >
               {line.cta ? (
-                <div className="flex items-center gap-[1.8cqw]">
+                <div className="landing-type flex items-center gap-[1.8cqw]">
                   <StripeButton href={links.apply}>Apply now</StripeButton>
                   <StripeButton href={links.refer}>Refer an applicant</StripeButton>
                 </div>
@@ -62,7 +62,7 @@ export default function Hero() {
                    centre line. Lines with a descender get a smaller drop so the
                    tail clears the stripe below. */
                 <span
-                  className={`font-display text-[min(11cqw,12.7svh)] leading-none tracking-[-0.005em] ${
+                  className={`landing-type font-display text-[min(11cqw,12.7svh)] leading-none tracking-[-0.005em] ${
                     line.descends ? "translate-y-[0.04em]" : "translate-y-[0.11em]"
                   }`}
                 >
@@ -100,7 +100,7 @@ function Badge({ children }: { children: string }) {
   return (
     <div
       aria-hidden="true"
-      className="absolute left-[38.5%] top-[27%] w-[min(23.7svh,26cqw)] -translate-x-1/2 -translate-y-1/2"
+      className="landing-type absolute left-[38.5%] top-[27%] w-[min(23.7svh,26cqw)] -translate-x-1/2 -translate-y-1/2"
     >
       <svg viewBox="0 0 100 100" className="w-full">
         <polygon points={starburst(20, 50, 41)} fill="var(--heading)" />

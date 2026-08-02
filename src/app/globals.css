@@ -120,8 +120,57 @@ body {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    /* Delays too, or a staggered entrance would just stall on its first frame. */
+    animation-delay: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/*
+ * Landing entrance. The star field arrives at full strength over the bare
+ * stripes, then settles back at 0.6s as the photograph fades up beneath it; the
+ * type follows at 1.2s. Each animation owns its element's opacity
+ * outright — `both` holds the opening frame through the delay and the closing
+ * frame afterwards — so the resting values live here rather than in a utility
+ * class that would fight the animation.
+ */
+@keyframes landing-stars {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.3;
+  }
+}
+
+@keyframes landing-photo {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.7;
+  }
+}
+
+@keyframes landing-type {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.landing-stars {
+  animation: landing-stars 600ms ease 600ms both;
+}
+
+.landing-photo {
+  animation: landing-photo 600ms ease 600ms both;
+}
+
+.landing-type {
+  animation: landing-type 700ms ease 1200ms both;
 }
 
 /*
