@@ -103,6 +103,8 @@ export const past = {
   heading: "DCMC 1.0",
   /** Paths under /public. The first photo takes the large mosaic slot;
       `position` is a CSS object-position for slots that crop the image. */
+  blurb:
+    "From April 9–12, 2026, 35 students from 7 universities across the U.S. came to Washington, DC to learn, network, share policy proposals, hear from professionals in the field, and accelerate their AI policy careers. Pictures and testimonials below:",
   photos: [
     {
       src: "/dcmc1/main.jpg",
