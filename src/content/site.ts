@@ -49,10 +49,10 @@ export const hero = {
 } as const;
 
 export const about = {
-  heading: "There aren’t enough people working on policy to make sure AI goes well.",
+  heading: "We need more people working on policy to make sure AI goes well.",
   body: [
-    "Policy mandating responsible AI development, deployment, and usage will decide the future. A major bottleneck on impactful, informed policy work is the disconnect between the technical expertise of AI researchers and Washington’s policy landscape, leaving pressing issues that require early attention unaddressed.",
-    "By bringing together motivated students, young professionals, and knowledgeable guest speakers who all share an interest in AI policy, we hope to develop the next generation of policymakers working towards safe AI for now and the future.",
+    "The future of AI will be shaped in large part by political decisions made in Washington, DC. A major bottleneck on impactful, informed policy work is the disconnect between the technical expertise of AI researchers and the priorities of Washington’s policy landscape.",
+    "By bringing together motivated students, young professionals, and knowledgeable guest speakers who all share an interest in AI policy, we hope to develop the next generation of policymakers working towards safe AI and thoughtful governance.",
   ],
   /** The who-this-is-for callout beside the mission paragraph. */
   callout: {
