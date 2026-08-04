@@ -12,7 +12,7 @@ export const PLACEHOLDER_LINK = "#";
 export const conference = {
   name: "DC Mini-Conference 2.0",
   shortName: "DCMC 2.0",
-  dates: "October 16–18, 2026",
+  dates: "October 23–25, 2026",
   location: "Washington, DC",
   email: "contact@dcminiconf.com",
 } as const;
@@ -28,7 +28,7 @@ export const hero = {
   description:
     "A three-day conference for students interested in the future of AI policy, held in Washington, DC.",
   additionalSession: {
-    lead: "Can’t make October 16–18?",
+    lead: "Can’t make October 23–25?",
     body:
       "Depending on applicant interest, we may also hold an additional session on November 6–8, 2026. The application above covers both.",
   },
@@ -70,8 +70,8 @@ export const timeline = {
     { date: "Aug 28, 2026", label: "Priority application deadline" },
     { date: "Sep 12, 2026", label: "Final application deadline" },
     { date: "Sep 20, 2026", label: "Decisions released" },
-    { date: "Oct 15, 2026", label: "Arrival", note: "Lodging provided from Thursday evening." },
-    { date: "Oct 16–18, 2026", label: "DC Mini-Conference 2.0", note: "Washington, DC" },
+    { date: "Oct 22, 2026", label: "Arrival", note: "Lodging provided from Thursday evening." },
+    { date: "Oct 23–25, 2026", label: "DC Mini-Conference 2.0", note: "Washington, DC" },
   /* Annotated rather than inferred: with every date now confirmed, inference
      would drop the optional `tba` flag from the type entirely. */
   ] as TimelineItem[],
@@ -104,7 +104,7 @@ export const past = {
       caption: "A guest speaker presenting on AI risk and policy at DCMC 1.0",
     },
     {
-      src: "/dcmc1/group.png",
+      src: "/dcmc1/group.jpg",
       caption: "Attendees gathered outdoors during DCMC 1.0",
       /* The short, wide tile crops the portrait vertically; keep faces central. */
       position: "50% 55%",

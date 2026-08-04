@@ -1,6 +1,6 @@
 # DC Mini-Conference 2.0
 
-Single-page site for DCMC 2.0 — October 16–18, 2026, Washington, DC.
+Single-page site for DCMC 2.0 — October 23–25, 2026, Washington, DC.
 
 ## Develop
 
