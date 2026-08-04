@@ -109,11 +109,11 @@ export function CTA({
   className?: string;
 }) {
   const base =
-    "group inline-flex items-center justify-center gap-2 rounded-card px-7 py-3.5 font-display text-sm uppercase tracking-[0.12em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+    "group inline-flex min-h-11 items-center justify-center gap-2 rounded-card px-7 py-3.5 font-sans text-sm font-semibold tracking-[0.01em] transition-[color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.96] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
   const styles =
     variant === "primary"
-      ? "bg-accent text-on-accent hover:bg-accent-hover"
-      : "border border-rule text-foreground hover:border-accent hover:text-accent";
+      ? "bg-accent text-on-accent shadow-[0_1px_2px_rgba(0,0,0,0.12),0_6px_16px_-10px_rgba(78,24,28,0.65)] hover:bg-accent-hover"
+      : "text-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.12),0_1px_2px_-1px_rgba(0,0,0,0.08)] hover:text-accent hover:shadow-[0_0_0_1px_rgba(147,51,51,0.55),0_1px_2px_-1px_rgba(0,0,0,0.08)]";
 
   if (href === PLACEHOLDER_LINK) {
     return (

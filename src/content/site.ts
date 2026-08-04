@@ -25,27 +25,13 @@ export const links: Record<"apply" | "refer" | "policymakerInterest", string> = 
 };
 
 export const hero = {
-  /**
-   * One line per flag stripe on the landing, top to bottom. An empty string
-   * leaves that stripe blank; `align` defaults to left.
-   */
-  lines: [
-    { text: "AI Policy", descends: true },
-    { text: "DC", cta: "apply" },
-    { text: "Mini", cta: "refer" },
-    { text: "Conference" },
-    { text: "" },
-    { text: conference.dates.replace(/,\s*\d{4}$/, ""), align: "right" },
-    { text: conference.location, align: "right", descends: true },
-  ] as {
-    text: string;
-    align?: "right";
-    /** Puts a call-to-action button at the right end of this stripe. */
-    cta?: "apply" | "refer";
-    /** Line has a descender: ease the drop so it clears the stripe edge. */
-    descends?: boolean;
-  }[],
-  badge: "2.0",
+  description:
+    "A three-day conference for students interested in the future of AI policy, held in Washington, DC.",
+  additionalSession: {
+    lead: "Can’t make October 16–18?",
+    body:
+      "Depending on applicant interest, we may also hold an additional session on November 6–8, 2026. The application above covers both.",
+  },
 } as const;
 
 export const about = {
@@ -89,6 +75,12 @@ export const timeline = {
   /* Annotated rather than inferred: with every date now confirmed, inference
      would drop the optional `tba` flag from the type entirely. */
   ] as TimelineItem[],
+  additionalSession: {
+    label: "Possible additional cohort",
+    date: "November 6–8, 2026",
+    body:
+      "We may run DCMC 2.1 depending on applicant interest. Indicate your availability on the application.",
+  },
 } as const;
 
 /** Attribution is optional — DCMC 1.0 testimonials were collected anonymously.

@@ -1,157 +1,85 @@
 import Image from "next/image";
-import { hero, links } from "@/content/site";
+import { CTA, Container } from "@/components/ui";
+import { conference, hero, links } from "@/content/site";
 
 /**
- * Landing: the Capitol-and-stars panel on the left, a flag-stripe field on the
- * right carrying one line of the title per stripe. Proportions follow the
- * approved artwork — a 38.2% photo panel and seven equal stripes, red first,
- * with ink flipping white-on-red and navy-on-white.
- *
- * Type is sized `min(cqw, svh)` against the stripe field: the width term keeps
- * long lines inside a narrow field, the height term keeps them inside their
- * stripe on a short, wide viewport. Below 768px the panel moves above the
- * stripes.
+ * A quiet, editorial landing composition: one message, one photograph, and
+ * one restrained accent. Washington is established by the image, so the hero
+ * does not need additional flag or campaign-style imagery.
  */
 export default function Hero() {
   return (
     <section
       id="top"
-      className="relative -mt-16 flex h-svh flex-col overflow-hidden md:flex-row"
+      className="-mt-16 flex min-h-svh items-center bg-sand pb-16 pt-32 sm:pb-20 sm:pt-36 lg:pb-24 lg:pt-40"
     >
-      {/*
-        The stars-over-Capitol panel, composited here rather than baked into a
-        flat asset. Same stack as the source artwork: a white ground, the
-        photograph at 70%, then the star field at 30% — the white showing
-        through is what gives the panel its washed, pale cast. The tile is
-        sized to the panel width so five stars span it, as in the original.
-      */}
-      <div className="relative h-[30%] w-full shrink-0 overflow-hidden bg-white md:h-full md:w-[38.2%]">
-        <Image
-          src="/Capitol.webp"
-          alt="The United States Capitol"
-          fill
-          priority
-          sizes="(max-width: 768px) 100vw, 39vw"
-          className="landing-photo translate-x-[3%] translate-y-[4%] scale-125 object-cover"
-        />
-        <div
-          aria-hidden="true"
-          className="landing-stars absolute inset-0"
-          style={{ backgroundImage: "url(/Stars.webp)", backgroundSize: "100% auto" }}
-        />
-      </div>
+      <Container>
+        <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] lg:gap-16 xl:gap-24">
+          <div className="max-w-[44rem]">
+            <h1 className="text-balance font-display text-[clamp(2.35rem,11.5vw,5.75rem)] font-normal leading-[0.94] tracking-[-0.04em] text-heading sm:text-[clamp(3.25rem,6vw,5.75rem)]">
+              <span className="block">AI Policy DC</span>
+              <span className="block whitespace-nowrap">Mini-Conference</span>
+            </h1>
 
-      <div className="@container relative flex flex-1 flex-col">
-        {hero.lines.map((line, index) => {
-          const onRed = index % 2 === 0;
-          return (
-            <div
-              key={line.text || `blank-${index}`}
-              className={`flex flex-1 items-center px-[3.5cqw] ${
-                onRed ? "bg-flag-red text-white" : "bg-white text-heading"
-              } ${
-                line.text && line.cta
-                  ? "justify-between"
-                  : line.align === "right" || line.cta
-                    ? "justify-end"
-                    : ""
-              }`}
-            >
-              {line.text ? (
-                /* leading-none centres the line box, which leaves the glyphs
-                   riding high; the nudge drops the cap block onto the stripe's
-                   centre line. Lines with a descender get a smaller drop so the
-                   tail clears the stripe below. */
-                <span
-                  className={`landing-type whitespace-nowrap font-display text-[min(11cqw,12.7svh)] leading-none tracking-[-0.005em] ${
-                    line.descends ? "translate-y-[0.04em]" : "translate-y-[0.11em]"
-                  }`}
-                >
-                  {line.text}
-                </span>
-              ) : null}
+            <p className="mt-8 max-w-xl text-pretty text-lg leading-[1.65] text-muted sm:text-xl">
+              {hero.description}
+            </p>
 
-              {line.cta ? (
-                <StripeButton
-                  href={line.cta === "apply" ? links.apply : links.refer}
-                  variant={line.cta === "apply" ? "filled" : "outline"}
-                >
-                  {line.cta === "apply" ? "Apply now" : "Refer an applicant"}
-                </StripeButton>
-              ) : null}
+            <p className="mt-8 font-sans text-sm font-semibold uppercase tracking-[0.1em] text-foreground">
+              <span>{conference.dates}</span>
+            </p>
+
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <CTA
+                href={links.apply}
+                className="min-h-14 !px-9 !py-4 !text-base sm:min-w-40"
+              >
+                Apply now
+              </CTA>
+              <CTA
+                href={links.refer}
+                variant="secondary"
+                className="min-h-14 !px-9 !py-4 !text-base sm:min-w-56"
+              >
+                Refer an applicant
+              </CTA>
             </div>
-          );
-        })}
 
-        <Badge>{hero.badge}</Badge>
-      </div>
+            <aside
+              aria-label="Possible additional conference dates"
+              className="mt-8 max-w-xl border-l-2 border-accent/60 pl-4"
+            >
+              <p className="text-sm font-semibold text-foreground">
+                {hero.additionalSession.lead}
+              </p>
+              <p className="mt-1 text-pretty text-sm leading-relaxed text-muted">
+                {hero.additionalSession.body}
+              </p>
+            </aside>
+          </div>
+
+          <figure className="relative min-h-[24rem] overflow-hidden rounded-[2px] shadow-[0_18px_50px_-28px_rgba(20,42,93,0.45)] sm:min-h-[32rem] lg:min-h-[min(68vh,42rem)]">
+            <div className="absolute inset-0 overflow-hidden">
+              <Image
+                src="/Capitol.webp"
+                alt="The United States Capitol in Washington, DC"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 44vw"
+                className="scale-[1.13] object-cover object-[50%_39%] saturate-[0.65] contrast-[0.96]"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-heading/10 mix-blend-multiply"
+              />
+            </div>
+            <figcaption className="sr-only">
+              The United States Capitol, the setting for a three-day conference on
+              artificial intelligence policy.
+            </figcaption>
+          </figure>
+        </div>
+      </Container>
     </section>
   );
-}
-
-/**
- * Stripe call to action. "outline" is a white rule on a red stripe that fills
- * to white with red ink; "filled" is solid navy on a white stripe. Padding is
- * em-based so it tracks the container-sized type.
- */
-function StripeButton({
-  href,
-  children,
-  variant = "outline",
-}: {
-  href: string;
-  children: string;
-  variant?: "outline" | "filled";
-}) {
-  const styles =
-    variant === "filled"
-      ? "border-heading bg-heading text-white hover:border-ink hover:bg-ink focus-visible:outline-heading"
-      : "border-white text-white hover:bg-white hover:text-flag-red focus-visible:outline-white";
-
-  return (
-    <a
-      href={href}
-      className={`landing-type whitespace-nowrap border px-[1.1em] py-[0.7em] font-display text-[min(3.1cqw,2.4svh)] uppercase leading-none tracking-[0.1em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 md:px-[1.7em] md:py-[0.75em] md:text-[min(2.4cqw,2.9svh)] md:tracking-[0.12em] ${styles}`}
-    >
-      {children}
-    </a>
-  );
-}
-
-/** Navy starburst seal sitting across the second and third stripes. */
-function Badge({ children }: { children: string }) {
-  return (
-    <div
-      aria-hidden="true"
-      className="landing-type absolute left-[38.5%] top-[27%] w-[min(23.7svh,26cqw)] -translate-x-1/2 -translate-y-1/2"
-    >
-      <svg viewBox="0 0 100 100" className="w-full">
-        <polygon points={starburst(20, 50, 41)} fill="var(--heading)" />
-        {/*
-          Explicit baseline rather than dominant-baseline, which browsers
-          disagree on: digits are cap-height 0.68em, so at 44 a baseline of
-          64.9 centres them on 50.
-        */}
-        <text
-          x="50"
-          y="64.9"
-          textAnchor="middle"
-          fill="#ffffff"
-          fontFamily="var(--font-newsreader), serif"
-          fontSize="44"
-        >
-          {children}
-        </text>
-      </svg>
-    </div>
-  );
-}
-
-/** Points for a `count`-pointed star, alternating outer and inner radii. */
-function starburst(count: number, outer: number, inner: number) {
-  return Array.from({ length: count * 2 }, (_, i) => {
-    const radius = i % 2 === 0 ? outer : inner;
-    const angle = (Math.PI * i) / count - Math.PI / 2;
-    return `${50 + radius * Math.cos(angle)},${50 + radius * Math.sin(angle)}`;
-  }).join(" ");
 }

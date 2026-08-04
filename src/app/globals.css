@@ -109,13 +109,14 @@ html {
   scroll-behavior: auto;
   /* Keeps section headings clear of the sticky header when anchor-scrolling. */
   scroll-padding-top: 5rem;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background: var(--sand);
   color: var(--foreground);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -127,123 +128,6 @@ body {
     animation-delay: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-/*
- * Landing entrance. The star field arrives at full strength over the bare
- * stripes, then settles back at 0.6s as the photograph fades up beneath it; the
- * type follows at 1.2s. Each animation owns its element's opacity
- * outright — `both` holds the opening frame through the delay and the closing
- * frame afterwards — so the resting values live here rather than in a utility
- * class that would fight the animation.
- */
-@keyframes landing-stars {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0.3;
-  }
-}
-
-@keyframes landing-photo {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 0.7;
-  }
-}
-
-@keyframes landing-type {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.landing-stars {
-  animation: landing-stars 600ms ease 600ms both;
-}
-
-/* On phones the panel stays a full-strength star field — the canton to the
-   stripes below — so the settle is skipped and the opacity simply holds. */
-@media (max-width: 767px) {
-  .landing-stars {
-    animation: none;
-    opacity: 1;
-  }
-}
-
-.landing-photo {
-  animation: landing-photo 600ms ease 600ms both;
-}
-
-.landing-type {
-  animation: landing-type 700ms ease 1200ms both;
-}
-
-/*
- * Hero photograph. The image is masked so it dissolves into the page colour
- * rather than ending at a hard edge: downward on narrow screens, where the
- * photo sits above the text, and rightward on wide ones, where it sits beside
- * it. Both axes then get a softening overlay (.hero-veil) so the top, bottom,
- * and leading edges settle into the background too.
- */
-.hero-photo {
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    #000 0%,
-    #000 44%,
-    rgb(0 0 0 / 46%) 70%,
-    transparent 95%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    #000 0%,
-    #000 44%,
-    rgb(0 0 0 / 46%) 70%,
-    transparent 95%
-  );
-}
-
-@media (min-width: 768px) {
-  /* Fades out well before the title's left edge, so the type sits on clean
-     page colour and only its approach overlaps the dissolving photo. */
-  .hero-photo {
-    -webkit-mask-image: linear-gradient(
-      to right,
-      #000 0%,
-      #000 38%,
-      rgb(0 0 0 / 55%) 62%,
-      rgb(0 0 0 / 14%) 80%,
-      transparent 95%
-    );
-    mask-image: linear-gradient(
-      to right,
-      #000 0%,
-      #000 38%,
-      rgb(0 0 0 / 55%) 62%,
-      rgb(0 0 0 / 14%) 80%,
-      transparent 95%
-    );
-  }
-}
-
-/*
- * Settles the photo's top edge into the page colour. The bottom is left alone:
- * the hero simply ends at the next band, so fading there only washed out the
- * base of the building.
- */
-.hero-veil {
-  background-image: linear-gradient(
-    to bottom,
-    var(--sand) 0%,
-    rgb(0 0 0 / 0%) 22%,
-    rgb(0 0 0 / 0%) 100%
-  );
 }
 
 /* Stand-in for photography we don't have yet. Deliberately flat and labelled so
