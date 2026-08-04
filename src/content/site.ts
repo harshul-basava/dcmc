@@ -104,10 +104,10 @@ export const past = {
       caption: "A guest speaker presenting on AI risk and policy at DCMC 1.0",
     },
     {
-      src: "/dcmc1/side.jpg",
-      caption: "A small-group session with a guest speaker at DCMC 1.0",
-      /* The mosaic cell crops this 4:3 shot; bias right to keep the speaker. */
-      position: "82% 50%",
+      src: "/dcmc1/group.png",
+      caption: "Attendees gathered outdoors during DCMC 1.0",
+      /* The short, wide tile crops the portrait vertically; keep faces central. */
+      position: "50% 55%",
     },
     {
       src: "/dcmc1/rooftop.jpg",
