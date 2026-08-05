@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
-import { links, navItems } from "@/content/site";
+import { conference, links, navItems } from "@/content/site";
 import { CTA, Container } from "@/components/ui";
 
 /** Fraction of the hero scrolled past by the time the header is solid. */
@@ -84,6 +85,21 @@ export default function Nav() {
 
       <Container className="relative">
         <div className="flex h-16 items-center gap-6">
+          <a
+            href="#top"
+            aria-label={`${conference.shortName} — back to top`}
+            className="shrink-0"
+          >
+            <Image
+              src="/dcmc-logo.png"
+              alt=""
+              width={512}
+              height={512}
+              priority
+              className="h-9 w-9"
+            />
+          </a>
+
           <nav
             aria-label="Sections"
             className="hidden items-center gap-4 md:flex lg:gap-8"
