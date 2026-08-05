@@ -15,7 +15,7 @@ const newsreader = Newsreader({
   weight: ["300", "400", "500", "700"],
 });
 
-const description = `${conference.name} brings together college students and guest speakers working on AI policy. ${conference.dates} in ${conference.location}.`;
+const description = `${conference.name} brings together college students and guest speakers working on AI governance. ${conference.dates} in ${conference.location}.`;
 
 export const metadata: Metadata = {
   title: `${conference.name} — ${conference.dates}`,

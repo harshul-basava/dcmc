@@ -26,7 +26,7 @@ export const links: Record<"apply" | "refer" | "policymakerInterest", string> = 
 
 export const hero = {
   description:
-    "A three-day conference for students interested in the future of AI policy, held in Washington, DC.",
+    "A three-day conference for students interested in the future of AI governance, held in Washington, DC.",
   additionalSession: {
     lead: "Can’t make October 23–25?",
     body:
@@ -38,7 +38,7 @@ export const about = {
   heading: "We need more people working on policy to make sure AI goes well.",
   body: [
     "The future of AI will be shaped in large part by political decisions made in Washington, DC. A major bottleneck on impactful, informed policy work is the disconnect between the technical expertise of AI researchers and the priorities of Washington’s policy landscape.",
-    "By bringing together motivated students, young professionals, and knowledgeable guest speakers who all share an interest in AI policy, we hope to develop the next generation of policymakers working towards safe AI and thoughtful governance.",
+    "By bringing together motivated students, young professionals, and knowledgeable guest speakers who all share an interest in AI governance, we hope to develop the next generation of policymakers working towards safe AI and thoughtful oversight.",
   ],
   /** The who-this-is-for callout beside the mission paragraph. */
   callout: {
@@ -96,7 +96,7 @@ export const past = {
   /** Paths under /public. The first photo takes the large mosaic slot;
       `position` is a CSS object-position for slots that crop the image. */
   blurb:
-    "From April 9–12, 2026, 35 students from 7 universities across the U.S. came to Washington, DC to learn, network, share policy proposals, hear from professionals in the field, and accelerate their AI policy careers. Pictures and testimonials below:",
+    "From April 9–12, 2026, 35 students from 7 universities across the U.S. came to Washington, DC to learn, network, share policy proposals, hear from professionals in the field, and accelerate their AI governance careers. Pictures and testimonials below:",
   photos: [
     {
       src: "/dcmc1/main.jpg",

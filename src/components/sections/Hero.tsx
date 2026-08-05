@@ -16,8 +16,11 @@ export default function Hero() {
       <Container>
         <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] lg:gap-16 xl:gap-24">
           <div className="max-w-[44rem]">
-            <h1 className="text-balance font-display text-[clamp(2.35rem,11.5vw,5.75rem)] font-normal leading-[0.94] tracking-[-0.04em] text-heading sm:text-[clamp(3.25rem,6vw,5.75rem)]">
-              <span className="block">AI Policy DC</span>
+            {/* Capped at 5.3rem, not 5.75: "AI Governance DC" needs 685px at
+                92px but the column tops out at 647px, which stranded "DC" on a
+                line of its own above ~1430px. */}
+            <h1 className="text-balance font-display text-[clamp(2.2rem,11vw,5.3rem)] font-normal leading-[0.94] tracking-[-0.04em] text-heading sm:text-[clamp(3.25rem,6vw,5.3rem)]">
+              <span className="block">AI Governance DC</span>
               <span className="block whitespace-nowrap">Mini-Conference</span>
             </h1>
 
