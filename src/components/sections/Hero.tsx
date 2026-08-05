@@ -60,22 +60,24 @@ export default function Hero() {
 
           <figure className="relative min-h-[24rem] overflow-hidden rounded-[2px] shadow-[0_18px_50px_-28px_rgba(20,42,93,0.45)] sm:min-h-[32rem] lg:min-h-[min(68vh,42rem)]">
             <div className="absolute inset-0 overflow-hidden">
+              {/*
+                Pre-cropped square around the dome, so the frame stays centred
+                and no extra scaling is needed. The previous filters were tuned
+                for a cold grey photograph; this one is golden-hour, so the
+                desaturation eases off and the navy veil comes away.
+              */}
               <Image
-                src="/Capitol.webp"
-                alt="The United States Capitol in Washington, DC"
+                src="/DCMC_Capitol_Dome.jpg"
+                alt="The dome of the United States Capitol at golden hour"
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 44vw"
-                className="scale-[1.13] object-cover object-[50%_39%] saturate-[0.65] contrast-[0.96]"
-              />
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 bg-heading/10 mix-blend-multiply"
+                className="object-cover object-center brightness-[1.06] saturate-[0.95]"
               />
             </div>
             <figcaption className="sr-only">
-              The United States Capitol, the setting for a three-day conference on
-              artificial intelligence policy.
+              The United States Capitol at golden hour, the setting for a
+              three-day conference on artificial intelligence policy.
             </figcaption>
           </figure>
         </div>
