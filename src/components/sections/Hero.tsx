@@ -64,13 +64,13 @@ export default function Hero() {
           <figure className="relative min-h-[24rem] overflow-hidden rounded-[2px] shadow-[0_18px_50px_-28px_rgba(20,42,93,0.45)] sm:min-h-[32rem] lg:min-h-[min(68vh,42rem)]">
             <div className="absolute inset-0 overflow-hidden">
               {/*
-                Pre-cropped square around the dome, so the frame stays centred
-                and no extra scaling is needed. The previous filters were tuned
-                for a cold grey photograph; this one is golden-hour, so the
-                desaturation eases off and the navy veil comes away.
+                The portrait crop keeps the dome centred across breakpoints.
+                The previous filters were tuned for a cold grey photograph;
+                this one is golden-hour, so the desaturation eases off and the
+                navy veil comes away.
               */}
               <Image
-                src="/DCMC_Capitol_Dome.jpg"
+                src="/DCMC_Capitol_Dome.png"
                 alt="The dome of the United States Capitol at golden hour"
                 fill
                 priority

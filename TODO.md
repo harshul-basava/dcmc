@@ -30,4 +30,4 @@ These sections had no source text, so the wording is a first draft:
 
 - [ ] Replace the favicon (`src/app/icon.png` / `apple-icon.png`) when the real
       logo lands — they are generated from `public/temp_logo.png`.
-- [ ] Add an Open Graph image — see `metadata.openGraph` in `src/app/layout.tsx`.
+- [x] Add an Open Graph image — see `src/app/opengraph-image.jpg`.

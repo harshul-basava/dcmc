@@ -18,6 +18,7 @@ const newsreader = Newsreader({
 const description = `${conference.name} brings together college students and guest speakers working on AI governance. ${conference.dates} in ${conference.location}.`;
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://dcminiconf.com"),
   title: `${conference.name} — ${conference.dates}`,
   description,
   openGraph: {
