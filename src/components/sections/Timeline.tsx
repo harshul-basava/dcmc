@@ -13,7 +13,7 @@ export default function Timeline() {
          * The prior five-column grid pushed the conference itself onto a second
          * row, visually separating the destination from the run-up.
          */}
-        <ol className="grid gap-x-4 gap-y-6 md:grid-cols-6 md:border-t md:border-rule xl:gap-x-6">
+        <ol className="grid gap-x-4 gap-y-6 md:grid-cols-5 md:border-t md:border-rule xl:gap-x-6">
           {timeline.items.map((item) => (
             <li
               key={item.label}

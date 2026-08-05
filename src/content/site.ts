@@ -67,8 +67,7 @@ export const timeline = {
   heading: "Timeline",
   items: [
     { date: "Aug 3, 2026", label: "Applications open" },
-    { date: "Aug 28, 2026", label: "Priority application deadline" },
-    { date: "Sep 12, 2026", label: "Final application deadline" },
+    { date: "Aug 28, 2026", label: "Final application deadline" },
     { date: "Sep 20, 2026", label: "Decisions released" },
     { date: "Oct 22, 2026", label: "Arrival", note: "Lodging provided from Thursday evening." },
     { date: "Oct 23–25, 2026", label: "DC Mini-Conference 2.0", note: "Washington, DC" },
