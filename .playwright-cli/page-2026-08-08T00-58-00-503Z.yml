@@ -1,0 +1,141 @@
+- generic [active] [ref=f2e1]:
+  - link "Skip to content" [ref=f2e2] [cursor=pointer]:
+    - /url: "#top"
+  - banner:
+    - generic:
+      - generic:
+        - link "DCMC 2.0 — back to top":
+          - /url: "#top"
+        - generic:
+          - link "Apply":
+            - /url: https://tinyurl.com/dcmcapp
+          - button "Open menu"
+  - main [ref=f2e3]:
+    - generic [ref=f2e6]:
+      - generic [ref=f2e7]:
+        - heading "AI Governance DC Mini-Conference" [level=1] [ref=f2e8]:
+          - generic [ref=f2e9]: AI Governance DC
+          - generic [ref=f2e10]: Mini-Conference
+        - paragraph [ref=f2e11]: A three-day conference for students interested in the future of AI governance, held in Washington, DC.
+        - paragraph [ref=f2e12]: October 23–25, 2026
+        - generic [ref=f2e13]:
+          - link "Apply now by August 28" [ref=f2e14] [cursor=pointer]:
+            - /url: https://tinyurl.com/dcmcapp
+          - link "Refer an applicant" [ref=f2e15] [cursor=pointer]:
+            - /url: https://tinyurl.com/dcmcrefer
+        - complementary "Possible additional conference dates" [ref=f2e16]:
+          - paragraph [ref=f2e17]: Can’t make October 23–25?
+          - paragraph [ref=f2e18]: Depending on applicant interest, we may also hold an additional session on November 6–8, 2026. The application above covers both.
+      - figure "The United States Capitol at golden hour, the setting for a three-day conference on artificial intelligence policy." [ref=f2e19]:
+        - img "The dome of the United States Capitol at golden hour" [ref=f2e21]
+    - generic [ref=f2e24]:
+      - heading "We need more people working on policy to make sure AI goes well." [level=2] [ref=f2e25]
+      - generic [ref=f2e26]:
+        - generic [ref=f2e27]:
+          - paragraph [ref=f2e28]: The future of AI will be shaped in large part by political decisions made in Washington, DC. A major bottleneck on impactful, informed policy work is the disconnect between the technical expertise of AI researchers and the priorities of Washington’s policy landscape.
+          - paragraph [ref=f2e29]: By bringing together motivated students, young professionals, and knowledgeable guest speakers who all share an interest in AI governance, we hope to develop the next generation of policymakers working towards safe AI and thoughtful oversight.
+        - generic [ref=f2e30]:
+          - paragraph [ref=f2e31]: "If you are:"
+          - list [ref=f2e32]:
+            - listitem [ref=f2e33]: an undergraduate
+            - listitem [ref=f2e34]: a graduate / master's student
+            - listitem [ref=f2e35]: a law school student
+            - listitem [ref=f2e36]: a recent graduate
+          - paragraph [ref=f2e37]:
+            - text: "who is considering a career in AI governance, law, or public service, then this conference is for you:"
+            - link "apply here" [ref=f2e38] [cursor=pointer]:
+              - /url: https://tinyurl.com/dcmcapp
+            - text: .
+    - generic [ref=f2e40]:
+      - heading "Timeline" [level=2] [ref=f2e41]
+      - generic [ref=f2e42]:
+        - list [ref=f2e43]:
+          - listitem [ref=f2e44]:
+            - generic [ref=f2e45]: Aug 3, 2026
+            - generic [ref=f2e46]: Applications open
+          - listitem [ref=f2e47]:
+            - generic [ref=f2e48]: August 28, 2026
+            - generic [ref=f2e49]: Final application deadline
+          - listitem [ref=f2e50]:
+            - generic [ref=f2e51]: Sep 20, 2026
+            - generic [ref=f2e52]: Decisions released
+          - listitem [ref=f2e53]:
+            - generic [ref=f2e54]: Oct 22, 2026
+            - generic [ref=f2e55]: Arrival
+            - generic [ref=f2e56]: Lodging provided from Thursday evening.
+          - listitem [ref=f2e57]:
+            - generic [ref=f2e58]: Oct 23–25, 2026
+            - generic [ref=f2e59]: DC Mini-Conference 2.0
+            - generic [ref=f2e60]: Washington, DC
+        - complementary "Possible additional conference session" [ref=f2e61]:
+          - paragraph [ref=f2e62]:
+            - generic [ref=f2e63]: Possible additional cohort
+            - generic [ref=f2e64]: November 6–8, 2026
+          - paragraph [ref=f2e65]: We may run DCMC 2.1 depending on applicant interest. Indicate your availability on the application.
+    - generic [ref=f2e67]:
+      - heading "DCMC 1.0" [level=2] [ref=f2e68]
+      - list [ref=f2e69]:
+        - listitem [ref=f2e70]:
+          - img "A guest speaker presenting on AI risk and policy at DCMC 1.0" [ref=f2e71]
+        - listitem [ref=f2e72]:
+          - img "Attendees gathered outdoors during DCMC 1.0" [ref=f2e73]
+        - listitem [ref=f2e74]:
+          - img "Attendees at lunch on a DC rooftop during DCMC 1.0" [ref=f2e75]
+      - list [ref=f2e77]:
+        - listitem [ref=f2e78]:
+          - generic [ref=f2e79]:
+            - blockquote [ref=f2e80]:
+              - text: I can't seem to stress how powerful, inspiring and well-designed this was to move people like me to
+              - strong [ref=f2e81]: act more within this field
+              - text: .
+            - paragraph [ref=f2e82]: DCMC 1.0 attendee
+        - listitem [ref=f2e83]:
+          - generic [ref=f2e84]:
+            - blockquote [ref=f2e85]:
+              - text: I think it will prove to be a big
+              - strong [ref=f2e86]: inflection point for my future in AI policy
+              - text: . I gained so, so much context and knowledge in the field that I am not sure I could, or would, have found otherwise.
+            - paragraph [ref=f2e87]: DCMC 1.0 attendee
+      - generic [ref=f2e88]:
+        - paragraph [ref=f2e89]: Including guests from
+        - list [ref=f2e90]:
+          - listitem [ref=f2e91]:
+            - img "Institute for Progress" [ref=f2e92]
+          - listitem [ref=f2e93]:
+            - img "Center for a New American Security" [ref=f2e94]
+          - listitem [ref=f2e95]:
+            - img "Americans for Responsible Innovation" [ref=f2e96]
+          - listitem [ref=f2e97]:
+            - img "Center for Security and Emerging Technology" [ref=f2e98]
+          - listitem [ref=f2e99]:
+            - img "Foundation for American Innovation" [ref=f2e100]
+          - listitem [ref=f2e101]:
+            - img "RAND Corporation" [ref=f2e102]
+    - generic [ref=f2e104]:
+      - heading "Come help write the rules." [level=2] [ref=f2e105]
+      - generic [ref=f2e106]:
+        - link "Apply now" [ref=f2e107] [cursor=pointer]:
+          - /url: https://tinyurl.com/dcmcapp
+        - link "Refer an applicant" [ref=f2e108] [cursor=pointer]:
+          - /url: https://tinyurl.com/dcmcrefer
+          - text: Refer an applicant
+          - generic [ref=f2e109]: →
+      - generic [ref=f2e110]:
+        - generic [ref=f2e111]:
+          - paragraph [ref=f2e112]: Questions
+          - paragraph [ref=f2e113]:
+            - text: Please contact
+            - link "contact@dcminiconf.com" [ref=f2e114] [cursor=pointer]:
+              - /url: mailto:contact@dcminiconf.com
+            - text: with any questions or feedback.
+        - generic [ref=f2e115]:
+          - paragraph [ref=f2e116]: For policymakers
+          - paragraph [ref=f2e117]: Work in policy and interested in speaking or attending? We'd like to hear from you.
+          - link "Email us to express interest" [ref=f2e119] [cursor=pointer]:
+            - /url: mailto:contact@dcminiconf.com?subject=Interest%20in%20DCMC%202.0
+            - text: Email us to express interest →
+  - contentinfo [ref=f2e120]:
+    - generic [ref=f2e122]:
+      - paragraph [ref=f2e123]: DC Mini-Conference 2.0
+      - paragraph [ref=f2e124]: October 23–25, 2026 · Washington, DC
+      - paragraph [ref=f2e125]: © 2026 DCMC 2.0
