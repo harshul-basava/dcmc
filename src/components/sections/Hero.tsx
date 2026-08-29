@@ -37,7 +37,7 @@ export default function Hero() {
                 href={links.apply}
                 className="min-h-14 !px-9 !py-4 !text-base sm:min-w-40"
               >
-                Apply now by August 28
+                Apply now by September 4
               </CTA>
               <CTA
                 href={links.refer}

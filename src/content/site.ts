@@ -13,7 +13,7 @@ export const conference = {
   name: "DC Mini-Conference 2.0",
   shortName: "DCMC 2.0",
   dates: "October 23–25, 2026",
-  applicationDeadline: "August 28, 2026",
+  applicationDeadline: "September 4, 2026",
   location: "Washington, DC",
   email: "contact@dcminiconf.com",
 } as const;
