@@ -126,11 +126,11 @@ export default function Nav() {
 
           <div className="ml-auto flex items-center gap-3">
             <CTA
-              href={links.apply}
+              href={links.futureInterest}
               variant="secondary"
               className="hidden px-5 py-2.5 sm:inline-flex"
             >
-              Apply
+              Express interest
             </CTA>
             <button
               type="button"
@@ -168,8 +168,8 @@ export default function Nav() {
                 </li>
               ))}
               <li className="py-3">
-                <CTA href={links.apply} className="w-full">
-                  Apply now
+                <CTA href={links.futureInterest} className="w-full">
+                  Express interest
                 </CTA>
               </li>
             </ul>

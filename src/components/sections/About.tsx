@@ -29,16 +29,16 @@ export default function About() {
           </ul>
           <p className="mt-6 text-foreground">
             {callout.closingPrefix}
-            {links.apply === PLACEHOLDER_LINK ? (
+            {links.futureInterest === PLACEHOLDER_LINK ? (
               <span
-                title="Application link coming soon"
+                title="Expression-of-interest link coming soon"
                 className="cursor-not-allowed underline decoration-gold underline-offset-4 opacity-60"
               >
                 {callout.closingLink}
               </span>
             ) : (
               <a
-                href={links.apply}
+                href={links.futureInterest}
                 className="underline decoration-gold underline-offset-4 hover:text-gold"
               >
                 {callout.closingLink}

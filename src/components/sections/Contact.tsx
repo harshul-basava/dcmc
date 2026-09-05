@@ -1,16 +1,15 @@
 import { conference, contact, links, PLACEHOLDER_LINK } from "@/content/site";
 import { CTA, Section, SectionHeading } from "@/components/ui";
 
-/** Closing band: the apply call, then the two ways to get in touch. */
+/** Closing band: future-round interest, then the two ways to get in touch. */
 export default function Contact() {
   return (
     <Section id="contact" tone="ink" className="pb-20 sm:pb-24">
-      <SectionHeading>Come help write the rules.</SectionHeading>
+      <SectionHeading>Interested in a future round?</SectionHeading>
 
       <div className="mt-10 flex flex-wrap items-center gap-4">
-        <CTA href={links.apply}>Apply now</CTA>
-        <CTA href={links.refer} variant="secondary">
-          Refer an applicant <span aria-hidden="true">→</span>
+        <CTA href={links.futureInterest}>
+          Express interest <span aria-hidden="true">→</span>
         </CTA>
       </div>
 

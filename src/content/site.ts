@@ -18,9 +18,9 @@ export const conference = {
   email: "contact@dcminiconf.com",
 } as const;
 
-export const links: Record<"apply" | "refer" | "policymakerInterest", string> = {
-  apply: "https://tinyurl.com/dcmcapp",
-  refer: "https://tinyurl.com/dcmcrefer",
+export const links: Record<"futureInterest" | "policymakerInterest", string> = {
+  futureInterest:
+    "https://airtable.com/appZ3PpQjBx0UzJ3u/pag6AVPfntRmk9w5C/form",
   /** For policymakers / speakers who want to signal interest. */
   policymakerInterest: PLACEHOLDER_LINK,
 };
@@ -29,9 +29,9 @@ export const hero = {
   description:
     "A three-day conference for students interested in the future of AI governance, held in Washington, DC.",
   additionalSession: {
-    lead: "Can’t make October 23–25?",
+    lead: "Applications for DCMC 2.0 are now closed.",
     body:
-      "Depending on applicant interest, we may also hold an additional session on November 6–8, 2026. The application above covers both.",
+      "Express your interest to hear about future rounds of the conference.",
   },
 } as const;
 
@@ -50,9 +50,9 @@ export const about = {
       "a law school student",
       "a recent graduate",
     ],
-    /** Rendered as: prefix, then the application link, then the period. */
-    closingPrefix: "who is considering a career in AI governance, law, or public service, then this conference is for you: ",
-    closingLink: "apply here",
+    /** Rendered as: prefix, then the interest link, then the period. */
+    closingPrefix: "who is considering a career in AI governance, law, or public service, ",
+    closingLink: "express your interest in a future round",
   },
 } as const;
 

@@ -34,22 +34,15 @@ export default function Hero() {
 
             <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
               <CTA
-                href={links.apply}
-                className="min-h-14 !px-9 !py-4 !text-base sm:min-w-40"
+                href={links.futureInterest}
+                className="min-h-14 !px-9 !py-4 !text-base"
               >
-                Apply now by September 4
-              </CTA>
-              <CTA
-                href={links.refer}
-                variant="secondary"
-                className="min-h-14 !px-9 !py-4 !text-base sm:min-w-56"
-              >
-                Refer an applicant
+                Express interest in future rounds
               </CTA>
             </div>
 
             <aside
-              aria-label="Possible additional conference dates"
+              aria-label="Application status"
               className="mt-8 max-w-xl border-l-2 border-accent/60 pl-4"
             >
               <p className="text-sm font-semibold text-foreground">
