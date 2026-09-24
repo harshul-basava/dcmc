@@ -8,19 +8,23 @@ import { getAssignments, getSessions } from "@/server/data";
 import { personLookup } from "@/server/people";
 import { buildSchedule, minutesOf } from "@/server/schedule";
 import { describeWindows, parseAvailability, slotsFromWindows } from "@/server/availability";
-import { updateAvailability, updateGuestBio } from "./actions";
+import ProfileStatus from "@/components/dashboard/ProfileStatus";
+import DirectoryPreview from "@/components/dashboard/DirectoryPreview";
+import GuestProfileForm from "@/components/dashboard/GuestProfileForm";
+import { GUEST_PROFILE_ERRORS, type GuestProfileError } from "@/server/guest-profile";
+import { updateAvailability, updateGuestProfile } from "./actions";
 
-type View = "program" | "availability" | "bio";
+type View = "program" | "availability" | "profile";
 
 export default async function GuestPortal({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; saved?: string }>;
+  searchParams: Promise<{ view?: string; saved?: string; error?: string }>;
 }) {
   const me = await requireGuest("program");
-  const { view: rawView, saved } = await searchParams;
+  const { view: rawView, saved, error } = await searchParams;
   const view: View =
-    rawView === "availability" || rawView === "bio" ? rawView : "program";
+    rawView === "availability" || rawView === "profile" ? rawView : "program";
 
   const [sessions, assignments, people] = await Promise.all([
     getSessions(),
@@ -51,8 +55,8 @@ export default async function GuestPortal({
           lead={
             view === "availability"
               ? "Select the times you are free."
-              : view === "bio"
-                ? "Shown to participants in the guest directory."
+              : view === "profile"
+                ? "This is what participants see about you in the guest directory."
                 : `Your availability: ${describeWindows(windows)}`
           }
           actions={
@@ -61,7 +65,7 @@ export default async function GuestPortal({
                 [
                   ["program", "Programme"],
                   ["availability", "Your availability"],
-                  ["bio", "Your bio"],
+                  ["profile", "Your profile"],
                 ] as const
               ).map(([key, label]) => (
                 <a
@@ -104,28 +108,25 @@ export default async function GuestPortal({
           </form>
         ) : null}
 
-        {view === "bio" ? (
-          <form action={updateGuestBio} className="grid max-w-2xl gap-4">
-            <label htmlFor="bio" className="text-sm text-foreground">
-              Your directory bio
-            </label>
-            <textarea
-              id="bio"
-              name="bio"
-              rows={10}
-              maxLength={4000}
-              defaultValue={me.bio}
-              className="w-full rounded-card border border-rule bg-surface p-3 text-sm leading-relaxed text-foreground outline-none transition focus:border-accent focus:shadow-[0_0_0_4px_rgba(147,51,51,0.10)]"
-            />
-            <div>
-              <button
-                type="submit"
-                className="min-h-11 rounded-card bg-accent px-7 text-sm font-semibold text-on-accent transition hover:bg-accent-hover active:scale-[0.97]"
+        {view === "profile" ? (
+          <>
+            <ProfileStatus person={me} directory="guest directory" />
+
+            {error ? (
+              <p
+                role="alert"
+                className="mb-6 rounded-card border border-accent bg-[color:var(--red-50)] p-4 text-sm text-accent"
               >
-                Save bio
-              </button>
+                {GUEST_PROFILE_ERRORS[error as GuestProfileError] ??
+                  "Something went wrong. Please try again."}
+              </p>
+            ) : null}
+
+            <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
+              <GuestProfileForm guest={me} action={updateGuestProfile} />
+              <DirectoryPreview person={me} />
             </div>
-          </form>
+          </>
         ) : null}
       </div>
     </PortalShell>

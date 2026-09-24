@@ -451,12 +451,51 @@ export async function saveProfile(id: string, edit: ProfileEdit): Promise<void> 
   });
 }
 
+export type GuestProfileEdit = {
+  name: string;
+  title: string;
+  organization: string;
+  bio: string;
+  linkedin: string;
+};
+
+/**
+ * Saves a guest's directory profile. Used both by the guest editing their own
+ * and by an organizer editing it for them, so the two can never drift.
+ */
+export async function saveGuestProfile(id: string, edit: GuestProfileEdit): Promise<void> {
+  if (!airtableConfigured()) {
+    const guest = fixtures.guests.find((g) => g.id === id);
+    if (guest) {
+      guest.name = edit.name;
+      guest.title = edit.title;
+      guest.organization = edit.organization;
+      guest.bio = edit.bio;
+      guest.linkedin = edit.linkedin || undefined;
+    }
+    return;
+  }
+
+  await patchRecord(
+    id,
+    {
+      [GUEST_FIELD.name]: edit.name,
+      [GUEST_FIELD.role]: edit.title,
+      [GUEST_FIELD.affiliation]: edit.organization,
+      [GUEST_FIELD.bio]: edit.bio,
+      [GUEST_FIELD.linkedin]: edit.linkedin,
+    },
+    GUEST_TABLE,
+  );
+}
+
 export async function saveHeadshot(
   id: string,
   file: { buffer: Buffer; contentType: string; filename: string },
+  role: Exclude<Role, "admin"> = "participant",
 ): Promise<void> {
   if (!airtableConfigured()) return;
-  await uploadHeadshot(id, file);
+  await uploadHeadshot(id, file, role === "guest" ? GUEST_TABLE : undefined);
 }
 
 export async function saveBio(role: Exclude<Role, "admin">, id: string, bio: string): Promise<void> {

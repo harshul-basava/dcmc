@@ -221,6 +221,7 @@ export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 export async function uploadHeadshot(
   recordId: string,
   file: { buffer: Buffer; contentType: string; filename: string },
+  table: string = ATTENDEE_TABLE,
 ): Promise<void> {
   const cfg = config();
   if (!cfg) throw new Error("Airtable is not configured");
@@ -228,8 +229,9 @@ export async function uploadHeadshot(
     throw new Error("Headshot is larger than 5MB");
   }
 
+  const fieldId = table === GUEST_TABLE ? GUEST_FIELD.headshot : FIELD.headshot;
   const response = await fetch(
-    `https://content.airtable.com/v0/${cfg.baseId}/${recordId}/${FIELD.headshot}/uploadAttachment`,
+    `https://content.airtable.com/v0/${cfg.baseId}/${recordId}/${fieldId}/uploadAttachment`,
     {
       method: "POST",
       headers: {
@@ -245,7 +247,8 @@ export async function uploadHeadshot(
   );
 
   if (!response.ok) throw new Error(`Headshot upload failed: ${response.status}`);
-  invalidateRoster();
+  if (table === GUEST_TABLE) invalidateGuests();
+  else invalidateRoster();
 }
 
 /** First attachment URL, if any. Airtable's URLs are short-lived by design. */

@@ -11,13 +11,15 @@ export default async function AdminPeople() {
   await requireAdmin();
   const [participants, guests] = await Promise.all([getParticipants(), getGuests()]);
 
-  // Progress is measured over attendees only: guests have no profile editor
-  // yet, so counting them would make the numbers unreachable.
-  const headshots = participants.filter(hasHeadshot).length;
-  const bios = participants.filter(hasBio).length;
-  const ready = participants.filter(profileComplete).length;
-  const signedIn = participants.filter((p) => p.accessCount > 0).length;
-  const signIns = participants.reduce((sum, p) => sum + p.accessCount, 0);
+  // Progress spans everyone. Guests used to be excluded because they had no
+  // way to fill a profile in; now they have their own editor and organizers
+  // can fill one in for them, so leaving them out would hide real work.
+  const everyone = [...participants, ...guests];
+  const headshots = everyone.filter(hasHeadshot).length;
+  const bios = everyone.filter(hasBio).length;
+  const ready = everyone.filter(profileComplete).length;
+  const signedIn = everyone.filter((p) => p.accessCount > 0).length;
+  const signIns = everyone.reduce((sum, p) => sum + p.accessCount, 0);
 
   const rows = [
     ...participants.map((p) => ({ ...p, role: "participant" as const, extra: p.school })),
@@ -37,19 +39,19 @@ export default async function AdminPeople() {
         />
         <MetricCard
           label="Headshots"
-          value={`${headshots} / ${participants.length}`}
-          detail={headshots === participants.length ? "All in" : `${participants.length - headshots} to go`}
+          value={`${headshots} / ${everyone.length}`}
+          detail={headshots === everyone.length ? "All in" : `${everyone.length - headshots} to go`}
           tint="var(--success-bg)"
         />
         <MetricCard
           label="Bios"
-          value={`${bios} / ${participants.length}`}
-          detail={bios === participants.length ? "All in" : `${participants.length - bios} to go`}
+          value={`${bios} / ${everyone.length}`}
+          detail={bios === everyone.length ? "All in" : `${everyone.length - bios} to go`}
           tint="var(--warning-bg)"
         />
         <MetricCard
           label="In the directory"
-          value={`${ready} / ${participants.length}`}
+          value={`${ready} / ${everyone.length}`}
           detail={`${signedIn} signed in · ${signIns} sign-ins`}
           tint="var(--red-50)"
         />
@@ -74,7 +76,16 @@ export default async function AdminPeople() {
                     {/* Gradient plate only — no monogram until real headshots land. */}
                     <span className="plate h-9 w-7 shrink-0" aria-hidden="true" />
                     <span>
-                      <strong className="block font-medium text-foreground">{person.name}</strong>
+                      {person.role === "guest" ? (
+                        <a
+                          href={`/dashboard/admin/guests/${person.id}`}
+                          className="block font-medium text-foreground underline decoration-rule underline-offset-4 transition hover:decoration-accent"
+                        >
+                          {person.name}
+                        </a>
+                      ) : (
+                        <strong className="block font-medium text-foreground">{person.name}</strong>
+                      )}
                       <span className="text-xs text-muted">{person.title}</span>
                     </span>
                   </span>
