@@ -1,18 +1,7 @@
-import type { Session, SessionType } from "@/server/data/types";
+import { SESSION_TYPES } from "@/server/data/types";
+import type { Session } from "@/server/data/types";
 import { CONFERENCE_DAYS, longDayLabel } from "@/server/schedule";
 import { removeProgramSession, saveProgramSession } from "@/app/dashboard/admin/actions";
-
-const TYPES: SessionType[] = [
-  "talk",
-  "panel",
-  "workshop",
-  "one-to-one",
-  "small-group",
-  "meal",
-  "social",
-  "break",
-  "logistics",
-];
 
 /**
  * Create and edit panel, opened by `?new=1` or `?edit=<id>`.
@@ -95,7 +84,7 @@ export default function SessionEditor({
             <label className={labelClass}>
               Type
               <select name="type" defaultValue={session?.type ?? "talk"} className={field}>
-                {TYPES.map((type) => (
+                {SESSION_TYPES.map((type) => (
                   <option key={type} value={type}>
                     {type}
                   </option>

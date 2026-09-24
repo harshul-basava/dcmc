@@ -24,6 +24,8 @@
   --block-panel-edge: var(--indigo-600);
   --block-workshop: var(--blue-50);
   --block-workshop-edge: var(--blue-400);
+  --block-working-session: var(--indigo-50);
+  --block-working-session-edge: var(--indigo-400);
   --block-one-to-one: var(--red-100);
   --block-one-to-one-edge: var(--red-700);
   --block-small-group: var(--red-50);

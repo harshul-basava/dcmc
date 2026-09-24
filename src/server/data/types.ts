@@ -46,17 +46,32 @@ export type Guest = Person & {
   availability: string;
 };
 
-/** Drives block colour and which sessions are personalized. */
-export type SessionType =
-  | "talk"
-  | "panel"
-  | "workshop"
-  | "one-to-one"
-  | "small-group"
-  | "meal"
-  | "social"
-  | "break"
-  | "logistics";
+/**
+ * Drives block colour and which sessions are personalized.
+ *
+ * A value, not just a type: the editor's dropdown, the legend and the save
+ * action all read this one list, and the save action checks against it. The
+ * type arrives as an untrusted form string, and it is interpolated into a
+ * `--block-<type>` custom property, so it is validated rather than cast.
+ */
+export const SESSION_TYPES = [
+  "talk",
+  "panel",
+  "workshop",
+  "working-session",
+  "one-to-one",
+  "small-group",
+  "meal",
+  "social",
+  "break",
+  "logistics",
+] as const;
+
+export type SessionType = (typeof SESSION_TYPES)[number];
+
+export function isSessionType(value: string): value is SessionType {
+  return (SESSION_TYPES as readonly string[]).includes(value);
+}
 
 export type Session = {
   id: string;

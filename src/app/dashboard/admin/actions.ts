@@ -15,7 +15,8 @@ import {
   saveSession,
   setAccessCount,
 } from "@/server/data";
-import type { PersonKey, SessionType } from "@/server/data/types";
+import { isSessionType } from "@/server/data/types";
+import type { PersonKey } from "@/server/data/types";
 import { HANDBOOK_RESOURCES_KEY, PORTAL_PAGES } from "@/server/portal-pages";
 import { FEEDBACK_FORMS } from "@/server/feedback";
 import { CONFERENCE_DAYS } from "@/server/schedule";
@@ -92,7 +93,11 @@ export async function saveProgramSession(formData: FormData) {
   if (end <= start) redirect("/dashboard/admin/schedule?error=1");
 
   const slido = String(formData.get("slidoUrl") ?? "").trim();
-  const type = String(formData.get("type") ?? "talk") as SessionType;
+  // Untrusted, and it ends up in a `--block-<type>` custom property as well
+  // as in Airtable, where a write with typecast would mint a junk select
+  // option. Anything unrecognised falls back rather than being trusted.
+  const rawType = String(formData.get("type") ?? "talk");
+  const type = isSessionType(rawType) ? rawType : "talk";
 
   await saveSession(id, {
     title,

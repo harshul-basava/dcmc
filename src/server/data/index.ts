@@ -44,7 +44,7 @@ import type {
   Role,
   Session,
 } from "./types";
-import { PAIRING_EXCLUDED } from "./types";
+import { PAIRING_EXCLUDED, isSessionType } from "./types";
 import * as fixtures from "./fixtures";
 
 export * from "./types";
@@ -127,7 +127,8 @@ const PERSONALIZED_TYPES = new Set(["one-to-one", "small-group"]);
 function toSession(record: AirtableRecord): Session {
   const f = record.fields;
   const start = toLocalISO(f[SESSION_FIELD.start]);
-  const type = (text(f[SESSION_FIELD.type]) || "talk") as Session["type"];
+  const rawType = text(f[SESSION_FIELD.type]);
+  const type = isSessionType(rawType) ? rawType : "talk";
   const slido = text(f[SESSION_FIELD.slido]);
 
   return {

@@ -2,6 +2,7 @@ const KINDS: { type: string; label: string }[] = [
   { type: "talk", label: "Talk" },
   { type: "panel", label: "Panel" },
   { type: "workshop", label: "Workshop" },
+  { type: "working-session", label: "Working session" },
   { type: "one-to-one", label: "One-on-one" },
   { type: "small-group", label: "Small group" },
   { type: "meal", label: "Meal" },
