@@ -44,6 +44,32 @@ export const SESSION_FIELD = {
   details: process.env.AIRTABLE_FIELD_DETAILS ?? "fldocNtQ1lEeUW8sE",
 } as const;
 
+/** DCMC 2.0 Speakers and Guests: the guest RSVP table.
+ *  Its primary column is named "Question" — an artefact of the intake form,
+ *  where the first question asked for the person's name. It holds the name. */
+export const GUEST_TABLE = process.env.AIRTABLE_GUESTS_TABLE ?? "tblduvKvg50k6bOE6";
+
+export const GUEST_FIELD = {
+  name: process.env.AIRTABLE_FIELD_GUEST_NAME ?? "fldcdd7c4sN2lT51A",
+  email: process.env.AIRTABLE_FIELD_GUEST_EMAIL ?? "fldIzMMK9zU3FsCvu",
+  rsvp: process.env.AIRTABLE_FIELD_GUEST_RSVP ?? "fldgomIPLGdoTZzKc",
+  dates: process.env.AIRTABLE_FIELD_GUEST_DATES ?? "fldZdbDZaBFvlj908",
+  /** Free text from the RSVP form. Read-only; the portal never writes it. */
+  times: process.env.AIRTABLE_FIELD_GUEST_TIMES ?? "fld4ZcBt0FzASYk1R",
+  /** `date,start,end` rows written by the portal's availability editor. */
+  availability: process.env.AIRTABLE_FIELD_GUEST_AVAILABILITY ?? "fldYIV6bEegcbZ9DH",
+  role: process.env.AIRTABLE_FIELD_GUEST_ROLE ?? "fldf04BCVQnlIVPvU",
+  affiliation: process.env.AIRTABLE_FIELD_GUEST_AFFILIATION ?? "fldzmQSGiSTlwvNyc",
+  bio: process.env.AIRTABLE_FIELD_GUEST_BIO ?? "fldeJPcrW8Ckdib5l",
+  headshot: process.env.AIRTABLE_FIELD_GUEST_HEADSHOT ?? "fldqUSVDUMRvOo9bs",
+  linkedin: process.env.AIRTABLE_FIELD_GUEST_LINKEDIN ?? "fldfEjImCbqeUCbwf",
+  signInPhrase: process.env.AIRTABLE_FIELD_GUEST_PHRASE ?? "fldgjaHKO2ZS9122R",
+  signIns: process.env.AIRTABLE_FIELD_GUEST_SIGN_INS ?? "fldhBgkqn6ipeNe1u",
+} as const;
+
+/** The affirmative choice on the guest RSVP question. */
+const GUEST_RSVP_YES = process.env.AIRTABLE_GUEST_RSVP_YES ?? "Yes";
+
 /** Portal Page Settings: which pages each audience can open. */
 export const SETTINGS_TABLE = process.env.AIRTABLE_SETTINGS_TABLE ?? "tblhmi9HvNpiwh8Dm";
 
@@ -162,21 +188,26 @@ export async function fetchRoster(): Promise<AirtableRecord[]> {
   }
 }
 
-export async function fetchRecord(recordId: string): Promise<AirtableRecord> {
+export async function fetchRecord(
+  recordId: string,
+  table: string = ATTENDEE_TABLE,
+): Promise<AirtableRecord> {
   return (await request(
-    `${ATTENDEE_TABLE}/${recordId}?returnFieldsByFieldId=true`,
+    `${table}/${recordId}?returnFieldsByFieldId=true`,
   )) as AirtableRecord;
 }
 
 export async function patchRecord(
   recordId: string,
   fields: Record<string, unknown>,
+  table: string = ATTENDEE_TABLE,
 ): Promise<void> {
-  await request(`${ATTENDEE_TABLE}/${recordId}`, {
+  await request(`${table}/${recordId}`, {
     method: "PATCH",
     body: JSON.stringify({ fields, returnFieldsByFieldId: true }),
   });
-  invalidateRoster();
+  if (table === GUEST_TABLE) invalidateGuests();
+  else invalidateRoster();
 }
 
 /** Airtable's own cap on the upload endpoint. */
@@ -362,4 +393,55 @@ export async function incrementSignIns(recordId: string): Promise<void> {
 
 export async function setSignIns(recordId: string, value: number): Promise<void> {
   await patchRecord(recordId, { [FIELD.signIns]: Math.max(0, value) });
+}
+
+/* ---------- Guests ---------- */
+
+let guestsCache: { at: number; records: AirtableRecord[] } | null = null;
+
+export function invalidateGuests(): void {
+  guestsCache = null;
+}
+
+/** Every speaker or guest who said yes. */
+export async function fetchGuests(): Promise<AirtableRecord[]> {
+  if (guestsCache && Date.now() - guestsCache.at < TTL_MS) return guestsCache.records;
+
+  try {
+    const records: AirtableRecord[] = [];
+    let offset: string | undefined;
+    do {
+      const params = new URLSearchParams({
+        pageSize: "100",
+        filterByFormula: `{${GUEST_FIELD.rsvp}} = "${GUEST_RSVP_YES.replace(/"/g, '\\"')}"`,
+        returnFieldsByFieldId: "true",
+      });
+      if (offset) params.set("offset", offset);
+      const page = (await request(`${GUEST_TABLE}?${params}`)) as {
+        records: AirtableRecord[];
+        offset?: string;
+      };
+      records.push(...page.records);
+      offset = page.offset;
+    } while (offset);
+
+    guestsCache = { at: Date.now(), records };
+    return records;
+  } catch (error) {
+    if (guestsCache) return guestsCache.records;
+    throw error;
+  }
+}
+
+export async function incrementGuestSignIns(recordId: string): Promise<void> {
+  const record = await fetchRecord(recordId, GUEST_TABLE);
+  await patchRecord(
+    recordId,
+    { [GUEST_FIELD.signIns]: count(record.fields[GUEST_FIELD.signIns]) + 1 },
+    GUEST_TABLE,
+  );
+}
+
+export async function setGuestSignIns(recordId: string, value: number): Promise<void> {
+  await patchRecord(recordId, { [GUEST_FIELD.signIns]: Math.max(0, value) }, GUEST_TABLE);
 }

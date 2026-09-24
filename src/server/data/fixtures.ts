@@ -74,32 +74,15 @@ export const participants: Participant[] = PARTICIPANT_SEED.map(
   }),
 );
 
-/** name | title | organization | availability | password */
-const GUEST_SEED: [string, string, string, string, string][] = [
-  ["Dr. Helen Vasquez", "Senior Fellow", "Center for Security and Emerging Technology", "2026-10-23,09:00,13:00", "silver-pine"],
-  ["James Okoro", "Director of AI Policy", "Institute for Progress", "2026-10-23,13:00,18:00", "copper-wren"],
-  ["Anita Desai", "Counsel", "Senate Commerce Committee", "2026-10-24,09:00,12:00", "golden-reed"],
-  ["Robert Kim", "Principal Researcher", "RAND Corporation", "2026-10-24,13:00,17:00", "iron-holt"],
-  ["Michelle Andrada", "VP of Government Affairs", "Americans for Responsible Innovation", "2026-10-24,09:00,16:00", "bronze-marsh"],
-  ["Dr. Paul Whitmore", "Adjunct Professor", "Georgetown Law", "2026-10-25,09:00,13:00", "slate-cove"],
-  ["Fatima Nasser", "Senior Advisor", "Foundation for American Innovation", "2026-10-25,10:00,15:00", "cedar-knoll"],
-  ["Greg Tanaka", "Former Deputy Assistant Secretary", "Center for a New American Security", "2026-10-23,15:00,19:00", "onyx-bluff"],
-];
-
-export const guests: Guest[] = GUEST_SEED.map(
-  ([name, title, organization, availability, shortPassword], i) => ({
-    id: guestId(i + 1),
-    name,
-    title,
-    organization,
-    availability,
-    bio: `${name} is ${title} at ${organization}. Placeholder biography — replace with the real one before launch.`,
-    email: `${name.toLowerCase().replace(/[^a-z]+/g, ".")}@example.org`,
-    shortPassword,
-    accessCount: [2, 0, 5, 1, 0, 3, 0, 1][i],
-    linkedin: i % 2 === 0 ? `https://www.linkedin.com/in/${name.toLowerCase().replace(/[^a-z]+/g, "-")}` : undefined,
-  }),
-);
+/**
+ * Deliberately empty. Guests come from the "DCMC 2.0 Speakers and Guests"
+ * RSVP table in Airtable; there is no offline stand-in because the invented
+ * ones that used to live here were indistinguishable from real speakers at
+ * real organizations, and they surfaced on the live site.
+ *
+ * With no token configured the guest directory is simply empty.
+ */
+export const guests: Guest[] = [];
 
 /** day | start | end | title | type | location | speaker | description */
 type SessionSeed = [string, string, string, string, SessionType, string, string, string];

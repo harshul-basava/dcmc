@@ -14,6 +14,8 @@
 import { safeEqual } from "../session";
 import {
   FIELD,
+  GUEST_FIELD,
+  GUEST_TABLE,
   SESSION_FIELD,
   SETTING_FIELD,
   airtableConfigured,
@@ -21,13 +23,16 @@ import {
   count,
   createSessionRecord,
   deleteSessionRecord,
+  fetchGuests,
   fetchRoster,
   fetchSessions,
   fetchSettings,
+  incrementGuestSignIns,
   incrementSignIns,
   patchRecord,
   patchSessionRecord,
   putSetting,
+  setGuestSignIns,
   setSignIns,
   text,
   uploadHeadshot,
@@ -90,8 +95,31 @@ export async function getParticipants(): Promise<Participant[]> {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/** One row of the guest RSVP table as the dashboard sees it. */
+function toGuest(record: AirtableRecord): Guest {
+  const f = record.fields;
+  return {
+    id: record.id,
+    name: text(f[GUEST_FIELD.name]) || "Unnamed guest",
+    title: text(f[GUEST_FIELD.role]),
+    organization: text(f[GUEST_FIELD.affiliation]),
+    photo: attachmentUrl(f[GUEST_FIELD.headshot]),
+    bio: text(f[GUEST_FIELD.bio]),
+    linkedin: text(f[GUEST_FIELD.linkedin]) || undefined,
+    email: text(f[GUEST_FIELD.email]),
+    shortPassword: text(f[GUEST_FIELD.signInPhrase]),
+    accessCount: count(f[GUEST_FIELD.signIns]),
+    // What the guest entered in the portal, as `date,start,end` rows. The
+    // RSVP form's own answer is prose ("Oct 23 before 7pm") and lives in a
+    // separate column, so it is never parsed as rows or overwritten here.
+    availability: text(f[GUEST_FIELD.availability]),
+  };
+}
+
 export async function getGuests(): Promise<Guest[]> {
-  return fixtures.guests;
+  if (!airtableConfigured()) return fixtures.guests;
+  const records = await fetchGuests();
+  return records.map(toGuest).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getParticipant(id: string): Promise<Participant | null> {
@@ -100,7 +128,8 @@ export async function getParticipant(id: string): Promise<Participant | null> {
 }
 
 export async function getGuest(id: string): Promise<Guest | null> {
-  return fixtures.guests.find((g) => g.id === id) ?? null;
+  if (!airtableConfigured()) return fixtures.guests.find((g) => g.id === id) ?? null;
+  return (await getGuests()).find((g) => g.id === id) ?? null;
 }
 
 /** Airtable returns UTC; the programme is written and read in DC local time. */
@@ -215,8 +244,8 @@ export async function findPersonByPassword(password: string): Promise<PasswordMa
       matches.push({ role: "participant", id: person.id });
     }
   }
-  for (const person of fixtures.guests) {
-    if (safeEqual(key, shortPasswordKey(person.shortPassword))) {
+  for (const person of await getGuests()) {
+    if (person.shortPassword && safeEqual(key, shortPasswordKey(person.shortPassword))) {
       matches.push({ role: "guest", id: person.id });
     }
   }
@@ -228,8 +257,9 @@ export async function findPersonByPassword(password: string): Promise<PasswordMa
  * fail-open: a counter that cannot be written must never block a login.
  */
 export async function recordLogin(match: PasswordMatch): Promise<void> {
-  if (airtableConfigured() && match.role === "participant") {
-    await incrementSignIns(match.id);
+  if (airtableConfigured()) {
+    if (match.role === "participant") await incrementSignIns(match.id);
+    else await incrementGuestSignIns(match.id);
     return;
   }
 
@@ -240,8 +270,9 @@ export async function recordLogin(match: PasswordMatch): Promise<void> {
 }
 
 export async function setAccessCount(role: Exclude<Role, "admin">, id: string, value: number): Promise<void> {
-  if (airtableConfigured() && role === "participant") {
-    await setSignIns(id, value);
+  if (airtableConfigured()) {
+    if (role === "participant") await setSignIns(id, value);
+    else await setGuestSignIns(id, value);
     return;
   }
 
@@ -429,13 +460,26 @@ export async function saveHeadshot(
 }
 
 export async function saveBio(role: Exclude<Role, "admin">, id: string, bio: string): Promise<void> {
+  const trimmed = bio.slice(0, 4000);
+
+  if (airtableConfigured()) {
+    if (role === "participant") await patchRecord(id, { [FIELD.bio]: trimmed });
+    else await patchRecord(id, { [GUEST_FIELD.bio]: trimmed }, GUEST_TABLE);
+    return;
+  }
+
   const list: { id: string; bio: string }[] =
     role === "participant" ? fixtures.participants : fixtures.guests;
   const person = list.find((p) => p.id === id);
-  if (person) person.bio = bio.slice(0, 4000);
+  if (person) person.bio = trimmed;
 }
 
 export async function saveAvailability(id: string, csv: string): Promise<void> {
+  if (airtableConfigured()) {
+    await patchRecord(id, { [GUEST_FIELD.availability]: csv }, GUEST_TABLE);
+    return;
+  }
+
   const guest = fixtures.guests.find((g) => g.id === id);
   if (guest) guest.availability = csv;
 }
