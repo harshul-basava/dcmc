@@ -1,0 +1,207 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/server/auth";
+import {
+  deleteSession,
+  getAssignments,
+  getGuests,
+  getParticipants,
+  getPreferences,
+  getSessions,
+  replaceAssignments,
+  savePortalPageSetting,
+  saveSession,
+  setAccessCount,
+} from "@/server/data";
+import type { PersonKey, SessionType } from "@/server/data/types";
+import { HANDBOOK_RESOURCES_KEY, PORTAL_PAGES } from "@/server/portal-pages";
+import { FEEDBACK_FORMS } from "@/server/feedback";
+import {
+  conversationCounts,
+  excludedFrom,
+  generateOneToOne,
+  generateSmallGroups,
+} from "@/server/pairings";
+
+export async function savePortalPages(formData: FormData) {
+  await requireAdmin();
+
+  // Every page in the catalogue is written on every save. Reading the checkbox
+  // by name means an unchecked box (which browsers omit entirely) correctly
+  // becomes `false` rather than being left at its old value.
+  for (const page of PORTAL_PAGES) {
+    await savePortalPageSetting(
+      page.role,
+      page.key,
+      page.label,
+      formData.get(`page-${page.role}:${page.key}`) === "on",
+    );
+  }
+
+  await savePortalPageSetting(
+    "all",
+    HANDBOOK_RESOURCES_KEY,
+    "Conference resources",
+    formData.get(`feature-${HANDBOOK_RESOURCES_KEY}`) === "on",
+  );
+
+  revalidatePath("/dashboard", "layout");
+  redirect("/dashboard/admin/pages?saved=1");
+}
+
+export async function saveFeedbackAvailability(formData: FormData) {
+  await requireAdmin();
+
+  for (const form of FEEDBACK_FORMS) {
+    if (form.key === "anytime") continue; // Always open, by design.
+    await savePortalPageSetting(
+      "all",
+      `feedback-${form.key}`,
+      form.label,
+      formData.get(`feedback-${form.key}`) === "on",
+    );
+  }
+
+  revalidatePath("/dashboard", "layout");
+  redirect("/dashboard/admin/feedback?saved=1");
+}
+
+export async function saveProgramSession(formData: FormData) {
+  await requireAdmin();
+
+  const id = String(formData.get("id") ?? "") || null;
+  const title = String(formData.get("title") ?? "").trim().slice(0, 240);
+  const start = String(formData.get("start") ?? "");
+  const end = String(formData.get("end") ?? "");
+
+  if (!title || !start || !end || end <= start) {
+    redirect("/dashboard/admin/schedule?error=1");
+  }
+
+  const slido = String(formData.get("slidoUrl") ?? "").trim();
+  const type = String(formData.get("type") ?? "talk") as SessionType;
+
+  await saveSession(id, {
+    title,
+    start,
+    end,
+    type,
+    track: String(formData.get("track") ?? "").slice(0, 100),
+    status: formData.get("status") === "tentative" ? "tentative" : "confirmed",
+    location: String(formData.get("location") ?? "").slice(0, 240),
+    speaker: String(formData.get("speaker") ?? "").slice(0, 240),
+    // Only https links are accepted, so a saved link can't downgrade anyone.
+    slidoUrl: slido.startsWith("https://") ? slido : undefined,
+    description: String(formData.get("description") ?? "").slice(0, 4000),
+    personalized: type === "one-to-one" || type === "small-group",
+  });
+
+  revalidatePath("/dashboard", "layout");
+  redirect("/dashboard/admin/schedule?saved=1");
+}
+
+export async function removeProgramSession(formData: FormData) {
+  await requireAdmin();
+  await deleteSession(String(formData.get("id") ?? ""));
+  revalidatePath("/dashboard", "layout");
+  redirect("/dashboard/admin/schedule?deleted=1");
+}
+
+export async function changeAccessCount(formData: FormData) {
+  await requireAdmin();
+
+  const role = formData.get("role") === "guest" ? "guest" : "participant";
+  const id = String(formData.get("id") ?? "");
+  const current = Number(formData.get("current") ?? 0);
+  const action = String(formData.get("action") ?? "");
+
+  const next = action === "increment" ? current + 1 : action === "decrement" ? current - 1 : 0;
+  await setAccessCount(role, id, next);
+
+  revalidatePath("/dashboard/admin/people");
+  redirect("/dashboard/admin/people");
+}
+
+/** Roster for one block: everybody not explicitly excluded from it. */
+async function rosterFor(sessionId: string): Promise<PersonKey[]> {
+  const [participants, guests, assignments] = await Promise.all([
+    getParticipants(),
+    getGuests(),
+    getAssignments(),
+  ]);
+  const excluded = excludedFrom(assignments, sessionId);
+
+  return [
+    ...participants.map((p) => `participant:${p.id}` as PersonKey),
+    ...guests.map((g) => `guest:${g.id}` as PersonKey),
+  ].filter((key) => !excluded.has(key));
+}
+
+export async function generatePairings(formData: FormData) {
+  await requireAdmin();
+
+  const sessionId = String(formData.get("sessionId") ?? "");
+  const sessions = await getSessions();
+  const session = sessions.find((s) => s.id === sessionId);
+  if (!session) redirect("/dashboard/admin/pairings?error=1");
+
+  const [roster, preferences, assignments] = await Promise.all([
+    rosterFor(sessionId),
+    getPreferences(),
+    getAssignments(),
+  ]);
+
+  const rows =
+    session.type === "small-group"
+      ? generateSmallGroups({
+          sessionId,
+          roster,
+          size: Number(formData.get("size") ?? 5),
+        })
+      : generateOneToOne({
+          sessionId,
+          roster,
+          preferences,
+          // Spread conversations across the whole conference, not just this block.
+          existingCounts: conversationCounts(assignments.filter((a) => a.sessionId !== sessionId)),
+        });
+
+  // Generation only ever writes a draft. Publishing is a separate, deliberate act.
+  await replaceAssignments([sessionId], rows, "draft");
+
+  revalidatePath("/dashboard", "layout");
+  redirect(`/dashboard/admin/pairings?generated=${sessionId}`);
+}
+
+export async function publishPairings(formData: FormData) {
+  await requireAdmin();
+
+  const sessionId = String(formData.get("sessionId") ?? "");
+  const assignments = await getAssignments();
+  const draft = assignments
+    .filter((a) => a.sessionId === sessionId && a.state === "draft")
+    .map(({ sessionId: s, personKey, group, location, kind }) => ({
+      sessionId: s,
+      personKey,
+      group,
+      location,
+      kind,
+    }));
+
+  if (!draft.length) redirect("/dashboard/admin/pairings?error=1");
+
+  await replaceAssignments([sessionId], draft, "published");
+  revalidatePath("/dashboard", "layout");
+  redirect(`/dashboard/admin/pairings?published=${sessionId}`);
+}
+
+/** Withdraws a block from participant schedules, leaving the draft intact. */
+export async function hidePairings(formData: FormData) {
+  await requireAdmin();
+  const sessionId = String(formData.get("sessionId") ?? "");
+  await replaceAssignments([sessionId], [], "published");
+  revalidatePath("/dashboard", "layout");
+  redirect(`/dashboard/admin/pairings?hidden=${sessionId}`);
+}
