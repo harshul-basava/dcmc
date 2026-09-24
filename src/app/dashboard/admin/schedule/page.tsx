@@ -72,7 +72,7 @@ export default async function AdminSchedule({
       {params.saved ? <Banner tone="ok">Saved.</Banner> : null}
       {params.deleted ? <Banner tone="ok">Event deleted.</Banner> : null}
       {params.error ? (
-        <Banner tone="bad">Give the event a name, and an end time after its start.</Banner>
+        <Banner tone="bad">Give the event a name, a day, and an end time after its start.</Banner>
       ) : null}
 
       <section className="program-panel">

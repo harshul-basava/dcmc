@@ -3,6 +3,28 @@ import type { Assignment, PersonKey, Session, SessionType } from "./data/types";
 /** Grid resolution. One row is this many minutes tall. */
 export const SLOT_MINUTES = 15;
 
+/**
+ * The days the conference occupies, arrival evening first. Events can only be
+ * scheduled on these, so the editor offers a day picker rather than a free
+ * date field — there is no such thing as a DCMC event on another date.
+ */
+export const CONFERENCE_DAYS: string[] = (
+  process.env.CONFERENCE_DAYS ?? "2026-10-22,2026-10-23,2026-10-24,2026-10-25"
+)
+  .split(",")
+  .map((day) => day.trim())
+  .filter(Boolean);
+
+/** "Thursday, Oct 22" for the day picker. */
+export function longDayLabel(date: string): string {
+  return new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 export type ScheduleDetail = {
   location: string;
   speaker: string;

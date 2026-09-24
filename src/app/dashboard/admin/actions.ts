@@ -18,6 +18,7 @@ import {
 import type { PersonKey, SessionType } from "@/server/data/types";
 import { HANDBOOK_RESOURCES_KEY, PORTAL_PAGES } from "@/server/portal-pages";
 import { FEEDBACK_FORMS } from "@/server/feedback";
+import { CONFERENCE_DAYS } from "@/server/schedule";
 import {
   conversationCounts,
   excludedFrom,
@@ -73,12 +74,22 @@ export async function saveProgramSession(formData: FormData) {
 
   const id = String(formData.get("id") ?? "") || null;
   const title = String(formData.get("title") ?? "").trim().slice(0, 240);
-  const start = String(formData.get("start") ?? "");
-  const end = String(formData.get("end") ?? "");
 
-  if (!title || !start || !end || end <= start) {
+  // One day plus two clock times, recombined here. Re-checked against the
+  // known conference days so a hand-crafted post cannot place an event
+  // somewhere the schedule grid would never render it.
+  const day = String(formData.get("day") ?? "");
+  const startTime = String(formData.get("startTime") ?? "");
+  const endTime = String(formData.get("endTime") ?? "");
+
+  const validTime = (value: string) => /^\d{2}:\d{2}$/.test(value);
+  if (!title || !CONFERENCE_DAYS.includes(day) || !validTime(startTime) || !validTime(endTime)) {
     redirect("/dashboard/admin/schedule?error=1");
   }
+
+  const start = `${day}T${startTime}`;
+  const end = `${day}T${endTime}`;
+  if (end <= start) redirect("/dashboard/admin/schedule?error=1");
 
   const slido = String(formData.get("slidoUrl") ?? "").trim();
   const type = String(formData.get("type") ?? "talk") as SessionType;

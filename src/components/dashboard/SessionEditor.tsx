@@ -1,4 +1,5 @@
 import type { Session, SessionType } from "@/server/data/types";
+import { CONFERENCE_DAYS, longDayLabel } from "@/server/schedule";
 import { removeProgramSession, saveProgramSession } from "@/app/dashboard/admin/actions";
 
 const TYPES: SessionType[] = [
@@ -53,14 +54,40 @@ export default function SessionEditor({
             <input name="title" required maxLength={240} defaultValue={session?.title} className={field} autoFocus />
           </label>
 
-          <div className="grid gap-5 sm:grid-cols-2">
+          {/* The conference runs on four known days, so the day is a choice and
+              the times are plain clock fields. Events never span midnight. */}
+          <div className="grid gap-5 sm:grid-cols-[1.4fr_1fr_1fr]">
+            <label className={labelClass}>
+              Day
+              <select name="day" defaultValue={session?.day ?? CONFERENCE_DAYS[1]} className={field}>
+                {CONFERENCE_DAYS.map((day) => (
+                  <option key={day} value={day}>
+                    {longDayLabel(day)}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label className={labelClass}>
               Starts
-              <input type="datetime-local" name="start" required defaultValue={session?.start} className={field} />
+              <input
+                type="time"
+                name="startTime"
+                required
+                step={300}
+                defaultValue={session?.start.slice(11)}
+                className={field}
+              />
             </label>
             <label className={labelClass}>
               Ends
-              <input type="datetime-local" name="end" required defaultValue={session?.end} className={field} />
+              <input
+                type="time"
+                name="endTime"
+                required
+                step={300}
+                defaultValue={session?.end.slice(11)}
+                className={field}
+              />
             </label>
           </div>
 
