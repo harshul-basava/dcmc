@@ -75,13 +75,19 @@ export async function saveFeedbackAvailability(formData: FormData) {
  * an event does not silently drop the days the organizer was focused on.
  * Re-validated here rather than echoed: it is form input landing in a URL.
  */
-function scheduleUrl(query: string, formData: FormData): string {
+function scheduleUrl(query: string, formData: FormData, ensureDay?: string): string {
   const raw = String(formData.get("days") ?? "");
   const days = raw
     .split(",")
     .map((day) => day.trim())
     .filter((day) => /^\d{4}-\d{2}-\d{2}$/.test(day));
-  const suffix = days.length ? `&days=${days.join(",")}` : "";
+
+  // Saving an event onto a day the filter hides would answer "Saved." with an
+  // empty calendar — indistinguishable from the save having failed. Whatever
+  // was just written is always brought into view.
+  if (ensureDay && days.length && !days.includes(ensureDay)) days.push(ensureDay);
+
+  const suffix = days.length ? `&days=${days.sort().join(",")}` : "";
   return `/dashboard/admin/schedule?${query}${suffix}`;
 }
 
@@ -130,7 +136,7 @@ export async function saveProgramSession(formData: FormData) {
   });
 
   revalidatePath("/dashboard", "layout");
-  redirect(scheduleUrl("saved=1", formData));
+  redirect(scheduleUrl("saved=1", formData, day));
 }
 
 export async function removeProgramSession(formData: FormData) {
