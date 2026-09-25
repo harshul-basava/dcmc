@@ -13,9 +13,13 @@ import { removeProgramSession, saveProgramSession } from "@/app/dashboard/admin/
 export default function SessionEditor({
   session,
   base,
+  daysFilter,
 }: {
   session: Session | null;
   base: string;
+  /** The page's `?days=` filter, carried through the save so the organizer
+   *  lands back on the days they were focused on. */
+  daysFilter?: string | null;
 }) {
   const field =
     "w-full rounded-card border border-rule bg-surface px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-accent focus:shadow-[0_0_0_4px_rgba(147,51,51,0.10)]";
@@ -37,6 +41,7 @@ export default function SessionEditor({
 
         <form action={saveProgramSession} className="editor-body" id="session-form">
           {session ? <input type="hidden" name="id" value={session.id} /> : null}
+          {daysFilter ? <input type="hidden" name="days" value={daysFilter} /> : null}
 
           <label className={labelClass}>
             Event name
@@ -136,6 +141,7 @@ export default function SessionEditor({
           {session ? (
             <form action={removeProgramSession}>
               <input type="hidden" name="id" value={session.id} />
+              {daysFilter ? <input type="hidden" name="days" value={daysFilter} /> : null}
               <button
                 type="submit"
                 className="min-h-11 rounded-card px-4 text-sm text-muted underline underline-offset-2 transition hover:text-accent"

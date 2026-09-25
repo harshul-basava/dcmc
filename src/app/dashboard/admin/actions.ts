@@ -70,6 +70,21 @@ export async function saveFeedbackAvailability(formData: FormData) {
   redirect("/dashboard/admin/feedback?saved=1");
 }
 
+/**
+ * Carries the schedule page's day filter back through a redirect, so saving
+ * an event does not silently drop the days the organizer was focused on.
+ * Re-validated here rather than echoed: it is form input landing in a URL.
+ */
+function scheduleUrl(query: string, formData: FormData): string {
+  const raw = String(formData.get("days") ?? "");
+  const days = raw
+    .split(",")
+    .map((day) => day.trim())
+    .filter((day) => /^\d{4}-\d{2}-\d{2}$/.test(day));
+  const suffix = days.length ? `&days=${days.join(",")}` : "";
+  return `/dashboard/admin/schedule?${query}${suffix}`;
+}
+
 export async function saveProgramSession(formData: FormData) {
   await requireAdmin();
 
@@ -85,12 +100,12 @@ export async function saveProgramSession(formData: FormData) {
 
   const validTime = (value: string) => /^\d{2}:\d{2}$/.test(value);
   if (!title || !CONFERENCE_DAYS.includes(day) || !validTime(startTime) || !validTime(endTime)) {
-    redirect("/dashboard/admin/schedule?error=1");
+    redirect(scheduleUrl("error=1", formData));
   }
 
   const start = `${day}T${startTime}`;
   const end = `${day}T${endTime}`;
-  if (end <= start) redirect("/dashboard/admin/schedule?error=1");
+  if (end <= start) redirect(scheduleUrl("error=1", formData));
 
   const slido = String(formData.get("slidoUrl") ?? "").trim();
   // Untrusted, and it ends up in a `--block-<type>` custom property as well
@@ -115,14 +130,14 @@ export async function saveProgramSession(formData: FormData) {
   });
 
   revalidatePath("/dashboard", "layout");
-  redirect("/dashboard/admin/schedule?saved=1");
+  redirect(scheduleUrl("saved=1", formData));
 }
 
 export async function removeProgramSession(formData: FormData) {
   await requireAdmin();
   await deleteSession(String(formData.get("id") ?? ""));
   revalidatePath("/dashboard", "layout");
-  redirect("/dashboard/admin/schedule?deleted=1");
+  redirect(scheduleUrl("deleted=1", formData));
 }
 
 export async function changeAccessCount(formData: FormData) {

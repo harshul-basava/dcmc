@@ -532,8 +532,9 @@
   background: var(--neutral-100);
 }
 
-.day-focus button {
+.day-focus :is(button, a) {
   padding: 0.4rem 0.7rem;
+  text-decoration: none;
   border: 0;
   border-radius: 6px;
   background: transparent;
@@ -544,17 +545,18 @@
   transition: background-color 140ms, color 140ms;
 }
 
-.day-focus button:hover {
+.day-focus :is(button, a):hover {
   color: var(--text-body);
 }
 
-.day-focus button[aria-pressed="true"] {
+.day-focus :is(button, a)[aria-pressed="true"],
+.day-focus a[data-on="true"] {
   background: var(--surface);
   color: var(--text-body);
   box-shadow: 0 1px 2px rgb(32 28 24 / 10%);
 }
 
-.day-focus button:focus-visible {
+.day-focus :is(button, a):focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
 }

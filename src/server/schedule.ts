@@ -308,3 +308,23 @@ export function formatHour(minutes: number): string {
   const h = h24 % 12 === 0 ? 12 : h24 % 12;
   return `${h}:${String(minutes % 60).padStart(2, "0")} ${h24 >= 12 ? "PM" : "AM"}`;
 }
+
+/**
+ * The admin schedule's `?days=` filter — which days the organizer is focused
+ * on while editing.
+ *
+ * Absent means every day, so an unfiltered URL stays the plain one. Unknown
+ * dates are dropped rather than trusted, since the value reaches the page
+ * from the query string and drives what is rendered.
+ */
+export function parseDayFilter(value: string | undefined, available: string[]): string[] {
+  if (value === undefined) return available;
+  const wanted = new Set(value.split(",").map((day) => day.trim()).filter(Boolean));
+  return available.filter((day) => wanted.has(day));
+}
+
+/** Serialises a day filter back to a query value, or null when it is all of them. */
+export function serializeDayFilter(selected: string[], available: string[]): string | null {
+  if (selected.length === available.length) return null;
+  return selected.join(",");
+}
