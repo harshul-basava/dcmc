@@ -134,36 +134,44 @@ export default async function AdminSchedule({
             {sessions.length === 1 ? "event" : "events"}, {byDay.size} of {allDays.length} days.
           </p>
 
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <span className="text-xs uppercase tracking-[0.08em] text-muted">Days</span>
-            <div className="day-focus" role="group" aria-label="Days to show">
-              {allDays.map((date) => {
-                const on = shown.has(date);
-                const next = on
-                  ? selectedDays.filter((day) => day !== date)
-                  : allDays.filter((day) => shown.has(day) || day === date);
-                return (
-                  <a
-                    key={date}
-                    href={next.length === allDays.length ? BASE : `${BASE}?days=${next.join(",")}`}
-                    // These navigate rather than toggle in place, so the state
-                    // lives in the label — `aria-pressed` belongs to buttons.
-                    aria-label={`${on ? "Hide" : "Show"} ${dayName(date, true)}`}
-                    data-on={on}
-                  >
-                    {dayName(date)}
-                  </a>
-                );
-              })}
-            </div>
-            {filter === null ? null : (
-              <a href={BASE} className="text-xs text-muted underline underline-offset-4 transition hover:text-foreground">
-                Show all days
-              </a>
-            )}
-          </div>
+          {/* Legend and day toggles share one row: both are controls for
+              reading the calendar below, and the row wraps on narrow screens
+              rather than the toggles overflowing. */}
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+            <ScheduleLegend />
 
-          <ScheduleLegend />
+            <div className="flex flex-wrap items-center gap-3">
+              {filter === null ? null : (
+                <a
+                  href={BASE}
+                  className="text-xs text-muted underline underline-offset-4 transition hover:text-foreground"
+                >
+                  Show all days
+                </a>
+              )}
+              <div className="day-focus" role="group" aria-label="Days to show">
+                {allDays.map((date) => {
+                  const on = shown.has(date);
+                  const next = on
+                    ? selectedDays.filter((day) => day !== date)
+                    : allDays.filter((day) => shown.has(day) || day === date);
+                  return (
+                    <a
+                      key={date}
+                      href={next.length === allDays.length ? BASE : `${BASE}?days=${next.join(",")}`}
+                      // These navigate rather than toggle in place, so the
+                      // state lives in the label — `aria-pressed` belongs to
+                      // buttons.
+                      aria-label={`${on ? "Hide" : "Show"} ${dayName(date, true)}`}
+                      data-on={on}
+                    >
+                      {dayName(date)}
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
           <div className="mt-4">
             {visibleDays.length ? (
               <ScheduleGrid days={visibleDays} editBase={withFilter()} />
