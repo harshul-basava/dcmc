@@ -1,8 +1,10 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   SLOT_MINUTES,
   formatHour,
+  formatRange,
   hourMarks,
   type ScheduleDay,
 } from "@/server/schedule";
@@ -33,9 +35,29 @@ function editLink(editBase: string, sessionId: string): string {
   return `${editBase}${editBase.includes("?") ? "&" : "?"}edit=${sessionId}`;
 }
 
+/** `690` -> `"11:30"`. */
+function clockTime(minutes: number): string {
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+}
+
+/** A new event created by clicking empty space runs an hour by default. */
+const NEW_EVENT_MINUTES = 60;
+
+type Resize = {
+  sessionId: string;
+  date: string;
+  startMinutes: number;
+  /** Where the bottom edge was when the drag began. */
+  fromEnd: number;
+  originY: number;
+  /** Snapped, and never shorter than one slot. */
+  endMinutes: number;
+};
+
 export default function ScheduleGrid({
   days,
   editBase,
+  resizeFormId,
 }: {
   days: ScheduleDay[];
   /**
@@ -44,7 +66,84 @@ export default function ScheduleGrid({
    * client component and functions cannot cross the server boundary.
    */
   editBase?: string;
+  /**
+   * Admin only: the id of a form that posts a new end time. Dragging an
+   * event's bottom edge fills it in and submits it, so the server recomputes
+   * overlaps and lane widths rather than the calendar laying itself out
+   * twice.
+   *
+   * A form id rather than an action prop because this component is shared
+   * with the participant views, which have no business importing an admin
+   * action.
+   */
+  resizeFormId?: string;
 }) {
+  const resizable = Boolean(editBase && resizeFormId);
+  const [resize, setResize] = useState<Resize | null>(null);
+  /** Read by the window listeners without re-subscribing on every move. */
+  const resizeRef = useRef<Resize | null>(null);
+  const suppressClick = useRef(false);
+
+  const commitResize = useCallback(() => {
+    const current = resizeRef.current;
+    resizeRef.current = null;
+    setResize(null);
+    if (!current) return;
+
+    // The browser fires a click after the drag; it must not open the editor.
+    suppressClick.current = true;
+    if (current.endMinutes === current.fromEnd) return;
+
+    const form = document.getElementById(resizeFormId!) as HTMLFormElement | null;
+    if (!form) return;
+    const set = (name: string, value: string) => {
+      const field = form.elements.namedItem(name);
+      if (field instanceof HTMLInputElement) field.value = value;
+    };
+    set("id", current.sessionId);
+    set("day", current.date);
+    set("startTime", clockTime(current.startMinutes));
+    set("endTime", clockTime(current.endMinutes));
+    form.requestSubmit();
+  }, [resizeFormId]);
+
+  /*
+   * Move and release are tracked on the window rather than the handle.
+   * Pointer capture can be lost — another element taking it, the browser
+   * cancelling the gesture — and a drag that loses its end event would leave
+   * the block stuck following the cursor.
+   */
+  const isResizing = resize !== null;
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const onMove = (event: PointerEvent) => {
+      const current = resizeRef.current;
+      if (!current) return;
+      const steps = Math.round((event.clientY - current.originY) / ROW_HEIGHT);
+      const next = Math.max(
+        current.startMinutes + SLOT_MINUTES,
+        current.fromEnd + steps * SLOT_MINUTES,
+      );
+      if (next === current.endMinutes) return;
+      const updated = { ...current, endMinutes: next };
+      resizeRef.current = updated;
+      setResize(updated);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", commitResize);
+    window.addEventListener("pointercancel", commitResize);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", commitResize);
+      window.removeEventListener("pointercancel", commitResize);
+    };
+    // Only the presence of a drag matters; the values live in the ref, so
+    // the listeners are not re-subscribed on every pointermove.
+  }, [isResizing, commitResize]);
+
   if (!days.length) {
     return (
       <div className="rounded-card border border-dashed border-rule px-6 py-14 text-center">
@@ -91,12 +190,36 @@ export default function ScheduleGrid({
               </header>
 
               <div
-                className="day-slots"
+                className={`day-slots${resizable ? " is-editable" : ""}`}
                 style={{ height, ["--hour-offset" as string]: `${hourOffset}px` }}
+                onClick={
+                  resizable
+                    ? (event) => {
+                        // Only empty space: a click on a block is that
+                        // block's own link.
+                        if (event.target !== event.currentTarget) return;
+                        const box = event.currentTarget.getBoundingClientRect();
+                        const slot =
+                          start +
+                          Math.floor((event.clientY - box.top) / ROW_HEIGHT) * SLOT_MINUTES;
+                        const params = new URLSearchParams({
+                          new: "1",
+                          day: day.date,
+                          start: clockTime(slot),
+                          end: clockTime(Math.min(slot + NEW_EVENT_MINUTES, 24 * 60 - SLOT_MINUTES)),
+                        });
+                        window.location.href = `${editBase}${
+                          editBase!.includes("?") ? "&" : "?"
+                        }${params}`;
+                      }
+                    : undefined
+                }
               >
                 {day.blocks.map((block) => {
                   const width = 100 / block.lanes;
-                  const duration = block.endMinutes - block.startMinutes;
+                  const dragging = resize?.sessionId === block.sessionId;
+                  const endMinutes = dragging ? resize.endMinutes : block.endMinutes;
+                  const duration = endMinutes - block.startMinutes;
                   return (
                     <a
                       key={block.key}
@@ -105,9 +228,22 @@ export default function ScheduleGrid({
                           ? editLink(editBase, block.sessionId)
                           : `#session-${block.key}`
                       }
+                      draggable={resizable ? false : undefined}
+                      onClick={
+                        resizable
+                          ? (event) => {
+                              if (suppressClick.current) {
+                                event.preventDefault();
+                                suppressClick.current = false;
+                              }
+                            }
+                          : undefined
+                      }
                       className={`program-block program-block-${block.type}${
                         duration < 45 ? " program-block-short" : ""
-                      }${block.mine ? " program-block-mine" : ""}`}
+                      }${block.mine ? " program-block-mine" : ""}${
+                        dragging ? " is-resizing" : ""
+                      }`}
                       style={{
                         top: px(block.startMinutes - start),
                         height: Math.max(px(duration) - 2, 18),
@@ -118,9 +254,36 @@ export default function ScheduleGrid({
                       }}
                     >
                       <strong>{block.title}</strong>
-                      <span className="program-block-meta">{block.timeLabel}</span>
+                      <span className="program-block-meta">
+                        {dragging
+                          ? formatRange(block.startMinutes, endMinutes)
+                          : block.timeLabel}
+                      </span>
                       {block.speaker ? (
                         <em className="program-block-speaker">{block.speaker}</em>
+                      ) : null}
+
+                      {resizable ? (
+                        <span
+                          className="program-block-grip"
+                          aria-hidden="true"
+                          onPointerDown={(event) => {
+                            if (event.button !== 0) return;
+                            // Otherwise the press starts a text selection that
+                            // fights the drag.
+                            event.preventDefault();
+                            const next = {
+                              sessionId: block.sessionId,
+                              date: day.date,
+                              startMinutes: block.startMinutes,
+                              fromEnd: block.endMinutes,
+                              originY: event.clientY,
+                              endMinutes: block.endMinutes,
+                            };
+                            resizeRef.current = next;
+                            setResize(next);
+                          }}
+                        />
                       ) : null}
                     </a>
                   );

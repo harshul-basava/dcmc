@@ -14,12 +14,18 @@ export default function SessionEditor({
   session,
   base,
   daysFilter,
+  defaults,
 }: {
   session: Session | null;
   base: string;
   /** The page's `?days=` filter, carried through the save so the organizer
    *  lands back on the days they were focused on. */
   daysFilter?: string | null;
+  /**
+   * Prefill for a new event: the day last used, or the slot clicked on the
+   * calendar. Ignored when editing, where the event's own values win.
+   */
+  defaults?: { day?: string; startTime?: string; endTime?: string };
 }) {
   const field =
     "w-full rounded-card border border-rule bg-surface px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-accent focus:shadow-[0_0_0_4px_rgba(147,51,51,0.10)]";
@@ -53,7 +59,7 @@ export default function SessionEditor({
           <div className="grid gap-5 sm:grid-cols-[1.4fr_1fr_1fr]">
             <label className={labelClass}>
               Day
-              <select name="day" defaultValue={session?.day ?? CONFERENCE_DAYS[1]} className={field}>
+              <select name="day" defaultValue={session?.day ?? defaults?.day ?? CONFERENCE_DAYS[1]} className={field}>
                 {CONFERENCE_DAYS.map((day) => (
                   <option key={day} value={day}>
                     {longDayLabel(day)}
@@ -68,7 +74,7 @@ export default function SessionEditor({
                 name="startTime"
                 required
                 step={300}
-                defaultValue={session?.start.slice(11)}
+                defaultValue={session?.start.slice(11) ?? defaults?.startTime}
                 className={field}
               />
             </label>
@@ -79,7 +85,7 @@ export default function SessionEditor({
                 name="endTime"
                 required
                 step={300}
-                defaultValue={session?.end.slice(11)}
+                defaultValue={session?.end.slice(11) ?? defaults?.endTime}
                 className={field}
               />
             </label>

@@ -330,6 +330,30 @@ function toAirtableInstant(local: string): string {
   return new Date(asUTC.getTime() + (reference.getTime() - shown.getTime())).toISOString();
 }
 
+/**
+ * Changes only when an event happens, leaving every other field alone.
+ *
+ * Separate from saveSession because a resize knows nothing but the new end
+ * time: writing the whole record from what the calendar happens to be
+ * holding would clobber a description or speaker edited since the page
+ * rendered.
+ */
+export async function setSessionTimes(id: string, start: string, end: string): Promise<void> {
+  if (airtableConfigured()) {
+    await patchSessionRecord(id, {
+      [SESSION_FIELD.start]: toAirtableInstant(start),
+      [SESSION_FIELD.end]: toAirtableInstant(end),
+    });
+    return;
+  }
+
+  const existing = fixtures.sessions.find((s) => s.id === id);
+  if (!existing) throw new Error(`No session ${id}`);
+  existing.start = start;
+  existing.end = end;
+  existing.day = start.slice(0, 10);
+}
+
 export async function saveSession(id: string | null, fields: Omit<Session, "id" | "day">): Promise<Session> {
   // The day is always derived from the start time, never entered separately,
   // so the two can't drift.

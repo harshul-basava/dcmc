@@ -328,3 +328,12 @@ export function serializeDayFilter(selected: string[], available: string[]): str
   if (selected.length === available.length) return null;
   return selected.join(",");
 }
+
+/**
+ * Remembers the day last used in the schedule editor, so creating several
+ * events on one day does not mean re-picking it each time.
+ *
+ * Lives here rather than beside the action that writes it: a "use server"
+ * module may only export async functions.
+ */
+export const LAST_DAY_COOKIE = "dcmc-last-day";

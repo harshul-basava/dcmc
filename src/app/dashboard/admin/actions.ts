@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { requireAdmin } from "@/server/auth";
 import {
   deleteSession,
@@ -13,13 +14,14 @@ import {
   replaceAssignments,
   savePortalPageSetting,
   saveSession,
+  setSessionTimes,
   setAccessCount,
 } from "@/server/data";
 import { isSessionType } from "@/server/data/types";
 import type { PersonKey } from "@/server/data/types";
 import { HANDBOOK_RESOURCES_KEY, PORTAL_PAGES } from "@/server/portal-pages";
 import { FEEDBACK_FORMS } from "@/server/feedback";
-import { CONFERENCE_DAYS } from "@/server/schedule";
+import { CONFERENCE_DAYS, LAST_DAY_COOKIE } from "@/server/schedule";
 import {
   conversationCounts,
   excludedFrom,
@@ -134,6 +136,48 @@ export async function saveProgramSession(formData: FormData) {
     description: String(formData.get("description") ?? "").slice(0, 4000),
     personalized: type === "one-to-one" || type === "small-group",
   });
+
+  await rememberDay(day);
+  revalidatePath("/dashboard", "layout");
+  redirect(scheduleUrl("saved=1", formData, day));
+}
+
+/**
+ * Stores the day last used in the editor. A cookie rather than client state
+ * because the editor is server rendered and the default has to be in the
+ * first HTML — a select that changes after hydration would be worse than a
+ * wrong one.
+ */
+async function rememberDay(day: string): Promise<void> {
+  const store = await cookies();
+  store.set(LAST_DAY_COOKIE, day, {
+    path: "/dashboard",
+    sameSite: "strict",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24 * 120,
+  });
+}
+
+/**
+ * Stretches an event by dragging its bottom edge. Only the times move; see
+ * setSessionTimes for why the rest of the record is left alone.
+ */
+export async function resizeProgramSession(formData: FormData) {
+  await requireAdmin();
+
+  const id = String(formData.get("id") ?? "");
+  const day = String(formData.get("day") ?? "");
+  const startTime = String(formData.get("startTime") ?? "");
+  const endTime = String(formData.get("endTime") ?? "");
+
+  const validTime = (value: string) => /^\d{2}:\d{2}$/.test(value);
+  if (!id || !CONFERENCE_DAYS.includes(day) || !validTime(startTime) || !validTime(endTime)) {
+    redirect(scheduleUrl("error=1", formData));
+  }
+  if (endTime <= startTime) redirect(scheduleUrl("error=1", formData));
+
+  await setSessionTimes(id, `${day}T${startTime}`, `${day}T${endTime}`);
 
   revalidatePath("/dashboard", "layout");
   redirect(scheduleUrl("saved=1", formData, day));

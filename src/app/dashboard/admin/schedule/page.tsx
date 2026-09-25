@@ -3,11 +3,15 @@ import PageHeading from "@/components/dashboard/PageHeading";
 import ScheduleGrid from "@/components/dashboard/ScheduleGrid";
 import ScheduleLegend from "@/components/dashboard/ScheduleLegend";
 import SessionEditor from "@/components/dashboard/SessionEditor";
+import { resizeProgramSession } from "../actions";
+import { cookies } from "next/headers";
 import { requireAdmin } from "@/server/auth";
 import { getAssignments, getSessions } from "@/server/data";
 import type { Session } from "@/server/data/types";
 import { personLookup } from "@/server/people";
 import {
+  CONFERENCE_DAYS,
+  LAST_DAY_COOKIE,
   buildSchedule,
   formatRange,
   minutesOf,
@@ -16,6 +20,9 @@ import {
 } from "@/server/schedule";
 
 const BASE = "/dashboard/admin/schedule";
+
+/** The hidden form a resize fills in and submits. */
+const RESIZE_FORM = "resize-session";
 
 function dayName(date: string, long = false) {
   return new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
@@ -42,16 +49,31 @@ export default async function AdminSchedule({
     error?: string;
     deleted?: string;
     days?: string;
+    day?: string;
+    start?: string;
+    end?: string;
   }>;
 }) {
   await requireAdmin();
   const params = await searchParams;
+  const lastDay = (await cookies()).get(LAST_DAY_COOKIE)?.value;
 
   const [sessions, assignments, people] = await Promise.all([
     getSessions(),
     getAssignments(),
     personLookup(),
   ]);
+
+  const clock = (value?: string) => (value && /^\d{2}:\d{2}$/.test(value) ? value : undefined);
+  const newDefaults = {
+    day: CONFERENCE_DAYS.includes(params.day ?? "")
+      ? params.day
+      : CONFERENCE_DAYS.includes(lastDay ?? "")
+        ? lastDay
+        : undefined,
+    startTime: clock(params.start),
+    endTime: clock(params.end),
+  };
 
   const editing = params.edit ? (sessions.find((s) => s.id === params.edit) ?? null) : null;
   const open = Boolean(editing) || params.new === "1";
@@ -174,7 +196,11 @@ export default async function AdminSchedule({
           </div>
           <div className="mt-4">
             {visibleDays.length ? (
-              <ScheduleGrid days={visibleDays} editBase={withFilter()} />
+              <ScheduleGrid
+                days={visibleDays}
+                editBase={withFilter()}
+                resizeFormId={RESIZE_FORM}
+              />
             ) : (
               <p className="rounded-card border border-rule bg-card p-6 text-center text-sm text-muted">
                 No days selected.
@@ -247,7 +273,23 @@ export default async function AdminSchedule({
         ))}
       </div>
 
-      {open ? <SessionEditor session={editing} base={withFilter()} daysFilter={filter} /> : null}
+      {/* Filled in and submitted by dragging an event's bottom edge. */}
+      <form id={RESIZE_FORM} action={resizeProgramSession} hidden>
+        <input type="hidden" name="id" defaultValue="" />
+        <input type="hidden" name="day" defaultValue="" />
+        <input type="hidden" name="startTime" defaultValue="" />
+        <input type="hidden" name="endTime" defaultValue="" />
+        <input type="hidden" name="days" defaultValue={filter ?? ""} />
+      </form>
+
+      {open ? (
+        <SessionEditor
+          session={editing}
+          base={withFilter()}
+          daysFilter={filter}
+          defaults={newDefaults}
+        />
+      ) : null}
     </PortalShell>
   );
 }
