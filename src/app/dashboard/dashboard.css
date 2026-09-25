@@ -15,29 +15,52 @@
   --slot-height: 28px;
   --slot-minutes: 15;
 
-  /* Session colours, drawn from the brand scales so the dashboard stays in the
-     same family as the landing page. Each kind also carries a left border
-     weight, so the kinds stay distinguishable without relying on hue alone. */
+  /* Session colours. One hue per kind, so a day of the programme can be read
+     at a glance without consulting the legend.
+
+     Talk, panel and one-to-one stay on the brand scales. The rest need hues
+     the brand does not carry, defined here rather than in brand.css: these
+     are dashboard furniture, not part of the site's identity, and the two
+     green/amber tokens brand.css does have are status colours — borrowing
+     them would make "green" mean both "small group" and "done".
+
+     Every kind also carries a left border weight, so they stay tellable
+     apart without relying on hue alone. */
   --block-talk: var(--blue-100);
   --block-talk-edge: var(--blue-600);
+
   --block-panel: var(--indigo-100);
   --block-panel-edge: var(--indigo-600);
-  --block-workshop: var(--blue-50);
-  --block-workshop-edge: var(--blue-400);
-  --block-working-session: var(--indigo-50);
-  --block-working-session-edge: var(--indigo-400);
+
+  /* Teal — taught sessions read as cool and separate from the talks. */
+  --block-workshop: #DDF0EE;
+  --block-workshop-edge: #1E8C84;
+
+  /* Amber — hands-on time. */
+  --block-working-session: #FAEFD4;
+  --block-working-session-edge: #D9942A;
+
   --block-one-to-one: var(--red-100);
   --block-one-to-one-edge: var(--red-700);
-  --block-small-group: var(--red-50);
-  --block-small-group-edge: var(--red-400);
-  --block-meal: var(--neutral-100);
-  --block-meal-edge: var(--neutral-400);
-  --block-social: var(--neutral-100);
-  --block-social-edge: var(--neutral-500);
+
+  /* Green — the other conversation format, kept clearly apart from 1:1s. */
+  --block-small-group: #E3F3E8;
+  --block-small-group-edge: #2C9E5E;
+
+  /* Sand — meals sit quietly behind the programme. */
+  --block-meal: #F4EBDD;
+  --block-meal-edge: #B08445;
+
+  /* Violet — evening and social time. */
+  --block-social: #EBE5F6;
+  --block-social-edge: #6D4AA8;
+
+  /* Breaks are gaps, not events: outline only. */
   --block-break: transparent;
   --block-break-edge: var(--neutral-300);
+
   --block-logistics: var(--neutral-100);
-  --block-logistics-edge: var(--neutral-400);
+  --block-logistics-edge: var(--neutral-500);
 }
 
 /* ---------- Schedule grid ---------- */
