@@ -1127,6 +1127,18 @@ body.schedule-expanded {
   /* Above its container, and above a neighbouring lane's blocks. */
   z-index: 3;
   box-shadow: 0 2px 8px rgb(32 28 24 / 14%);
+
+  /*
+   * Opaque, whatever the kind's own fill is. A break is deliberately
+   * transparent when it stands alone — outline only, because a gap is not an
+   * event — but an overlay sits on top of another block, and letting that
+   * block's colour show through makes the two read as one shape.
+   *
+   * The kind's fill is painted as an image over a solid base, so a coloured
+   * overlay keeps its tint and a transparent one lands on plain surface.
+   */
+  background-color: var(--surface);
+  background-image: linear-gradient(var(--block-fill, transparent), var(--block-fill, transparent));
 }
 
 /*
