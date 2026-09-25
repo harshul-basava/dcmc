@@ -215,6 +215,20 @@ export default function ScheduleGrid({
                     : undefined
                 }
               >
+                {/* The day columns share one window, so a day that starts
+                    late opens with a run of time that is not merely empty —
+                    it is outside the programme. Hatching says so. */}
+                {day.blocks.length &&
+                Math.min(...day.blocks.map((b) => b.startMinutes)) > start ? (
+                  <div
+                    className="day-offhours"
+                    aria-hidden="true"
+                    style={{
+                      height: px(Math.min(...day.blocks.map((b) => b.startMinutes)) - start),
+                    }}
+                  />
+                ) : null}
+
                 {day.blocks.map((block) => {
                   const width = 100 / block.lanes;
                   const dragging = resize?.sessionId === block.sessionId;
@@ -243,12 +257,18 @@ export default function ScheduleGrid({
                         duration < 45 ? " program-block-short" : ""
                       }${block.mine ? " program-block-mine" : ""}${
                         dragging ? " is-resizing" : ""
-                      }`}
+                      }${block.overlay ? " program-block-overlay" : ""}`}
                       style={{
                         top: px(block.startMinutes - start),
                         height: Math.max(px(duration) - 2, 18),
-                        left: `calc(${block.lane * width}% + 2px)`,
-                        width: `calc(${width}% - 4px)`,
+                        // An overlay is inset from its container's left edge
+                        // so the block underneath stays legible.
+                        left: block.overlay
+                          ? `calc(${block.lane * width}% + 2px + var(--overlay-inset))`
+                          : `calc(${block.lane * width}% + 2px)`,
+                        width: block.overlay
+                          ? `calc(${width}% - 4px - var(--overlay-inset))`
+                          : `calc(${width}% - 4px)`,
                         ["--block-fill" as string]: `var(--block-${block.type})`,
                         ["--block-edge" as string]: `var(--block-${block.type}-edge)`,
                       }}

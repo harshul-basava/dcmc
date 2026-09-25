@@ -51,6 +51,12 @@ export type ScheduleBlock = {
   /** Filled in by the layout pass. */
   lane: number;
   lanes: number;
+  /**
+   * Drawn on top of the block it sits inside, rather than taking a lane of
+   * its own. A Q&A nested in a talk annotates that talk; it is not a
+   * competing choice, and halving the talk's width to seat it says otherwise.
+   */
+  overlay: boolean;
 };
 
 export type ScheduleDay = {
@@ -155,6 +161,7 @@ export function buildSchedule({
         detail,
         lane: 0,
         lanes: 1,
+        overlay: false,
       });
       continue;
     }
@@ -197,6 +204,7 @@ export function buildSchedule({
           },
           lane: 0,
           lanes: 1,
+          overlay: false,
         });
       }
       continue;
@@ -230,6 +238,7 @@ export function buildSchedule({
       },
       lane: 0,
       lanes: 1,
+      overlay: false,
     });
   }
 
@@ -263,12 +272,42 @@ export function buildSchedule({
 }
 
 /**
- * Side-by-side placement for blocks that genuinely overlap in time. Blocks are
- * grouped into clusters of mutual overlap; within a cluster each takes the
- * first lane free at its start time, and every block in the cluster is widened
- * to the same fraction so the columns line up.
+ * Places the blocks of one day.
+ *
+ * A block that fits entirely inside a longer one is an overlay: it is drawn
+ * on top of its container rather than beside it. Without this a fifteen
+ * minute Q&A halves the width of the hour-long talk it belongs to, and the
+ * day reads as two competing tracks that do not exist.
+ *
+ * Everything else is laid out side by side: blocks are grouped into clusters
+ * of mutual overlap, each takes the first lane free at its start, and the
+ * whole cluster is widened to the same fraction so the columns line up.
  */
 function assignLanes(blocks: ScheduleBlock[]): void {
+  /** The longest block that completely contains this one, if any. */
+  const containerOf = new Map<ScheduleBlock, ScheduleBlock>();
+
+  for (const block of blocks) {
+    const span = block.endMinutes - block.startMinutes;
+    let best: ScheduleBlock | null = null;
+
+    for (const other of blocks) {
+      if (other === block) continue;
+      const contains =
+        other.startMinutes <= block.startMinutes && other.endMinutes >= block.endMinutes;
+      // Strictly longer, so two blocks sharing a span can never each claim
+      // to contain the other.
+      if (!contains || other.endMinutes - other.startMinutes <= span) continue;
+      if (!best || other.endMinutes - other.startMinutes > best.endMinutes - best.startMinutes) {
+        best = other;
+      }
+    }
+
+    if (best) containerOf.set(block, best);
+  }
+
+  const laneBlocks = blocks.filter((block) => !containerOf.has(block));
+
   let cluster: ScheduleBlock[] = [];
   let clusterEnd = -1;
 
@@ -279,7 +318,7 @@ function assignLanes(blocks: ScheduleBlock[]): void {
     cluster = [];
   };
 
-  for (const block of blocks) {
+  for (const block of laneBlocks) {
     if (block.startMinutes >= clusterEnd) flush();
 
     const taken = new Set(
@@ -293,6 +332,16 @@ function assignLanes(blocks: ScheduleBlock[]): void {
     clusterEnd = Math.max(clusterEnd, block.endMinutes);
   }
   flush();
+
+  // An overlay sits in its container's lane. Containers can nest, so walk out
+  // to the one that actually holds a lane.
+  for (const [block, container] of containerOf) {
+    let root = container;
+    while (containerOf.has(root)) root = containerOf.get(root)!;
+    block.overlay = true;
+    block.lane = root.lane;
+    block.lanes = root.lanes;
+  }
 }
 
 /** Whole-hour marks for the time rail, from the first whole hour in range. */

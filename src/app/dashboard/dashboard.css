@@ -1114,3 +1114,38 @@ body.schedule-expanded {
 .day-slots.is-editable {
   cursor: cell;
 }
+
+/* ---------- Nested events, and time outside the programme ---------- */
+
+.day-slots {
+  /* How far an overlay is pushed off its container's left edge. Enough to
+     leave the container's colour bar and the start of its title readable. */
+  --overlay-inset: 2.75rem;
+}
+
+.program-block-overlay {
+  /* Above its container, and above a neighbouring lane's blocks. */
+  z-index: 3;
+  box-shadow: 0 2px 8px rgb(32 28 24 / 14%);
+}
+
+/*
+ * Time before the day's first event. The columns share one window so the
+ * hour rail lines up, which leaves a late-starting day with a tall blank —
+ * hatching reads as "nothing here by design" rather than "still loading".
+ */
+.day-offhours {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0,
+    transparent 5px,
+    var(--neutral-200) 5px,
+    var(--neutral-200) 6px
+  );
+  opacity: 0.7;
+}
