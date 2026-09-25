@@ -23,6 +23,16 @@ function px(minutes: number): number {
  * Each block is an anchor to a `:target` dialog rendered below the grid — no
  * client JavaScript is involved in opening or closing one.
  */
+/**
+ * `editBase` may already carry a query — the admin schedule puts its day
+ * filter there — so the separator has to be chosen, not assumed. Appending a
+ * second "?" folded `edit=` into the last day of the filter, which silently
+ * dropped that day from the view.
+ */
+function editLink(editBase: string, sessionId: string): string {
+  return `${editBase}${editBase.includes("?") ? "&" : "?"}edit=${sessionId}`;
+}
+
 export default function ScheduleGrid({
   days,
   editBase,
@@ -91,7 +101,9 @@ export default function ScheduleGrid({
                     <a
                       key={block.key}
                       href={
-                        editBase ? `${editBase}?edit=${block.sessionId}` : `#session-${block.key}`
+                        editBase
+                          ? editLink(editBase, block.sessionId)
+                          : `#session-${block.key}`
                       }
                       className={`program-block program-block-${block.type}${
                         duration < 45 ? " program-block-short" : ""
