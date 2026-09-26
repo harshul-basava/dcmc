@@ -7,6 +7,9 @@ import { HANDBOOK_RESOURCES_KEY, handbookResourcesOpen } from "@/server/portal-p
 import { FEEDBACK_FORMS, feedbackFormOpen } from "@/server/feedback";
 import { savePortalPages } from "../actions";
 
+/** The settings form, so the Save button in the header can submit it. */
+const PAGES_FORM = "portal-pages";
+
 const AUDIENCES = [
   { role: "participant" as const, label: "Attendees" },
   { role: "guest" as const, label: "Guests" },
@@ -37,15 +40,27 @@ export default async function AdminPortalPages({
         title="Portal pages"
         lead="A closed page leaves the audience's navigation, and direct requests to it are redirected."
         actions={
-          <a
-            href="/dashboard/admin/pages?refresh=1"
-            className="inline-flex min-h-10 items-center gap-2 rounded-card border border-rule bg-card px-4 text-xs text-foreground transition hover:border-border-strong"
-          >
-            <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-              <path d="M15.5 6.5A6 6 0 1 0 16 13M15.5 6.5V3m0 3.5H12" />
-            </svg>
-            Refresh
-          </a>
+          <>
+            <a
+              href="/dashboard/admin/pages?refresh=1"
+              className="inline-flex min-h-10 items-center gap-2 rounded-card border border-rule bg-card px-4 text-xs text-foreground transition hover:border-border-strong"
+            >
+              <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+                <path d="M15.5 6.5A6 6 0 1 0 16 13M15.5 6.5V3m0 3.5H12" />
+              </svg>
+              Refresh
+            </a>
+
+            {/* Outside the form it submits, so it needs naming. Saving is the
+                reason for the page; it should not be a scroll away. */}
+            <button
+              type="submit"
+              form={PAGES_FORM}
+              className="min-h-10 rounded-card bg-accent px-5 text-xs font-semibold text-on-accent transition hover:bg-accent-hover active:scale-[0.97]"
+            >
+              Save changes
+            </button>
+          </>
         }
       />
 
@@ -55,7 +70,7 @@ export default async function AdminPortalPages({
         </p>
       ) : null}
 
-      <form action={savePortalPages}>
+      <form id={PAGES_FORM} action={savePortalPages}>
         <div className="grid items-start gap-6 lg:grid-cols-2">
           {AUDIENCES.map(({ role, label }) => {
             const pages = PORTAL_PAGES.filter((page) => page.role === role);
@@ -159,14 +174,6 @@ export default async function AdminPortalPages({
           })}
         </div>
 
-        <div className="mt-8 flex justify-end">
-          <button
-            type="submit"
-            className="min-h-11 rounded-card bg-accent px-7 text-sm font-semibold text-on-accent transition hover:bg-accent-hover active:scale-[0.97]"
-          >
-            Save changes
-          </button>
-        </div>
       </form>
     </PortalShell>
   );
