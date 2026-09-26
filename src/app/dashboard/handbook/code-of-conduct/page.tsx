@@ -1,3 +1,4 @@
+import Link from "next/link";
 import PortalShell from "@/components/dashboard/PortalShell";
 import PageHeading from "@/components/dashboard/PageHeading";
 import HandbookBack from "@/components/dashboard/HandbookBack";
@@ -8,8 +9,7 @@ import { conference } from "@/content/site";
  * Adapted from the Lateral Workshop code of conduct.
  *
  * Their organisers' names and personal phone numbers are deliberately not
- * carried over — reporting routes to DCMC's own contact address until the
- * organising team's own details are filled in below.
+ * carried over; the reporting routes below are DCMC's own.
  */
 export default async function CodeOfConductPage() {
   await requireParticipant("handbook");
@@ -75,8 +75,25 @@ export default async function CodeOfConductPage() {
         <h2>Contact us to report any problems:</h2>
         <ul>
           <li>
-            Please contact an organizer immediately with any concerns, in person or by writing
-            to{" "}
+            Please contact Harshul immediately with any concerns, in person or by call or
+            text on{" "}
+            <a href="tel:+14083554218" className="text-accent underline underline-offset-2">
+              +1 (408) 355-4218
+            </a>
+            .
+          </li>
+          <li>
+            {/* Liam's and Seth's numbers are not published here yet — add them
+                beside their names once they have said which number to use. */}
+            If you do not feel comfortable contacting Harshul, please contact another member of
+            the core organizing team: Liam Robins or Seth Lifland.
+          </li>
+          <li>
+            You can also raise something without giving your name at all: the{" "}
+            <Link href="/dashboard/feedback" className="text-accent underline underline-offset-2">
+              feedback page
+            </Link>{" "}
+            has a form that can be submitted anonymously. Or write to{" "}
             <a
               href={`mailto:${conference.email}`}
               className="text-accent underline underline-offset-2"
@@ -84,10 +101,6 @@ export default async function CodeOfConductPage() {
               {conference.email}
             </a>
             .
-          </li>
-          <li>
-            If you do not feel comfortable contacting that person, please contact another
-            member of the core organizing team.
           </li>
           <li>We will do our best to maintain the confidentiality of complaints whenever feasible.</li>
         </ul>
