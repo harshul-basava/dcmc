@@ -46,10 +46,8 @@ export default async function CodeOfConductPage() {
           <li>Offensive or discriminatory actions or communication</li>
           <li>Being disruptive or otherwise undermining others&rsquo; experience in the program</li>
           <li>
-            Bullying or threatening, including but not limited to
-            <ul>
-              <li>Insulting people, putting them down, or mocking them</li>
-            </ul>
+            Bullying or threatening, including but not limited to insulting people, putting
+            them down, or mocking them
           </li>
           <li>
             Harassment of any kind, including unwelcome sexual attention and inappropriate
@@ -78,31 +76,26 @@ export default async function CodeOfConductPage() {
         <h2>Contact us to report any problems:</h2>
         <ul>
           <li>
-            Please contact Harshul immediately with any concerns, in person or by call or
-            text on{" "}
-            <a href="tel:+14083554218" className="text-accent underline underline-offset-2">
-              +1 (408) 355-4218
-            </a>
-            .
+            Please contact one of the main organizers with any concerns, in person or by call
+            or text.
+            {/* Liam's and Seth's numbers are not published yet; the lines are
+                here so they can be filled in without touching the copy. */}
+            <ul>
+              <li>
+                Harshul Basava:{" "}
+                <a href="tel:+14083554218" className="text-accent underline underline-offset-2">
+                  +1 (408) 355-4218
+                </a>
+              </li>
+              <li>Liam Robins:</li>
+              <li>Seth Lifland:</li>
+            </ul>
           </li>
           <li>
-            {/* Liam's and Seth's numbers are not published here yet — add them
-                beside their names once they have said which number to use. */}
-            If you do not feel comfortable contacting Harshul, please contact another member of
-            the core organizing team: Liam Robins or Seth Lifland.
-          </li>
-          <li>
-            You can also raise something without giving your name at all: the{" "}
+            You can contact us anonymously using the anytime form on the{" "}
             <Link href="/dashboard/feedback" className="text-accent underline underline-offset-2">
               feedback page
-            </Link>{" "}
-            has a form that can be submitted anonymously. Or write to{" "}
-            <a
-              href={`mailto:${conference.email}`}
-              className="text-accent underline underline-offset-2"
-            >
-              {conference.email}
-            </a>
+            </Link>
             .
           </li>
           <li>We will do our best to maintain the confidentiality of complaints whenever feasible.</li>
