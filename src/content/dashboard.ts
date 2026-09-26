@@ -282,7 +282,11 @@ export const organizers: { name: string; contact: string; photo?: string }[] = [
   { name: "Harshul Basava", contact: "+1 (408) 355-4218", photo: "/organizers/harshul-basava.jpg" },
   { name: "Liam Robins", contact: "" },
   { name: "Seth Lifland", contact: "+1 (703) 269-8686", photo: "/organizers/seth-lifland.jpeg" },
-  { name: "Binit Maharjan", contact: "" },
+  {
+    name: "Binit Maharjan",
+    contact: "+1 (571) 490-1063",
+    photo: "/organizers/binit-maharjan.jpg",
+  },
   { name: "Isel Neira", contact: "+1 (561) 231-3437", photo: "/organizers/isel-neira.jpeg" },
   {
     name: "Aybars Kocoglu",
