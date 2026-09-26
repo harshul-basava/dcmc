@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import PortalShell from "@/components/dashboard/PortalShell";
+import BackLink from "@/components/dashboard/BackLink";
 import PageHeading from "@/components/dashboard/PageHeading";
 import ProfileStatus from "@/components/dashboard/ProfileStatus";
 import DirectoryPreview from "@/components/dashboard/DirectoryPreview";
@@ -26,12 +27,7 @@ export default async function AdminGuestProfile({
 
   return (
     <PortalShell role="admin" active="people">
-      <a
-        href="/dashboard/admin/people"
-        className="mb-4 inline-block text-sm text-muted transition hover:text-foreground"
-      >
-        &lt; All people
-      </a>
+      <BackLink href="/dashboard/admin/people">All people</BackLink>
 
       <PageHeading
         title={guest.name}

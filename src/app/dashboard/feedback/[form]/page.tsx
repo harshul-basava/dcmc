@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import PortalShell from "@/components/dashboard/PortalShell";
+import BackLink from "@/components/dashboard/BackLink";
 import PageHeading from "@/components/dashboard/PageHeading";
 import RatingScale from "@/components/dashboard/RatingScale";
 import TextQuestion from "@/components/dashboard/TextQuestion";
@@ -69,25 +70,7 @@ export default async function FeedbackFormPage({
   return (
     <PortalShell role="participant" active="feedback">
       <div className="mx-auto w-full max-w-2xl">
-        <Link
-          href="/dashboard/feedback"
-          className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
-        >
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 16 16"
-            width="13"
-            height="13"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M10 3L5 8l5 5" />
-          </svg>
-          All feedback forms
-        </Link>
+        <BackLink href="/dashboard/feedback">All feedback forms</BackLink>
 
         {/* Anytime is a single box; its description would only repeat the label. */}
         <PageHeading title={form.title} lead={key === "anytime" ? undefined : form.description} />

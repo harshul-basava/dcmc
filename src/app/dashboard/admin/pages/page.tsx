@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import PortalShell from "@/components/dashboard/PortalShell";
 import PageHeading from "@/components/dashboard/PageHeading";
 import { requireAdmin } from "@/server/auth";
@@ -77,24 +78,56 @@ export default async function AdminPortalPages({
                 </header>
 
                 {pages.map((page) => (
-                  <div key={page.key} className="portal-pages-row">
-                    <span className="flex items-center gap-2.5">
-                      <span className="font-display text-base font-medium text-foreground">
-                        {page.label}
+                  <Fragment key={page.key}>
+                    <div className="portal-pages-row">
+                      <span className="flex items-center gap-2.5">
+                        <span className="font-display text-base font-medium text-foreground">
+                          {page.label}
+                        </span>
+                        {page.key === home ? <span className="portal-pages-home">Home</span> : null}
                       </span>
-                      {page.key === home ? <span className="portal-pages-home">Home</span> : null}
-                    </span>
 
-                    <label className="switch">
-                      <input
-                        type="checkbox"
-                        name={`page-${role}:${page.key}`}
-                        defaultChecked={state.get(`${role}:${page.key}`)}
-                      />
-                      <span className="switch-track" />
-                      <span className="sr-only">{`${page.label} open to ${label.toLowerCase()}`}</span>
-                    </label>
-                  </div>
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          name={`page-${role}:${page.key}`}
+                          defaultChecked={state.get(`${role}:${page.key}`)}
+                        />
+                        <span className="switch-track" />
+                        <span className="sr-only">{`${page.label} open to ${label.toLowerCase()}`}</span>
+                      </label>
+                    </div>
+
+                    {/* The individual forms live behind the Feedback page, so
+                        they are nested under it rather than given a card of
+                        their own. Closing the page closes all of them. */}
+                    {role === "participant" && page.key === "feedback"
+                      ? forms.map((form) => (
+                          <div
+                            key={form.key}
+                            className="portal-pages-row is-sub"
+                            data-disabled={!state.get("participant:feedback")}
+                          >
+                            <span>
+                              <span className="block text-sm font-medium text-foreground">
+                                {form.title}
+                              </span>
+                              <small className="text-xs text-muted">{form.description}</small>
+                            </span>
+
+                            <label className="switch">
+                              <input
+                                type="checkbox"
+                                name={`feedback-${form.key}`}
+                                defaultChecked={form.open}
+                              />
+                              <span className="switch-track" />
+                              <span className="sr-only">{`${form.title} open to attendees`}</span>
+                            </label>
+                          </div>
+                        ))
+                      : null}
+                  </Fragment>
                 ))}
 
                 {/* Not a nav page — a section inside the handbook — so it sits
@@ -125,46 +158,6 @@ export default async function AdminPortalPages({
             );
           })}
         </div>
-
-        {/* Which feedback forms are open. Not portal pages — they all live
-            behind the one Feedback page — but they gate access the same way,
-            and this is where someone comes looking to open something. */}
-        <section className="portal-pages-card mt-6">
-          <header className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="font-display text-xl tracking-tight text-foreground">
-                Feedback forms
-              </h2>
-              <p className="mt-1 text-sm text-muted">
-                Choose which forms attendees can fill in. Anytime is always open.
-              </p>
-            </div>
-            <span className="portal-pages-count">
-              {forms.filter((form) => form.open).length} of {forms.length}
-            </span>
-          </header>
-
-          {forms.map((form) => (
-            <div key={form.key} className="portal-pages-row">
-              <span>
-                <span className="block font-display text-base font-medium text-foreground">
-                  {form.title}
-                </span>
-                <small className="text-xs text-muted">{form.description}</small>
-              </span>
-
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  name={`feedback-${form.key}`}
-                  defaultChecked={form.open}
-                />
-                <span className="switch-track" />
-                <span className="sr-only">{`${form.title} open to attendees`}</span>
-              </label>
-            </div>
-          ))}
-        </section>
 
         <div className="mt-8 flex justify-end">
           <button

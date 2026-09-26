@@ -849,6 +849,26 @@ body.schedule-expanded {
   border-top: 1px solid var(--border);
 }
 
+/*
+ * A form that lives behind one of the pages above, indented under it. The
+ * rule runs only under the text so the group reads as belonging to its
+ * parent row rather than as another page.
+ */
+.portal-pages-row.is-sub {
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+  padding-left: 2.75rem;
+  background: var(--sand);
+}
+
+.portal-pages-row.is-sub + .portal-pages-row.is-sub {
+  border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+.portal-pages-row.is-sub[data-disabled="true"] {
+  opacity: 0.45;
+}
+
 /* A setting that is not a nav page sits apart, on the card's foot. */
 .portal-pages-row.is-feature {
   border-top: 1px solid var(--border);

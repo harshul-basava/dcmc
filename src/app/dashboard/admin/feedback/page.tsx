@@ -4,8 +4,6 @@ import MetricCard from "@/components/dashboard/MetricCard";
 import WipNotice from "@/components/dashboard/WipNotice";
 import { requireAdmin } from "@/server/auth";
 import { getFeedback, getParticipants } from "@/server/data";
-import { FEEDBACK_FORMS, feedbackFormOpen } from "@/server/feedback";
-import { saveFeedbackAvailability } from "../actions";
 
 /** `2026-10-23T14:05:00Z` -> `23 Oct, 14:05`. */
 function formatWhen(value: string): string {
@@ -34,9 +32,6 @@ export default async function AdminFeedback({
   const { saved } = await searchParams;
 
   const [responses, participants] = await Promise.all([getFeedback(), getParticipants()]);
-  const availability = await Promise.all(
-    FEEDBACK_FORMS.map(async (form) => ({ ...form, open: await feedbackFormOpen(form.key) })),
-  );
 
   // The running log, newest first, kept out of the one-per-person list below.
   const anytime = responses
@@ -113,36 +108,20 @@ export default async function AdminFeedback({
         </p>
       ) : null}
 
-      <form action={saveFeedbackAvailability} className="mb-10 rounded-card border border-rule bg-card p-5">
-        <fieldset>
-          <legend className="font-display text-base text-foreground">Which forms are open</legend>
-          <ul className="mt-4 flex flex-wrap gap-x-8 gap-y-3">
-            {availability.map((form) => (
-              <li key={form.key}>
-                <label className="flex items-center gap-2 text-sm text-foreground">
-                  <input
-                    type="checkbox"
-                    name={`feedback-${form.key}`}
-                    defaultChecked={form.open}
-                    disabled={form.key === "anytime"}
-                    className="h-4 w-4 accent-[color:var(--color-accent)]"
-                  />
-                  {form.label}
-                  {form.key === "anytime" ? (
-                    <span className="text-xs text-muted">(always open)</span>
-                  ) : null}
-                </label>
-              </li>
-            ))}
-          </ul>
-        </fieldset>
-        <button
-          type="submit"
-          className="mt-5 min-h-11 rounded-card bg-accent px-6 text-sm font-semibold text-on-accent transition hover:bg-accent-hover active:scale-[0.97]"
+      {/* Which forms are open now lives on Portal pages, nested under the
+          Feedback page toggle it depends on. */}
+      <p className="mb-10 text-sm text-muted">
+        Open and close individual forms on{" "}
+        <a
+          href="/dashboard/admin/pages"
+          className="text-accent underline underline-offset-2"
         >
-          Save
-        </button>
-      </form>
+          Portal pages
+        </a>
+        .
+      </p>
+
+
 
       <div className="grid gap-4 sm:grid-cols-3">
         <MetricCard label="Responses" value={responses.length} />

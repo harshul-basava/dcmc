@@ -67,22 +67,6 @@ export async function savePortalPages(formData: FormData) {
   redirect("/dashboard/admin/pages?saved=1");
 }
 
-export async function saveFeedbackAvailability(formData: FormData) {
-  await requireAdmin();
-
-  for (const form of FEEDBACK_FORMS) {
-    if (form.key === "anytime") continue; // Always open, by design.
-    await savePortalPageSetting(
-      "all",
-      `feedback-${form.key}`,
-      form.label,
-      formData.get(`feedback-${form.key}`) === "on",
-    );
-  }
-
-  revalidatePath("/dashboard", "layout");
-  redirect("/dashboard/admin/feedback?saved=1");
-}
 
 /**
  * Carries the schedule page's day filter back through a redirect, so saving
