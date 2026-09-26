@@ -9,7 +9,7 @@ import {
   getSessions,
 } from "./data";
 import type { PersonKey } from "./data/types";
-import { personLookup } from "./people";
+import { personLookup, profileComplete } from "./people";
 import { formatRange, minutesOf } from "./schedule";
 
 /**
@@ -231,10 +231,13 @@ export type OneToOneCandidate = {
  * guests actually available for that day's 1:1 session, or participants will
  * rank people who were never going to be in the room.
  *
- * Profile completeness is deliberately not required here. The directory hides
- * incomplete profiles because a blank card tells a reader nothing; this list
- * exists to name a person for pairing, which works whether or not they have
- * uploaded a headshot yet.
+ * Only people who appear in a directory are offered: the same
+ * headshot-and-bio rule the directories filter on. Someone ranking names
+ * should be able to go and read about whoever they picked.
+ *
+ * That means the list is empty until people complete their profiles, and the
+ * question has nothing to offer until they do — see the form, which stops
+ * requiring an answer it cannot let anyone give.
  */
 export async function oneToOneCandidates(excludeParticipantId: string): Promise<OneToOneCandidate[]> {
   const [participants, guests] = await Promise.all([getParticipants(), getGuests()]);
@@ -242,6 +245,7 @@ export async function oneToOneCandidates(excludeParticipantId: string): Promise<
   const people: OneToOneCandidate[] = [
     ...participants
       .filter((person) => person.id !== excludeParticipantId)
+      .filter(profileComplete)
       .map((person) => ({
         key: `participant:${person.id}` as PersonKey,
         name: person.name,
@@ -252,7 +256,7 @@ export async function oneToOneCandidates(excludeParticipantId: string): Promise<
         linkedin: person.linkedin,
         isGuest: false,
       })),
-    ...guests.map((person) => ({
+    ...guests.filter(profileComplete).map((person) => ({
       key: `guest:${person.id}` as PersonKey,
       name: person.name,
       title: person.title,

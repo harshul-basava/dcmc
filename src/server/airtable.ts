@@ -81,7 +81,12 @@ export const FEEDBACK_FIELD = {
   day: process.env.AIRTABLE_FIELD_FB_DAY ?? "fldOowedqX4Yp53tL",
   dayRating: process.env.AIRTABLE_FIELD_FB_DAY_RATING ?? "fldLru97e4PyGtX5g",
   requests: process.env.AIRTABLE_FIELD_FB_REQUESTS ?? "fldK40J9PibkJtcAf",
+  /** Readable copy, for a human reading the table. */
   answers: process.env.AIRTABLE_FIELD_FB_ANSWERS ?? "fldFN6wjCrhDHQTqJ",
+  /** The same answers verbatim. What the dashboard reads back, because the
+   *  readable copy cannot survive a round trip: an answer is free text and
+   *  may itself contain whatever we used as a separator. */
+  answersJson: process.env.AIRTABLE_FIELD_FB_ANSWERS_JSON ?? "fldWa3KhC0EKLY9DN",
   ratings: process.env.AIRTABLE_FIELD_FB_RATINGS ?? "fldkdCFDZSJu8IUbx",
   sessionRatings: process.env.AIRTABLE_FIELD_FB_SESSIONS ?? "flda7BDw61L9QLBQf",
   submittedAt: process.env.AIRTABLE_FIELD_FB_SUBMITTED ?? "flde5vtxB7C49fLaD",

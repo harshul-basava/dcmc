@@ -211,9 +211,12 @@ export default async function FeedbackFormPage({
           </>
         ) : daily ? (
           <>
-            {/* Five stars, required, "Not valuable"/"Extremely valuable" are
-                all RatingScale's defaults. */}
-            <RatingScale name="scale-day" legend="How valuable was the day overall?" />
+            <RatingScale
+              name="scale-day"
+              legend="How valuable was the day overall?"
+              leftLabel=""
+              rightLabel=""
+            />
             <TextQuestion name="day-comments" label="Comments" rows={4} />
 
             <TextQuestion
@@ -224,25 +227,37 @@ export default async function FeedbackFormPage({
             />
 
             <div className="grid gap-2">
-              <span className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-                <span className="text-sm text-foreground">
-                  Please list up to {MAX_ONE_TO_ONE_PICKS} names, in order, of people you would
-                  like to have 1-1s with tomorrow.
+              <span className="text-sm text-foreground">
+                Please list up to {MAX_ONE_TO_ONE_PICKS} names, in order, of people you would
+                like to have 1-1s with tomorrow.
+                {candidates.length ? (
                   <span aria-hidden="true" className="ml-1 text-accent">
                     *
                   </span>
-                </span>
+                ) : null}
               </span>
-              <p className="text-xs text-muted">
-                You can list other attendees or guest speakers. Select a name to see their bio,
-                and drag to change the order.
-              </p>
-              <RankedNames
-                name="one-on-one-picks"
-                candidates={candidates}
-                max={MAX_ONE_TO_ONE_PICKS}
-                guests={candidates.filter((person) => person.isGuest)}
-              />
+
+              {candidates.length ? (
+                <>
+                  <p className="text-xs text-muted">
+                    You can list other attendees or guest speakers. Select a name to see their
+                    bio, and drag to change the order.
+                  </p>
+                  <RankedNames
+                    name="one-on-one-picks"
+                    candidates={candidates}
+                    max={MAX_ONE_TO_ONE_PICKS}
+                  />
+                </>
+              ) : (
+                /* The list only offers people who appear in a directory. With
+                   nobody there yet the question cannot be answered, so it says
+                   so rather than blocking the form behind it. */
+                <p className="rounded-card border border-dashed border-rule px-5 py-6 text-sm text-muted">
+                  Nobody has completed their profile yet, so there is nobody to list here. This
+                  question will open once attendees have added a headshot and a bio.
+                </p>
+              )}
             </div>
 
             <TextQuestion

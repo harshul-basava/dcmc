@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { OneToOneCandidate } from "@/server/feedback";
 
 /**
@@ -14,24 +14,65 @@ import type { OneToOneCandidate } from "@/server/feedback";
  * instead. The server accepts either, so the question is answerable without
  * client JavaScript like the rest of the dashboard.
  */
+/** The `gap-1.5` between rows, in pixels — part of how far a row travels. */
+const ROW_GAP = 6;
+
+type Drag = { index: number; offset: number; height: number; count: number };
+
+/** Where the dragged row would land if released now. */
+function targetOf(drag: Drag): number {
+  if (!drag.height) return drag.index;
+  const steps = Math.round(drag.offset / drag.height);
+  return Math.min(Math.max(drag.index + steps, 0), drag.count - 1);
+}
+
+/**
+ * How far a row that is *not* being dragged should slide, so the list opens a
+ * gap where the dragged row would land. This is what makes the reorder read
+ * as a list rearranging itself rather than an image being carried around.
+ */
+function shiftFor(index: number, drag: Drag): number {
+  if (!drag.height) return 0;
+  const target = targetOf(drag);
+  if (index > drag.index && index <= target) return -drag.height;
+  if (index < drag.index && index >= target) return drag.height;
+  return 0;
+}
+
+/**
+ * The rank to print mid-drag. Without this the numbers keep their original
+ * positions while the rows slide past them, so the list briefly reads 2, 1, 3.
+ */
+function rankFor(index: number, drag: Drag | null): number {
+  if (!drag) return index + 1;
+  const target = targetOf(drag);
+  if (index === drag.index) return target + 1;
+  if (index > drag.index && index <= target) return index;
+  if (index < drag.index && index >= target) return index + 2;
+  return index + 1;
+}
+
 export default function RankedNames({
   name,
   candidates,
   max,
-  guests,
 }: {
   /** Field holding the ordered person keys, one per line. */
   name: string;
   candidates: OneToOneCandidate[];
   max: number;
-  /** Shown as chips above the picker, so guest bios are one click away. */
-  guests: OneToOneCandidate[];
 }) {
   const [picked, setPicked] = useState<OneToOneCandidate[]>([]);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<OneToOneCandidate | null>(null);
-  const dragFrom = useRef<number | null>(null);
+  /** Which row is being dragged, how far it has travelled, and how tall a
+   *  row is — all three are needed to render the rest of the list sliding. */
+  const [drag, setDrag] = useState<Drag | null>(null);
+  /** The same drag, mutable, so the window listeners never read stale state. */
+  const dragRef = useRef<
+    { index: number; originY: number; height: number; offset: number; count: number } | null
+  >(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // False while server-rendering and through hydration, true thereafter — the
@@ -75,6 +116,42 @@ export default function RankedNames({
     setPicked(next);
   };
 
+  useEffect(() => {
+    if (!drag) return;
+
+    const onMove = (event: PointerEvent) => {
+      const current = dragRef.current;
+      if (!current) return;
+      current.offset = event.clientY - current.originY;
+      setDrag({
+        index: current.index,
+        offset: current.offset,
+        height: current.height,
+        count: current.count,
+      });
+    };
+
+    const onUp = () => {
+      const current = dragRef.current;
+      dragRef.current = null;
+      setDrag(null);
+      if (!current) return;
+      move(current.index, targetOf({ ...current }));
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+    // Re-subscribing on every pointermove would be wasteful; the handlers
+    // read the live values from the ref instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drag === null]);
+
   if (!live) {
     return (
       <textarea
@@ -92,43 +169,54 @@ export default function RankedNames({
       {/* The ordered keys, which is what the server actually reads. */}
       <input type="hidden" name={name} value={picked.map((p) => p.key).join("\n")} />
 
-      {guests.length ? (
-        <div className="flex flex-wrap gap-1.5">
-          {guests.map((guest) => (
-            <button
-              key={guest.key}
-              type="button"
-              onClick={() => setProfile(guest)}
-              className="rounded bg-[color:var(--neutral-100)] px-2.5 py-1 text-xs text-foreground transition hover:bg-[color:var(--neutral-200)]"
-            >
-              {guest.name}
-            </button>
-          ))}
-        </div>
-      ) : null}
-
       {picked.length ? (
         <ol className="grid gap-1.5">
           {picked.map((person, index) => (
             <li
               key={person.key}
-              draggable
-              onDragStart={() => {
-                dragFrom.current = index;
-              }}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => {
-                event.preventDefault();
-                if (dragFrom.current !== null) move(dragFrom.current, index);
-                dragFrom.current = null;
-              }}
-              className="flex items-center gap-2.5 rounded-card border border-rule bg-card px-3 py-2"
+              className={`flex items-center gap-2.5 rounded-card border bg-card px-3 py-2 ${
+                drag?.index === index
+                  ? "relative z-10 border-border-strong shadow-[0_6px_16px_rgb(32_28_24/16%)]"
+                  : "border-rule transition-transform duration-150"
+              }`}
+              style={
+                drag
+                  ? {
+                      transform:
+                        index === drag.index
+                          ? `translateY(${drag.offset}px)`
+                          : `translateY(${shiftFor(index, drag)}px)`,
+                    }
+                  : undefined
+              }
             >
               <span className="w-5 shrink-0 text-center text-xs tabular-nums text-muted">
-                {index + 1}
+                {rankFor(index, drag)}
               </span>
 
-              <span aria-hidden="true" className="cursor-grab text-muted" title="Drag to reorder">
+              <span
+                aria-hidden="true"
+                title="Drag to reorder"
+                onPointerDown={(event) => {
+                  if (event.button !== 0) return;
+                  // Otherwise the press starts a text selection that fights
+                  // the drag.
+                  event.preventDefault();
+                  const row = event.currentTarget.closest("li");
+                  const height = row ? row.getBoundingClientRect().height + ROW_GAP : 0;
+                  dragRef.current = {
+                    index,
+                    originY: event.clientY,
+                    height,
+                    offset: 0,
+                    count: picked.length,
+                  };
+                  setDrag({ index, offset: 0, height, count: picked.length });
+                }}
+                className={`select-none text-muted ${
+                  drag?.index === index ? "cursor-grabbing" : "cursor-grab"
+                }`}
+              >
                 ⠿
               </span>
 

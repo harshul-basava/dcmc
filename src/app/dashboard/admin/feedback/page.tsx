@@ -7,6 +7,19 @@ import { getFeedback, getParticipants } from "@/server/data";
 import { FEEDBACK_FORMS, feedbackFormOpen } from "@/server/feedback";
 import { saveFeedbackAvailability } from "../actions";
 
+/** `2026-10-23T14:05:00Z` -> `23 Oct, 14:05`. */
+function formatWhen(value: string): string {
+  const when = new Date(value);
+  if (Number.isNaN(when.getTime())) return value;
+  return when.toLocaleString("en-GB", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/New_York",
+  });
+}
+
 function mean(values: number[]): number | null {
   if (!values.length) return null;
   return values.reduce((a, b) => a + b, 0) / values.length;
@@ -24,6 +37,11 @@ export default async function AdminFeedback({
   const availability = await Promise.all(
     FEEDBACK_FORMS.map(async (form) => ({ ...form, open: await feedbackFormOpen(form.key) })),
   );
+
+  // The running log, newest first, kept out of the one-per-person list below.
+  const anytime = responses
+    .filter((response) => response.form === "anytime" && response.answers.comment?.trim())
+    .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
 
   const sessionRatings = responses.flatMap((r) =>
     r.sessions.map((s) => s.rating).filter((n): n is number => typeof n === "number"),
@@ -56,9 +74,38 @@ export default async function AdminFeedback({
       <PageHeading title="Feedback" />
 
       <WipNotice>
-        Responses are still fixtures, and submissions are not yet written to Airtable.
-        The form toggles below are live.
+        Responses and the form toggles are live. The aggregate charts below still need work:
+        they only count the per-session ratings the overall form collects.
       </WipNotice>
+
+      <section className="mb-10">
+        <h2 className="font-display text-lg tracking-tight text-foreground">
+          Anytime feedback
+        </h2>
+        <p className="mt-1 text-sm text-muted">
+          Submitted whenever someone has something to say, and never closed. Newest first.
+        </p>
+
+        {anytime.length ? (
+          <ul className="mt-4 grid gap-2">
+            {anytime.map((response) => (
+              <li key={response.id} className="rounded-card border border-rule bg-card p-5">
+                <p className="text-sm leading-relaxed text-foreground">
+                  {response.answers.comment}
+                </p>
+                <p className="mt-3 text-xs text-muted">
+                  {response.participantName || "Anonymous"}
+                  {response.submittedAt ? ` · ${formatWhen(response.submittedAt)}` : ""}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-4 rounded-card border border-dashed border-rule px-6 py-10 text-center text-sm text-muted">
+            Nothing yet. Anytime responses appear here as they come in.
+          </p>
+        )}
+      </section>
 
       {saved ? (
         <p className="mb-6 rounded-card border border-rule bg-card p-4 text-sm text-[color:var(--color-success)]">

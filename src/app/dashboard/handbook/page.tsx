@@ -1,5 +1,4 @@
 import PortalShell from "@/components/dashboard/PortalShell";
-import PageHeading from "@/components/dashboard/PageHeading";
 import { requireParticipant } from "@/server/auth";
 import { conference } from "@/content/site";
 import { handbookLinks } from "@/content/dashboard";
@@ -13,20 +12,25 @@ export default async function HandbookPage() {
   );
 
   return (
-    <PortalShell role="participant" active="handbook" framed={false}>
-      <PageHeading title="Handbook" />
+    <PortalShell role="participant" active="handbook">
+      <h1 className="mb-6 font-display text-3xl font-normal tracking-[-0.02em] text-foreground">
+        Attendee handbook
+      </h1>
 
-      <ul className="grid gap-3 sm:grid-cols-2">
+      {/* One card per line rather than a two-column grid: the entries are a
+          list to read down, and their descriptions are long enough that two
+          columns cramp them. */}
+      <ul className="grid gap-3">
         {links.map((link) => (
           <li key={link.href}>
             <a
               href={link.href}
-              className="block h-full rounded-card border border-rule bg-card p-6 transition hover:border-border-strong"
+              className="block rounded-card border border-rule bg-surface px-6 py-5 transition hover:border-border-strong"
             >
-              <strong className="font-display text-base font-medium text-foreground">
+              <strong className="font-display text-lg font-medium tracking-tight text-foreground">
                 {link.title}
               </strong>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{link.body}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted">{link.body}</p>
             </a>
           </li>
         ))}

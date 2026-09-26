@@ -453,7 +453,7 @@ function toFeedback(record: AirtableRecord): FeedbackResponse {
     participantName: text(f[FEEDBACK_FIELD.attendee]),
     date: text(f[FEEDBACK_FIELD.day]),
     sessions: parse(f[FEEDBACK_FIELD.sessionRatings], []),
-    answers: parse(f[FEEDBACK_FIELD.answers], {} as Record<string, string>),
+    answers: parse(f[FEEDBACK_FIELD.answersJson], {} as Record<string, string>),
     ratings: parse(f[FEEDBACK_FIELD.ratings], {} as Record<string, number>),
     submittedAt: text(f[FEEDBACK_FIELD.submittedAt]),
   };
@@ -508,6 +508,7 @@ export async function saveFeedback(response: Omit<FeedbackResponse, "id">): Prom
     [FEEDBACK_FIELD.dayRating]: response.ratings.day ?? null,
     [FEEDBACK_FIELD.requests]: picks,
     [FEEDBACK_FIELD.answers]: labelledAnswers(written),
+    [FEEDBACK_FIELD.answersJson]: JSON.stringify(written),
     [FEEDBACK_FIELD.ratings]: JSON.stringify(response.ratings),
     [FEEDBACK_FIELD.sessionRatings]: response.sessions.length
       ? JSON.stringify(response.sessions)

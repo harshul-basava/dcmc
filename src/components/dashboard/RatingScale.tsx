@@ -49,10 +49,14 @@ export default function RatingScale({
         ))}
       </div>
 
-      <div aria-hidden="true" className="mt-1.5 flex justify-between text-[0.6875rem] text-muted">
-        <span>{leftLabel}</span>
-        <span>{rightLabel}</span>
-      </div>
+      {/* The end labels explain an unfamiliar scale; on a plain "how good was
+          it" star row they only restate the stars. */}
+      {leftLabel || rightLabel ? (
+        <div aria-hidden="true" className="mt-1.5 flex justify-between text-[0.6875rem] text-muted">
+          <span>{leftLabel}</span>
+          <span>{rightLabel}</span>
+        </div>
+      ) : null}
     </fieldset>
   );
 }

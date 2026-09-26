@@ -3,6 +3,7 @@ import PageHeading from "@/components/dashboard/PageHeading";
 import { requireAdmin } from "@/server/auth";
 import { PORTAL_PAGES, portalPageState } from "@/server/portal-pages";
 import { HANDBOOK_RESOURCES_KEY, handbookResourcesOpen } from "@/server/portal-pages";
+import { FEEDBACK_FORMS, feedbackFormOpen } from "@/server/feedback";
 import { savePortalPages } from "../actions";
 
 const AUDIENCES = [
@@ -17,7 +18,17 @@ export default async function AdminPortalPages({
 }) {
   await requireAdmin();
   const { saved } = await searchParams;
-  const [state, resourcesOpen] = await Promise.all([portalPageState(), handbookResourcesOpen()]);
+  const [state, resourcesOpen, forms] = await Promise.all([
+    portalPageState(),
+    handbookResourcesOpen(),
+    // Anytime never closes, so it is not offered as a toggle.
+    Promise.all(
+      FEEDBACK_FORMS.filter((form) => form.key !== "anytime").map(async (form) => ({
+        ...form,
+        open: await feedbackFormOpen(form.key),
+      })),
+    ),
+  ]);
 
   return (
     <PortalShell role="admin" active="pages">
@@ -114,6 +125,46 @@ export default async function AdminPortalPages({
             );
           })}
         </div>
+
+        {/* Which feedback forms are open. Not portal pages — they all live
+            behind the one Feedback page — but they gate access the same way,
+            and this is where someone comes looking to open something. */}
+        <section className="portal-pages-card mt-6">
+          <header className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="font-display text-xl tracking-tight text-foreground">
+                Feedback forms
+              </h2>
+              <p className="mt-1 text-sm text-muted">
+                Choose which forms attendees can fill in. Anytime is always open.
+              </p>
+            </div>
+            <span className="portal-pages-count">
+              {forms.filter((form) => form.open).length} of {forms.length}
+            </span>
+          </header>
+
+          {forms.map((form) => (
+            <div key={form.key} className="portal-pages-row">
+              <span>
+                <span className="block font-display text-base font-medium text-foreground">
+                  {form.title}
+                </span>
+                <small className="text-xs text-muted">{form.description}</small>
+              </span>
+
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  name={`feedback-${form.key}`}
+                  defaultChecked={form.open}
+                />
+                <span className="switch-track" />
+                <span className="sr-only">{`${form.title} open to attendees`}</span>
+              </label>
+            </div>
+          ))}
+        </section>
 
         <div className="mt-8 flex justify-end">
           <button

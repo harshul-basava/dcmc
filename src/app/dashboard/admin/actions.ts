@@ -51,6 +51,18 @@ export async function savePortalPages(formData: FormData) {
     formData.get(`feature-${HANDBOOK_RESOURCES_KEY}`) === "on",
   );
 
+  // The same settings the admin Feedback page writes, so the two views of
+  // them can never disagree.
+  for (const form of FEEDBACK_FORMS) {
+    if (form.key === "anytime") continue; // Always open, by design.
+    await savePortalPageSetting(
+      "all",
+      `feedback-${form.key}`,
+      form.label,
+      formData.get(`feedback-${form.key}`) === "on",
+    );
+  }
+
   revalidatePath("/dashboard", "layout");
   redirect("/dashboard/admin/pages?saved=1");
 }

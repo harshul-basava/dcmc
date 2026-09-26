@@ -4,12 +4,14 @@ import { redirect } from "next/navigation";
 import { requireParticipant } from "@/server/auth";
 import { getSessions, saveFeedback } from "@/server/data";
 import { personLookup } from "@/server/people";
+import type { PersonKey } from "@/server/data/types";
 import {
   MAX_ONE_TO_ONE_PICKS,
   REPEATABLE_FORMS,
   feedbackForm,
   feedbackFormOpen,
   markFormCompleted,
+  oneToOneCandidates,
 } from "@/server/feedback";
 
 /**
@@ -68,16 +70,21 @@ export async function submitFeedback(formData: FormData) {
   // textarea of typed names. Both are kept as written — an unmatched name is
   // still an answer, and the pairing round can reconcile it later.
   const daily = key === "friday" || key === "saturday";
+  // Only people who appear in a directory can be ranked, so an unmatched
+  // entry is dropped rather than stored as a name nobody can act on.
+  const candidates = daily ? await oneToOneCandidates(me.id) : [];
+  const selectable = new Set(candidates.map((person) => person.key));
+
   if (daily) {
     const people = await personLookup();
     const picks = String(formData.get("one-on-one-picks") ?? "")
       .split("\n")
       .map((line) => line.trim())
       .filter(Boolean)
+      .filter((entry) => selectable.has(entry as PersonKey))
       .slice(0, MAX_ONE_TO_ONE_PICKS)
       // The picker sends person keys; resolve them to names so the stored
-      // answer is readable. A name typed into the no-JavaScript textarea is
-      // already a name and passes through untouched.
+      // answer is readable.
       .map((entry, index) => `${index + 1}. ${people.get(entry)?.name ?? entry}`);
     answers["one-on-one-picks"] = picks.join("\n");
   }
@@ -94,8 +101,9 @@ export async function submitFeedback(formData: FormData) {
       "goal-questions",
     ],
     "one-on-ones": ["one-on-ones-overall"],
-    friday: ["learned", "one-on-one-picks"],
-    saturday: ["learned", "one-on-one-picks"],
+    // The names question is only required when there is somebody to name.
+    friday: candidates.length ? ["learned", "one-on-one-picks"] : ["learned"],
+    saturday: candidates.length ? ["learned", "one-on-one-picks"] : ["learned"],
   };
   // Anytime is embedded on the index; the rest have their own page.
   const back = key === "anytime" ? "/dashboard/feedback" : `/dashboard/feedback/${key}`;
