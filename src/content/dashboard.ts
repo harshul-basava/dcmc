@@ -211,3 +211,41 @@ export const handbookLinks = [
     href: "/dashboard/handbook/code-of-conduct",
   },
 ];
+
+/**
+ * The organizing team, as shown on the handbook's Getting help section.
+ *
+ * `contact` is whatever an attendee should use to reach that person — a
+ * number beginning "+" is rendered as a dialable link. Blank is a real
+ * state: the person is listed, their line is waiting to be filled in.
+ *
+ * `photo` is a path under /public once real headshots exist; until then
+ * every slot falls back to a gradient plate.
+ */
+export const organizers: { name: string; contact: string; photo?: string }[] = [
+  { name: "Harshul Basava", contact: "+1 (408) 355-4218" },
+  { name: "Liam Robins", contact: "" },
+  { name: "Seth Lifland", contact: "" },
+  { name: "Binit Maharjan", contact: "" },
+  { name: "Isel Neira", contact: "" },
+  { name: "Aybars Kocoglu", contact: "" },
+  { name: "Rohan Kansal", contact: "" },
+];
+
+/**
+ * The team in a different order each time.
+ *
+ * Deliberately impure, and deliberately not inline in the page: a random
+ * order is the point — nobody should be permanently first — but a component
+ * body is meant to be replayable, so the randomness lives here rather than
+ * in the render. The dashboard layout is force-dynamic, so this re-runs on
+ * every request.
+ */
+export function shuffledOrganizers(): typeof organizers {
+  const team = [...organizers];
+  for (let i = team.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [team[i], team[j]] = [team[j], team[i]];
+  }
+  return team;
+}

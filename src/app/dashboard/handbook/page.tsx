@@ -1,12 +1,16 @@
+import Image from "next/image";
+import Link from "next/link";
 import PortalShell from "@/components/dashboard/PortalShell";
 import { requireParticipant } from "@/server/auth";
-import { conference } from "@/content/site";
-import { handbookLinks } from "@/content/dashboard";
+import { handbookLinks, shuffledOrganizers } from "@/content/dashboard";
 import { handbookResourcesOpen } from "@/server/portal-pages";
 
 export default async function HandbookPage() {
   await requireParticipant("handbook");
   const resourcesOpen = await handbookResourcesOpen();
+  // A different order on every load, so no one is permanently first.
+  const team = shuffledOrganizers();
+
   const links = handbookLinks.filter(
     (link) => resourcesOpen || link.href !== "/dashboard/handbook/resources",
   );
@@ -36,17 +40,57 @@ export default async function HandbookPage() {
         ))}
       </ul>
 
-      <section className="mt-10 rounded-card border border-rule bg-card p-6">
+      {/* Not a card of its own: it already sits inside the handbook panel,
+          and a second border around it only boxed a box. */}
+      <section className="mt-12 border-t border-rule pt-8">
         <h2 className="font-display text-lg tracking-tight text-foreground">Getting help</h2>
-        <p className="mt-2 text-sm leading-relaxed text-muted">
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
           For anything urgent during the conference, or anything you would rather raise
-          privately, write to{" "}
-          <a href={`mailto:${conference.email}`} className="text-accent underline underline-offset-2">
-            {conference.email}
-          </a>
+          privately, contact one of the organizers below or submit the anytime form on the{" "}
+          <Link href="/dashboard/feedback" className="text-accent underline underline-offset-2">
+            feedback page
+          </Link>
           .
         </p>
+
+        {/* Seven across on a wide screen: the team reads as one row, and the
+            plates stay portrait-sized rather than filling a quarter of it. */}
+        <ul className="mt-6 grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-4 lg:grid-cols-7">
+          {team.map((person) => (
+            <li key={person.name}>
+              {person.photo ? (
+                <Image
+                  src={person.photo}
+                  alt=""
+                  width={160}
+                  height={200}
+                  className="w-full rounded-[5px] object-cover"
+                  style={{ aspectRatio: "4 / 5" }}
+                />
+              ) : (
+                <span className="plate block w-full" aria-hidden="true" />
+              )}
+
+              <strong className="mt-2.5 block text-sm font-medium text-foreground">
+                {person.name}
+              </strong>
+              {person.contact ? (
+                person.contact.startsWith("+") ? (
+                  <a
+                    href={`tel:${person.contact.replace(/[^\d+]/g, "")}`}
+                    className="block text-xs text-accent underline underline-offset-2"
+                  >
+                    {person.contact}
+                  </a>
+                ) : (
+                  <span className="block text-xs text-muted">{person.contact}</span>
+                )
+              ) : null}
+            </li>
+          ))}
+        </ul>
       </section>
+
     </PortalShell>
   );
 }
