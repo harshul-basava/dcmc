@@ -2,8 +2,27 @@ import Image from "next/image";
 import Link from "next/link";
 import PortalShell from "@/components/dashboard/PortalShell";
 import { requireParticipant } from "@/server/auth";
-import { handbookLinks, logistics, shuffledOrganizers } from "@/content/dashboard";
+import {
+  handbookLinks,
+  logistics,
+  shuffledOrganizers,
+  type Segment,
+} from "@/content/dashboard";
 import { handbookResourcesOpen } from "@/server/portal-pages";
+
+
+/** Copy with emphasis in it, as stored in the content module. */
+function render(segments: Segment[]) {
+  return segments.map((segment, index) =>
+    typeof segment === "string" ? (
+      segment
+    ) : (
+      <strong key={index} className="font-medium text-foreground">
+        {segment.bold}
+      </strong>
+    ),
+  );
+}
 
 export default async function HandbookPage() {
   await requireParticipant("handbook");
@@ -114,13 +133,13 @@ export default async function HandbookPage() {
           <h2 className="font-display text-2xl leading-tight tracking-tight text-foreground">
             Logistics
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted">{logistics.lead}</p>
+          <p className="mt-3 text-sm leading-relaxed text-muted">{render(logistics.lead)}</p>
 
           <dl className="mt-6 grid gap-5">
             {logistics.sections.map((section) => (
               <div key={section.title}>
                 <dt className="text-sm font-medium text-foreground">{section.title}</dt>
-                <dd className="mt-1 text-sm leading-relaxed text-muted">{section.body}</dd>
+                <dd className="mt-1 text-sm leading-relaxed text-muted">{render(section.body)}</dd>
               </div>
             ))}
           </dl>

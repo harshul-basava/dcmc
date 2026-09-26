@@ -218,32 +218,55 @@ export const handbookLinks = [
   },
 ];
 
+/**
+ * A run of copy that needs emphasis inside it.
+ *
+ * Segments rather than a string with markup: this file is plain TypeScript,
+ * and a `bold` flag keeps the copy editable here without moving it into the
+ * page or teaching the page to parse anything.
+ */
+export type Segment = string | { bold: string };
+
 /** The Logistics dialog, opened from the handbook card of the same name. */
-export const logistics = {
-  lead:
-    "The DC Mini-Conference on AI Governance will take place from 7 PM Thursday, October 22nd " +
-    "to 6 PM Sunday October 25th. Arrival and check-in is from 4–6 PM on Thursday, October 22nd.",
+export const logistics: {
+  lead: Segment[];
+  sections: { title: string; body: Segment[] }[];
+} = {
+  lead: [
+    "The DC Mini-Conference on AI Governance will take place from ",
+    { bold: "7 PM Thursday, October 22nd to 6 PM Sunday October 25th" },
+    ". Arrival and check-in is from 4–6 PM on Thursday, October 22nd.",
+  ],
   sections: [
     {
       title: "Reimbursements",
       // "here" becomes a link once there is a form to point it at.
-      body: "Attendees will be reimbursed up to $400 for flight costs. Submit receipts here.",
+      body: [
+        "Attendees will be reimbursed up to $400 for flight costs. Submit receipts through " +
+          "Hack Club here.",
+      ],
     },
     {
       title: "Office",
-      body:
-        "The mini-conference will be held at the Network on Emerging Threats office near the " +
-        "McPherson Square metro stop.",
+      body: [
+        "The mini-conference will be held at the ",
+        { bold: "Network on Emerging Threats" },
+        " office near the McPherson Square metro stop.",
+      ],
     },
     {
       title: "Hotel",
-      body:
-        "Attendees will be staying at the District Hotel, DC at 1440 Rhode Island Ave NW, " +
-        "Washington, DC 20005. Make sure to check in before 7 PM on Thursday, October 22nd, " +
-        "or let us know if circumstances prevent you from doing so.",
+      body: [
+        "Attendees will be staying at the ",
+        { bold: "District Hotel, DC" },
+        " at ",
+        { bold: "1440 Rhode Island Ave NW, Washington, DC 20005" },
+        ". Make sure to check in before 7 PM on Thursday, October 22nd, or let us know if " +
+          "circumstances prevent you from doing so.",
+      ],
     },
   ],
-} as const;
+};
 
 /**
  * The organizing team, as shown on the handbook's Getting help section.
@@ -258,7 +281,7 @@ export const logistics = {
 export const organizers: { name: string; contact: string; photo?: string }[] = [
   { name: "Harshul Basava", contact: "+1 (408) 355-4218" },
   { name: "Liam Robins", contact: "" },
-  { name: "Seth Lifland", contact: "" },
+  { name: "Seth Lifland", contact: "+1 (703) 269-8686" },
   { name: "Binit Maharjan", contact: "" },
   { name: "Isel Neira", contact: "" },
   { name: "Aybars Kocoglu", contact: "" },
