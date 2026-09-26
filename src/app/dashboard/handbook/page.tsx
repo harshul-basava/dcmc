@@ -86,8 +86,13 @@ export default async function HandbookPage() {
                 <Image
                   src={person.photo}
                   alt=""
-                  width={160}
-                  height={200}
+                  width={320}
+                  height={400}
+                  // The slot is about 190px wide on a wide screen and a third
+                  // of the viewport on a phone. Without this Next sizes the
+                  // derivative from `width` alone and a 2x display gets an
+                  // image it has to scale up.
+                  sizes="(min-width: 1024px) 200px, (min-width: 640px) 25vw, 33vw"
                   className="w-full rounded-[5px] object-cover"
                   style={{ aspectRatio: "4 / 5" }}
                 />
