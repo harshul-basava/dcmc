@@ -279,7 +279,7 @@ export const logistics: {
  * every slot falls back to a gradient plate.
  */
 export const organizers: { name: string; contact: string; photo?: string }[] = [
-  { name: "Harshul Basava", contact: "+1 (408) 355-4218" },
+  { name: "Harshul Basava", contact: "+1 (408) 355-4218", photo: "/organizers/harshul-basava.png" },
   { name: "Liam Robins", contact: "" },
   { name: "Seth Lifland", contact: "+1 (703) 269-8686", photo: "/organizers/seth-lifland.jpeg" },
   { name: "Binit Maharjan", contact: "" },
