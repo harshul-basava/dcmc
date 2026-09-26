@@ -13,6 +13,7 @@
 
 import { safeEqual } from "../session";
 import {
+  FEEDBACK_FIELD,
   FIELD,
   GUEST_FIELD,
   GUEST_TABLE,
@@ -23,6 +24,8 @@ import {
   count,
   createSessionRecord,
   deleteSessionRecord,
+  createFeedbackRecord,
+  fetchFeedback,
   fetchGuests,
   fetchRoster,
   fetchSessions,
@@ -34,6 +37,7 @@ import {
   putSetting,
   setGuestSignIns,
   setSignIns,
+  updateFeedbackRecord,
   text,
   uploadHeadshot,
   type AirtableRecord,
@@ -429,23 +433,104 @@ export async function replaceAssignments(
   fixtures.assignments.push(...keep, ...added);
 }
 
+/** One Portal Feedback row as the dashboard sees it. */
+function toFeedback(record: AirtableRecord): FeedbackResponse {
+  const f = record.fields;
+  const parse = <T,>(value: unknown, fallback: T): T => {
+    const raw = text(value);
+    if (!raw) return fallback;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return fallback;
+    }
+  };
+
+  return {
+    id: record.id,
+    form: text(f[FEEDBACK_FIELD.form]),
+    participantId: text(f[FEEDBACK_FIELD.attendeeId]),
+    participantName: text(f[FEEDBACK_FIELD.attendee]),
+    date: text(f[FEEDBACK_FIELD.day]),
+    sessions: parse(f[FEEDBACK_FIELD.sessionRatings], []),
+    answers: parse(f[FEEDBACK_FIELD.answers], {} as Record<string, string>),
+    ratings: parse(f[FEEDBACK_FIELD.ratings], {} as Record<string, number>),
+    submittedAt: text(f[FEEDBACK_FIELD.submittedAt]),
+  };
+}
+
 export async function getFeedback(): Promise<FeedbackResponse[]> {
-  return fixtures.feedbackResponses;
+  if (!airtableConfigured()) return fixtures.feedbackResponses;
+  const records = await fetchFeedback();
+  return records
+    .map(toFeedback)
+    .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+}
+
+/**
+ * Reads better in Airtable than a JSON blob: one labelled block per question,
+ * in the order the form asked them.
+ */
+function labelledAnswers(answers: Record<string, string>): string {
+  return Object.entries(answers)
+    .filter(([, value]) => value.trim())
+    .map(([question, value]) => `## ${question}\n${value.trim()}`)
+    .join("\n\n");
 }
 
 export async function saveFeedback(response: Omit<FeedbackResponse, "id">): Promise<void> {
-  const key = `${response.form}:${response.participantId}`;
-  const existing = fixtures.feedbackResponses.find(
-    (r) => `${r.form}:${r.participantId}` === key && r.form !== "anytime",
-  );
-  if (existing) {
-    Object.assign(existing, response);
+  if (!airtableConfigured()) {
+    const key = `${response.form}:${response.participantId}`;
+    const existing = fixtures.feedbackResponses.find(
+      (r) => `${r.form}:${r.participantId}` === key && r.form !== "anytime",
+    );
+    if (existing) {
+      Object.assign(existing, response);
+      return;
+    }
+    fixtures.feedbackResponses.push({
+      id: `rec${`F${fixtures.feedbackResponses.length + 1}`.padEnd(14, "X").slice(0, 14)}`,
+      ...response,
+    });
     return;
   }
-  fixtures.feedbackResponses.push({
-    id: `rec${`F${fixtures.feedbackResponses.length + 1}`.padEnd(14, "X").slice(0, 14)}`,
-    ...response,
-  });
+
+  // The ranked 1:1 list is stored on its own, in rank order and as names,
+  // because it is the one answer somebody will read down a column of.
+  const { "one-on-one-picks": picks = "", ...written } = response.answers;
+
+  const fields: Record<string, unknown> = {
+    [FEEDBACK_FIELD.reference]: `${response.form} · ${response.participantName || "Anonymous"}`,
+    [FEEDBACK_FIELD.form]: response.form,
+    [FEEDBACK_FIELD.attendee]: response.participantName,
+    [FEEDBACK_FIELD.attendeeId]: response.participantId,
+    [FEEDBACK_FIELD.day]: response.date,
+    [FEEDBACK_FIELD.dayRating]: response.ratings.day ?? null,
+    [FEEDBACK_FIELD.requests]: picks,
+    [FEEDBACK_FIELD.answers]: labelledAnswers(written),
+    [FEEDBACK_FIELD.ratings]: JSON.stringify(response.ratings),
+    [FEEDBACK_FIELD.sessionRatings]: response.sessions.length
+      ? JSON.stringify(response.sessions)
+      : "",
+    [FEEDBACK_FIELD.submittedAt]: response.submittedAt,
+  };
+
+  // One response per person per form, except anytime, which is a running log.
+  // Anonymous responses are never matched to an earlier one — there is no
+  // identity to match on, and guessing would defeat the point.
+  if (response.form !== "anytime" && response.participantId) {
+    const existing = (await fetchFeedback()).find(
+      (record) =>
+        text(record.fields[FEEDBACK_FIELD.form]) === response.form &&
+        text(record.fields[FEEDBACK_FIELD.attendeeId]) === response.participantId,
+    );
+    if (existing) {
+      await updateFeedbackRecord(existing.id, fields);
+      return;
+    }
+  }
+
+  await createFeedbackRecord(fields);
 }
 
 export type ProfileEdit = {

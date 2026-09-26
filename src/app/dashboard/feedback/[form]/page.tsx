@@ -6,7 +6,14 @@ import RatingScale from "@/components/dashboard/RatingScale";
 import TextQuestion from "@/components/dashboard/TextQuestion";
 import { requireParticipant } from "@/server/auth";
 import { getSessions } from "@/server/data";
-import { feedbackForm, feedbackFormOpen, oneToOneConversations } from "@/server/feedback";
+import RankedNames from "@/components/dashboard/RankedNames";
+import {
+  MAX_ONE_TO_ONE_PICKS,
+  feedbackForm,
+  feedbackFormOpen,
+  oneToOneCandidates,
+  oneToOneConversations,
+} from "@/server/feedback";
 import { submitFeedback } from "../actions";
 
 export default async function FeedbackFormPage({
@@ -48,14 +55,16 @@ export default async function FeedbackFormPage({
   }
 
   const sessions = await getSessions();
-  // Goal-setting and the 1-1 form ask about people and intentions, not talks.
-  const ratesSessions = key === "friday" || key === "saturday" || key === "overall";
-  const rated = ratesSessions
-    ? form.day
-      ? sessions.filter((s) => s.day === form.day && ["talk", "panel", "workshop"].includes(s.type))
-      : sessions.filter((s) => ["talk", "panel", "workshop"].includes(s.type))
-    : [];
+  // Only the overall form rates individual sessions. The daily forms ask about
+  // the day as a whole and spend their length on 1:1 requests instead.
+  const rated =
+    key === "overall"
+      ? sessions.filter((s) => ["talk", "panel", "workshop"].includes(s.type))
+      : [];
   const conversations = key === "one-on-ones" ? await oneToOneConversations(me.id) : [];
+
+  const daily = key === "friday" || key === "saturday";
+  const candidates = daily ? await oneToOneCandidates(me.id) : [];
 
   return (
     <PortalShell role="participant" active="feedback">
@@ -200,6 +209,58 @@ export default async function FeedbackFormPage({
               rows={3}
             />
           </>
+        ) : daily ? (
+          <>
+            {/* Five stars, required, "Not valuable"/"Extremely valuable" are
+                all RatingScale's defaults. */}
+            <RatingScale name="scale-day" legend="How valuable was the day overall?" />
+            <TextQuestion name="day-comments" label="Comments" rows={4} />
+
+            <TextQuestion
+              name="learned"
+              label="What is one valuable thing that you learned today?"
+              required
+              rows={4}
+            />
+
+            <div className="grid gap-2">
+              <span className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <span className="text-sm text-foreground">
+                  Please list up to {MAX_ONE_TO_ONE_PICKS} names, in order, of people you would
+                  like to have 1-1s with tomorrow.
+                  <span aria-hidden="true" className="ml-1 text-accent">
+                    *
+                  </span>
+                </span>
+              </span>
+              <p className="text-xs text-muted">
+                You can list other attendees or guest speakers. Select a name to see their bio,
+                and drag to change the order.
+              </p>
+              <RankedNames
+                name="one-on-one-picks"
+                candidates={candidates}
+                max={MAX_ONE_TO_ONE_PICKS}
+                guests={candidates.filter((person) => person.isGuest)}
+              />
+            </div>
+
+            <TextQuestion
+              name="detracting"
+              label="Is anything detracting from the workshop, and is there anything that would improve your experience?"
+              rows={4}
+            />
+            <TextQuestion
+              name="most-value"
+              label="Who have you gotten the most value from talking to?"
+              rows={3}
+            />
+            <TextQuestion
+              name="additional"
+              label="Is there anything else you would like us to know?"
+              rows={4}
+            />
+          </>
         ) : (
           <>
             {key === "overall" ? (
@@ -223,9 +284,7 @@ export default async function FeedbackFormPage({
                   rightLabel="Extremely likely"
                 />
               </>
-            ) : (
-              <RatingScale name="scale-day" legend={`How was ${form.label}, overall?`} />
-            )}
+            ) : null}
 
             {rated.length ? (
               <section className="grid gap-6">

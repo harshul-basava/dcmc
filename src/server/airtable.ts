@@ -70,6 +70,23 @@ export const GUEST_FIELD = {
 /** The affirmative choice on the guest RSVP question. */
 const GUEST_RSVP_YES = process.env.AIRTABLE_GUEST_RSVP_YES ?? "Yes";
 
+/** Portal Feedback: everything submitted through the feedback forms. */
+export const FEEDBACK_TABLE = process.env.AIRTABLE_FEEDBACK_TABLE ?? "tblVVWszzKTEI4rmE";
+
+export const FEEDBACK_FIELD = {
+  reference: process.env.AIRTABLE_FIELD_FB_REFERENCE ?? "fldPABZTuddX2AmfL",
+  form: process.env.AIRTABLE_FIELD_FB_FORM ?? "fldrJ0J3NdP14AA48",
+  attendee: process.env.AIRTABLE_FIELD_FB_ATTENDEE ?? "fldY7f4ZdryLk9dWe",
+  attendeeId: process.env.AIRTABLE_FIELD_FB_ATTENDEE_ID ?? "fldaSPY6LOVkUDl4R",
+  day: process.env.AIRTABLE_FIELD_FB_DAY ?? "fldOowedqX4Yp53tL",
+  dayRating: process.env.AIRTABLE_FIELD_FB_DAY_RATING ?? "fldLru97e4PyGtX5g",
+  requests: process.env.AIRTABLE_FIELD_FB_REQUESTS ?? "fldK40J9PibkJtcAf",
+  answers: process.env.AIRTABLE_FIELD_FB_ANSWERS ?? "fldFN6wjCrhDHQTqJ",
+  ratings: process.env.AIRTABLE_FIELD_FB_RATINGS ?? "fldkdCFDZSJu8IUbx",
+  sessionRatings: process.env.AIRTABLE_FIELD_FB_SESSIONS ?? "flda7BDw61L9QLBQf",
+  submittedAt: process.env.AIRTABLE_FIELD_FB_SUBMITTED ?? "flde5vtxB7C49fLaD",
+} as const;
+
 /** Portal Page Settings: which pages each audience can open. */
 export const SETTINGS_TABLE = process.env.AIRTABLE_SETTINGS_TABLE ?? "tblhmi9HvNpiwh8Dm";
 
@@ -434,6 +451,58 @@ export async function fetchGuests(): Promise<AirtableRecord[]> {
     if (guestsCache) return guestsCache.records;
     throw error;
   }
+}
+
+/* ---------- Feedback ---------- */
+
+let feedbackCache: { at: number; records: AirtableRecord[] } | null = null;
+
+export function invalidateFeedback(): void {
+  feedbackCache = null;
+}
+
+export async function fetchFeedback(): Promise<AirtableRecord[]> {
+  if (feedbackCache && Date.now() - feedbackCache.at < TTL_MS) return feedbackCache.records;
+
+  try {
+    const records: AirtableRecord[] = [];
+    let offset: string | undefined;
+    do {
+      const params = new URLSearchParams({ pageSize: "100", returnFieldsByFieldId: "true" });
+      if (offset) params.set("offset", offset);
+      const page = (await request(`${FEEDBACK_TABLE}?${params}`)) as {
+        records: AirtableRecord[];
+        offset?: string;
+      };
+      records.push(...page.records);
+      offset = page.offset;
+    } while (offset);
+
+    feedbackCache = { at: Date.now(), records };
+    return records;
+  } catch (error) {
+    if (feedbackCache) return feedbackCache.records;
+    throw error;
+  }
+}
+
+export async function createFeedbackRecord(fields: Record<string, unknown>): Promise<void> {
+  await request(FEEDBACK_TABLE, {
+    method: "POST",
+    body: JSON.stringify({ records: [{ fields }], typecast: true }),
+  });
+  invalidateFeedback();
+}
+
+export async function updateFeedbackRecord(
+  recordId: string,
+  fields: Record<string, unknown>,
+): Promise<void> {
+  await request(`${FEEDBACK_TABLE}/${recordId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ fields, typecast: true }),
+  });
+  invalidateFeedback();
 }
 
 export async function incrementGuestSignIns(recordId: string): Promise<void> {

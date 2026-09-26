@@ -3,7 +3,9 @@
 import { redirect } from "next/navigation";
 import { requireParticipant } from "@/server/auth";
 import { getSessions, saveFeedback } from "@/server/data";
+import { personLookup } from "@/server/people";
 import {
+  MAX_ONE_TO_ONE_PICKS,
   REPEATABLE_FORMS,
   feedbackForm,
   feedbackFormOpen,
@@ -24,13 +26,11 @@ export async function submitFeedback(formData: FormData) {
   if (!(await feedbackFormOpen(key))) redirect("/dashboard/feedback");
 
   const sessions = await getSessions();
-  // Mirrors the page: only the day and overall forms rate sessions.
-  const ratesSessions = key === "friday" || key === "saturday" || key === "overall";
-  const rated = ratesSessions
-    ? form.day
-      ? sessions.filter((s) => s.day === form.day && ["talk", "panel", "workshop"].includes(s.type))
-      : sessions.filter((s) => ["talk", "panel", "workshop"].includes(s.type))
-    : [];
+  // Mirrors the page: only the overall form rates individual sessions.
+  const rated =
+    key === "overall"
+      ? sessions.filter((s) => ["talk", "panel", "workshop"].includes(s.type))
+      : [];
 
   const sessionFeedback = rated.map((session) => {
     const raw = formData.get(`rating-${session.id}`);
@@ -63,6 +63,25 @@ export async function submitFeedback(formData: FormData) {
     answers[name] = value.slice(0, 8000);
   }
 
+  // The daily forms rank people for the next day's pairing round. The picker
+  // sends person keys, one per line; with JavaScript off the same field is a
+  // textarea of typed names. Both are kept as written — an unmatched name is
+  // still an answer, and the pairing round can reconcile it later.
+  const daily = key === "friday" || key === "saturday";
+  if (daily) {
+    const people = await personLookup();
+    const picks = String(formData.get("one-on-one-picks") ?? "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .slice(0, MAX_ONE_TO_ONE_PICKS)
+      // The picker sends person keys; resolve them to names so the stored
+      // answer is readable. A name typed into the no-JavaScript textarea is
+      // already a name and passes through untouched.
+      .map((entry, index) => `${index + 1}. ${people.get(entry)?.name ?? entry}`);
+    answers["one-on-one-picks"] = picks.join("\n");
+  }
+
   // Each form's own required fields, re-checked here rather than trusted from
   // the browser.
   const REQUIRED: Record<string, string[]> = {
@@ -75,6 +94,8 @@ export async function submitFeedback(formData: FormData) {
       "goal-questions",
     ],
     "one-on-ones": ["one-on-ones-overall"],
+    friday: ["learned", "one-on-one-picks"],
+    saturday: ["learned", "one-on-one-picks"],
   };
   // Anytime is embedded on the index; the rest have their own page.
   const back = key === "anytime" ? "/dashboard/feedback" : `/dashboard/feedback/${key}`;
@@ -82,6 +103,10 @@ export async function submitFeedback(formData: FormData) {
   for (const field of REQUIRED[key] ?? ["learned"]) {
     if (!answers[field]?.trim()) redirect(`${back}?error=1`);
   }
+
+  // The day rating is a required question too, and it arrives as a rating
+  // rather than an answer, so the loop above would never see it.
+  if (daily && !Number.isFinite(ratings.day)) redirect(`${back}?error=1`);
 
   await saveFeedback({
     form: key,

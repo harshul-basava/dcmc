@@ -16,7 +16,12 @@ export default function PageHeading({
         <h1 className="font-display text-[clamp(2.25rem,4vw,3.25rem)] font-normal leading-[1.1] tracking-[-0.02em] text-foreground">
           {title}
         </h1>
-        {lead ? <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted">{lead}</p> : null}
+        {/* `text-pretty` keeps the last word off a line of its own; the wider
+            cap gives a sentence like the directory's pending-profiles note
+            room to sit on one line. */}
+        {lead ? (
+          <p className="mt-3 max-w-3xl text-pretty text-base leading-relaxed text-muted">{lead}</p>
+        ) : null}
       </div>
       {actions ? <div className="flex items-center gap-3">{actions}</div> : null}
     </div>

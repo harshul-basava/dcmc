@@ -2,6 +2,8 @@ import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import {
   getGroupMembers,
+  getGuests,
+  getParticipants,
   getPortalPageSettings,
   getPublishedAssignmentsFor,
   getSessions,
@@ -205,3 +207,65 @@ export async function markFormCompleted(participantId: string, form: string): Pr
     maxAge: COMPLETION_TTL_SECONDS,
   });
 }
+
+/** Someone a participant can ask to be paired with. */
+export type OneToOneCandidate = {
+  key: PersonKey;
+  name: string;
+  title: string;
+  organization: string;
+  bio: string;
+  photo?: string;
+  linkedin?: string;
+  isGuest: boolean;
+};
+
+/**
+ * Everyone a participant may request a 1:1 with: the rest of the roster, plus
+ * every speaker and guest.
+ *
+ * NOTE: every guest is offered on every day. That is a simplification, not a
+ * fact — the RSVP table records which days each guest is attending (and several
+ * answered "Unsure"), and some will only be present for part of the
+ * conference. Before the pairing round runs for real this should filter to the
+ * guests actually available for that day's 1:1 session, or participants will
+ * rank people who were never going to be in the room.
+ *
+ * Profile completeness is deliberately not required here. The directory hides
+ * incomplete profiles because a blank card tells a reader nothing; this list
+ * exists to name a person for pairing, which works whether or not they have
+ * uploaded a headshot yet.
+ */
+export async function oneToOneCandidates(excludeParticipantId: string): Promise<OneToOneCandidate[]> {
+  const [participants, guests] = await Promise.all([getParticipants(), getGuests()]);
+
+  const people: OneToOneCandidate[] = [
+    ...participants
+      .filter((person) => person.id !== excludeParticipantId)
+      .map((person) => ({
+        key: `participant:${person.id}` as PersonKey,
+        name: person.name,
+        title: person.title,
+        organization: person.organization,
+        bio: person.bio,
+        photo: person.photo,
+        linkedin: person.linkedin,
+        isGuest: false,
+      })),
+    ...guests.map((person) => ({
+      key: `guest:${person.id}` as PersonKey,
+      name: person.name,
+      title: person.title,
+      organization: person.organization,
+      bio: person.bio,
+      photo: person.photo,
+      linkedin: person.linkedin,
+      isGuest: true,
+    })),
+  ];
+
+  return people.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** How many people a participant may rank on a daily form. */
+export const MAX_ONE_TO_ONE_PICKS = 10;
