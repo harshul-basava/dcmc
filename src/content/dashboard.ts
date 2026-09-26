@@ -281,7 +281,7 @@ export const logistics: {
 export const organizers: { name: string; contact: string; photo?: string }[] = [
   { name: "Harshul Basava", contact: "+1 (408) 355-4218" },
   { name: "Liam Robins", contact: "" },
-  { name: "Seth Lifland", contact: "+1 (703) 269-8686" },
+  { name: "Seth Lifland", contact: "+1 (703) 269-8686", photo: "/organizers/seth-lifland.jpeg" },
   { name: "Binit Maharjan", contact: "" },
   { name: "Isel Neira", contact: "" },
   { name: "Aybars Kocoglu", contact: "" },
