@@ -44,7 +44,9 @@ export default async function HandbookPage() {
           and a second border around it only boxed a box. */}
       <section className="mt-12 border-t border-rule pt-8">
         <h2 className="font-display text-lg tracking-tight text-foreground">Getting help</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+        {/* Full width of the panel: the measure that suits a long document
+            leaves a single sentence broken in half across a wide page. */}
+        <p className="mt-2 text-sm leading-relaxed text-muted">
           For anything urgent during the conference, or anything you would rather raise
           privately, contact one of the organizers below or submit the anytime form on the{" "}
           <Link href="/dashboard/feedback" className="text-accent underline underline-offset-2">
