@@ -16,10 +16,13 @@ export default async function CodeOfConductPage() {
 
   return (
     <PortalShell role="participant" active="handbook" framed={false}>
-      <HandbookBack />
-      <PageHeading title="Code of conduct" />
+      {/* The column is centred in the page; the prose inside it stays left
+          aligned, the same shape the feedback forms use. */}
+      <div className="mx-auto w-full max-w-2xl">
+        <HandbookBack />
+        <PageHeading title="Code of conduct" />
 
-      <div className="max-w-2xl [&_h2]:mt-8 [&_h2]:font-display [&_h2]:text-lg [&_h2]:tracking-tight [&_h2]:text-foreground [&_li]:text-sm [&_li]:leading-relaxed [&_li]:text-muted [&_p]:mt-3 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-muted [&_ul]:mt-3 [&_ul]:grid [&_ul]:gap-2 [&_ul]:pl-5 [&_ul]:list-disc [&_ul_ul]:mt-2">
+        <div className=" [&_h2]:mt-8 [&_h2]:font-display [&_h2]:text-lg [&_h2]:tracking-tight [&_h2]:text-foreground [&_li]:text-sm [&_li]:leading-relaxed [&_li]:text-muted [&_p]:mt-3 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-muted [&_ul]:mt-3 [&_ul]:grid [&_ul]:gap-2 [&_ul]:pl-5 [&_ul]:list-disc [&_ul_ul]:mt-2">
         <p>
           This code of conduct exists to ensure that people can collaborate in a positive and
           successful way.
@@ -122,6 +125,7 @@ export default async function CodeOfConductPage() {
           </a>
           .
         </p>
+        </div>
       </div>
     </PortalShell>
   );
