@@ -26,7 +26,8 @@ export const PORTAL_PAGES: PortalPage[] = [
 ];
 
 export const ADMIN_PAGES = [
-  { key: "overview", path: "/dashboard/admin", label: "Overview" },
+  // Overview is removed for now; /dashboard/admin redirects to whatever is
+  // first here.
   { key: "people", path: "/dashboard/admin/people", label: "People" },
   { key: "schedule", path: "/dashboard/admin/schedule", label: "Schedule" },
   { key: "pairings", path: "/dashboard/admin/pairings", label: "Pairings ·  WIP" },
