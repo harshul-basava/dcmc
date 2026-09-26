@@ -201,6 +201,12 @@ export const resourceGroups: ResourceGroup[] = [];
 
 export const handbookLinks = [
   {
+    title: "Logistics",
+    body: "Dates, the office, the hotel, and how to claim your travel back.",
+    // Short enough to read in place: this opens a dialog rather than a page.
+    href: "#logistics",
+  },
+  {
     title: "Conference resources",
     body: "Slide decks, reading lists, and the career resources we mention during the weekend.",
     href: "/dashboard/handbook/resources",
@@ -209,12 +215,6 @@ export const handbookLinks = [
     title: "Code of conduct",
     body: "What we expect of everyone here, and who to contact if something goes wrong.",
     href: "/dashboard/handbook/code-of-conduct",
-  },
-  {
-    title: "Logistics",
-    body: "Dates, the office, the hotel, and how to claim your travel back.",
-    // Short enough to read in place: this opens a dialog rather than a page.
-    href: "#logistics",
   },
 ];
 
