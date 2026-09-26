@@ -210,7 +210,40 @@ export const handbookLinks = [
     body: "What we expect of everyone here, and who to contact if something goes wrong.",
     href: "/dashboard/handbook/code-of-conduct",
   },
+  {
+    title: "Logistics",
+    body: "Dates, the office, the hotel, and how to claim your travel back.",
+    // Short enough to read in place: this opens a dialog rather than a page.
+    href: "#logistics",
+  },
 ];
+
+/** The Logistics dialog, opened from the handbook card of the same name. */
+export const logistics = {
+  lead:
+    "The DC Mini-Conference on AI Governance will take place from 7 PM Thursday, October 22nd " +
+    "to 6 PM Sunday October 25th. Arrival and check-in is from 4–6 PM on Thursday, October 22nd.",
+  sections: [
+    {
+      title: "Reimbursements",
+      // "here" becomes a link once there is a form to point it at.
+      body: "Attendees will be reimbursed up to $400 for flight costs. Submit receipts here.",
+    },
+    {
+      title: "Office",
+      body:
+        "The mini-conference will be held at the Network on Emerging Threats office near the " +
+        "McPherson Square metro stop.",
+    },
+    {
+      title: "Hotel",
+      body:
+        "Attendees will be staying at the District Hotel, DC at 1440 Rhode Island Ave NW, " +
+        "Washington, DC 20005. Make sure to check in before 7 PM on Thursday, October 22nd, " +
+        "or let us know if circumstances prevent you from doing so.",
+    },
+  ],
+} as const;
 
 /**
  * The organizing team, as shown on the handbook's Getting help section.

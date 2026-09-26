@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import PortalShell from "@/components/dashboard/PortalShell";
 import { requireParticipant } from "@/server/auth";
-import { handbookLinks, shuffledOrganizers } from "@/content/dashboard";
+import { handbookLinks, logistics, shuffledOrganizers } from "@/content/dashboard";
 import { handbookResourcesOpen } from "@/server/portal-pages";
 
 export default async function HandbookPage() {
@@ -17,7 +17,10 @@ export default async function HandbookPage() {
 
   return (
     <PortalShell role="participant" active="handbook">
-      <h1 className="mb-6 font-display text-3xl font-normal tracking-[-0.02em] text-foreground">
+      <h1
+        id="handbook"
+        className="mb-6 font-display text-3xl font-normal tracking-[-0.02em] text-foreground"
+      >
         Attendee handbook
       </h1>
 
@@ -93,6 +96,36 @@ export default async function HandbookPage() {
         </ul>
       </section>
 
+      {/* A `:target` dialog, like the schedule's session popups — opening and
+          closing it is the anchor above and CSS, with no client JavaScript. */}
+      <section
+        id="logistics"
+        className="overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Logistics"
+      >
+        <a className="overlay-backdrop" href="#handbook" aria-label="Close" tabIndex={-1} />
+        <div className="overlay-dialog">
+          <a className="overlay-close" href="#handbook" aria-label="Close">
+            ✕
+          </a>
+
+          <h2 className="font-display text-2xl leading-tight tracking-tight text-foreground">
+            Logistics
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted">{logistics.lead}</p>
+
+          <dl className="mt-6 grid gap-5">
+            {logistics.sections.map((section) => (
+              <div key={section.title}>
+                <dt className="text-sm font-medium text-foreground">{section.title}</dt>
+                <dd className="mt-1 text-sm leading-relaxed text-muted">{section.body}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
     </PortalShell>
   );
 }
