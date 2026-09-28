@@ -293,7 +293,7 @@ export const organizers: { name: string; contact: string; photo?: string }[] = [
     contact: "+1 (860) 970-3950",
     photo: "/organizers/aybars-kocoglu.jpg",
   },
-  { name: "Rohan Kansal", contact: "" },
+  { name: "Rohan Kansal", contact: "+1 (470) 406-8712", photo: "/organizers/rohan-kansal.jpg" },
 ];
 
 /**
