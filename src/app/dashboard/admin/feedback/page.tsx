@@ -35,7 +35,7 @@ export default async function AdminFeedback({
 
   // The running log, newest first, kept out of the one-per-person list below.
   const anytime = responses
-    .filter((response) => response.form === "anytime" && response.answers.comment?.trim())
+    .filter((response) => response.form === "anytime" && Object.values(response.answers).some((value) => value.trim()))
     .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
 
   const sessionRatings = responses.flatMap((r) =>
@@ -66,12 +66,9 @@ export default async function AdminFeedback({
 
   return (
     <PortalShell role="admin" active="feedback">
-      <PageHeading title="Feedback" />
+      <PageHeading title="Feedback" actions={<a href="/dashboard/admin/feedback/questions" className="inline-flex min-h-10 items-center rounded-card bg-accent px-4 text-xs font-semibold text-on-accent">Edit questions</a>} />
 
-      <WipNotice>
-        Responses and the form toggles are live. The aggregate charts below still need work:
-        they only count the per-session ratings the overall form collects.
-      </WipNotice>
+      <WipNotice>Charts below count only session ratings from the overall form.</WipNotice>
 
       <section className="mb-10">
         <h2 className="font-display text-lg tracking-tight text-foreground">
@@ -85,9 +82,11 @@ export default async function AdminFeedback({
           <ul className="mt-4 grid gap-2">
             {anytime.map((response) => (
               <li key={response.id} className="rounded-card border border-rule bg-card p-5">
-                <p className="text-sm leading-relaxed text-foreground">
-                  {response.answers.comment}
-                </p>
+                {Object.entries(response.answers).filter(([, value]) => value.trim()).map(([key, value]) => (
+                  <p key={key} className="mb-2 text-sm leading-relaxed text-foreground">
+                    <strong className="mr-2 font-medium">{response.questionLabels?.[key] ?? key}:</strong>{value}
+                  </p>
+                ))}
                 <p className="mt-3 text-xs text-muted">
                   {response.participantName || "Anonymous"}
                   {response.submittedAt ? ` · ${formatWhen(response.submittedAt)}` : ""}
@@ -201,11 +200,19 @@ export default async function AdminFeedback({
                   .map(([question, value]) => (
                     <p key={question}>
                       <span className="block text-xs uppercase tracking-[0.08em] text-muted">
-                        {question}
+                        {response.questionLabels?.[question] ?? question}
                       </span>
                       <span className="text-foreground">{value}</span>
                     </p>
                   ))}
+                {Object.entries(response.ratings).map(([question, value]) => (
+                  <p key={question}>
+                    <span className="block text-xs uppercase tracking-[0.08em] text-muted">
+                      {response.questionLabels?.[`scale-${question}`] ?? response.questionLabels?.[question] ?? question}
+                    </span>
+                    <span className="text-foreground">{value}</span>
+                  </p>
+                ))}
               </div>
             </details>
           ))}

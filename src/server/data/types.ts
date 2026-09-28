@@ -122,6 +122,8 @@ export type ConversationPreference = {
   targetKey: PersonKey;
   /** 1 is the strongest preference. */
   rank: number;
+  /** Date of the 1:1 block this request is for. Empty for legacy preferences. */
+  forDay?: string;
 };
 
 export type PortalPageSetting = {
@@ -145,5 +147,9 @@ export type FeedbackResponse = {
   answers: Record<string, string>;
   /** 0–10 and 1–5 scales keyed by question name. */
   ratings: Record<string, number>;
+  /** Question labels at submission time, preserved after the form changes. */
+  questionLabels?: Record<string, string>;
+  /** Stable person keys captured with next-day ranked requests. */
+  preferenceTargets?: PersonKey[];
   submittedAt: string;
 };

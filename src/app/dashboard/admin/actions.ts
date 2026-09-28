@@ -226,7 +226,7 @@ export async function generatePairings(formData: FormData) {
 
   const [roster, preferences, assignments] = await Promise.all([
     rosterFor(sessionId),
-    getPreferences(),
+    getPreferences(session.day),
     getAssignments(),
   ]);
 

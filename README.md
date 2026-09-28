@@ -25,8 +25,10 @@ The project runs on Next's defaults, so Vercel needs no configuration:
 3. Accept the detected settings — framework Next.js, build `next build`,
    install `npm install` — and deploy.
 
-There are no environment variables to set. Every push to `main` redeploys; other
-branches get preview URLs.
+The public site needs no environment variables. To run the private dashboard
+with live Airtable data, set the dashboard secrets and Airtable variables from
+`.env.example` in Vercel. Every push to `main` redeploys; other branches get
+preview URLs.
 
 To host on a plain static file server instead (GitHub Pages, S3), add
 `output: "export"` and `images: { unoptimized: true }` to `next.config.ts` and
@@ -121,10 +123,11 @@ A phrase that matches in both rosters is rejected rather than resolved, so two
 people can never share one. Sessions are a signed, HttpOnly cookie holding only
 a record id and a role, and last 12 hours.
 
-**Pages.** Participants get Schedule, Directory, Guest directory, Feedback,
-Reading list, and Handbook. Guests get a programme view, an availability
-editor, and a bio editor. Organisers get an overview, People, Schedule,
-Pairings, Feedback, and Portal pages.
+**Pages.** Participants get Schedule, Profile, Directory, Guest directory,
+Feedback, Reading list, and Handbook. Guests get a programme view, an
+availability editor, and a bio editor. Organisers get People, Schedule,
+Pairings, Feedback, and Portal pages. The Feedback screen also has a question
+editor for labels, order, required status, rating scale, and visibility.
 
 **Portal pages** (`/dashboard/admin/pages`) control which pages each audience
 can use. A closed page leaves the navigation *and* redirects direct requests —
@@ -136,9 +139,11 @@ it again without discarding the draft.
 
 ### Data
 
-Everything is fixtures today. `src/server/data/index.ts` is the only module
-that touches data — swap its function bodies for Airtable calls and no page
-changes. Writes mutate in-memory arrays, so they last until the server restarts.
+Without Airtable credentials the dashboard uses in-memory fixtures. With
+credentials, roster, sessions, portal settings, profiles, feedback, and pairings
+use the DC Mini-Conference base; see [dashboard Airtable setup](docs/dashboard-airtable.md).
+Feedback question definitions live in Portal Page Settings, and submissions
+retain their original question labels in Portal Feedback.
 
 ### A note on how it is built
 

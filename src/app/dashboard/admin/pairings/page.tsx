@@ -7,6 +7,7 @@ import { PAIRING_EXCLUDED } from "@/server/data/types";
 import { personLookup } from "@/server/people";
 import { formatRange, minutesOf } from "@/server/schedule";
 import { generatePairings, hidePairings, publishPairings } from "../actions";
+import { airtableConfigured, ASSIGNMENTS_TABLE } from "@/server/airtable";
 
 export default async function AdminPairings({
   searchParams,
@@ -23,6 +24,7 @@ export default async function AdminPairings({
   ]);
 
   const blocks = sessions.filter((s) => s.personalized);
+  const storageReady = !airtableConfigured() || Boolean(ASSIGNMENTS_TABLE);
 
   return (
     <PortalShell role="admin" active="pairings">
@@ -31,10 +33,7 @@ export default async function AdminPairings({
         lead="Drafts stay private. Participants see a block only once it is released."
       />
 
-      <WipNotice>
-        Generation and release work against the fixture roster, not the live Airtable
-        attendees. Treat anything here as a preview.
-      </WipNotice>
+      {airtableConfigured() && !ASSIGNMENTS_TABLE ? <WipNotice>Pairing storage needs to be connected before drafts can be saved or released.</WipNotice> : null}
 
       {flags.error ? (
         <p role="alert" className="mb-6 rounded-card border border-accent bg-[color:var(--red-50)] p-4 text-sm text-accent">
@@ -115,7 +114,8 @@ export default async function AdminPairings({
                   ) : null}
                   <button
                     type="submit"
-                    className="min-h-10 rounded-card border border-rule px-4 text-xs text-foreground transition hover:border-border-strong"
+                    disabled={!storageReady}
+                    className="min-h-10 rounded-card border border-rule px-4 text-xs text-foreground transition hover:border-border-strong disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Generate draft
                   </button>
@@ -125,7 +125,8 @@ export default async function AdminPairings({
                   <input type="hidden" name="sessionId" value={session.id} />
                   <button
                     type="submit"
-                    className="min-h-10 rounded-card bg-accent px-4 text-xs font-semibold text-on-accent transition hover:bg-accent-hover"
+                    disabled={!storageReady || !draft.length}
+                    className="min-h-10 rounded-card bg-accent px-4 text-xs font-semibold text-on-accent transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {published.length ? "Update live pairings" : "Release"}
                   </button>
@@ -136,6 +137,7 @@ export default async function AdminPairings({
                     <input type="hidden" name="sessionId" value={session.id} />
                     <button
                       type="submit"
+                      disabled={!storageReady}
                       className="min-h-10 rounded-card px-4 text-xs text-muted underline underline-offset-2 transition hover:text-accent"
                     >
                       Hide

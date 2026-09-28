@@ -1,6 +1,7 @@
 import PortalShell from "@/components/dashboard/PortalShell";
 import PageHeading from "@/components/dashboard/PageHeading";
-import TextQuestion from "@/components/dashboard/TextQuestion";
+import FeedbackFields from "@/components/dashboard/FeedbackFields";
+import { getFeedbackQuestions } from "@/server/feedback-questions";
 import { requireParticipant } from "@/server/auth";
 import { FEEDBACK_FORMS, completedForms, feedbackFormOpen } from "@/server/feedback";
 import { submitFeedback } from "./actions";
@@ -13,6 +14,7 @@ export default async function FeedbackIndex({
   const me = await requireParticipant("feedback");
   const { saved, error } = await searchParams;
   const done = await completedForms(me.id);
+  const anytimeQuestions = await getFeedbackQuestions("anytime");
 
   // Anytime is embedded alongside rather than linked to, so it is not a card.
   const linked = await Promise.all(
@@ -99,22 +101,11 @@ export default async function FeedbackIndex({
           <form action={submitFeedback} className="mt-5 grid gap-5">
             <input type="hidden" name="form" value="anytime" />
 
-            <TextQuestion
-              name="comment"
-              label="Feedback"
-              required
-              rows={8}
-              aside={
-                <label className="flex items-center gap-2 text-xs text-muted">
-                  Submit Anonymously
-                  <input
-                    type="checkbox"
-                    name="anonymous"
-                    className="h-4 w-4 accent-[color:var(--color-accent)]"
-                  />
-                </label>
-              }
-            />
+            <FeedbackFields questions={anytimeQuestions} />
+            <label className="flex items-center gap-2 text-xs text-muted">
+              <input type="checkbox" name="anonymous" className="h-4 w-4 accent-[color:var(--color-accent)]" />
+              Submit anonymously
+            </label>
 
             <div>
               <button

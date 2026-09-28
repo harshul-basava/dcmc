@@ -94,6 +94,10 @@ export const FEEDBACK_FIELD = {
 
 /** Portal Page Settings: which pages each audience can open. */
 export const SETTINGS_TABLE = process.env.AIRTABLE_SETTINGS_TABLE ?? "tblhmi9HvNpiwh8Dm";
+// DCMC tables created for personalized schedules and ranked 1:1 requests.
+// Override the IDs when pointing this dashboard at another conference base.
+export const ASSIGNMENTS_TABLE = process.env.AIRTABLE_ASSIGNMENTS_TABLE || "tblBjgQ0kJqcD3xr7";
+export const PREFERENCES_TABLE = process.env.AIRTABLE_PREFERENCES_TABLE || "tblUXnGxDqnvY0CqH";
 
 export const SETTING_FIELD = {
   setting: process.env.AIRTABLE_FIELD_SETTING ?? "fld5bLtm3BuSYv5Kh",
@@ -116,7 +120,7 @@ export type AirtableRecord = {
 };
 
 function config(): { token: string; baseId: string } | null {
-  const token = process.env.AIRTABLE_API_TOKEN;
+  const token = process.env.AIRTABLE_API_TOKEN || process.env.AIRTABLE_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
   if (!token || !baseId) return null;
   return { token, baseId };
@@ -151,6 +155,49 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
     return response.json();
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/** Uncached records for small operational tables. Never fall back to fixtures
+ * when Airtable is configured: a missing table must be visible as an error. */
+export async function listTableRecords(table: string): Promise<AirtableRecord[]> {
+  const records: AirtableRecord[] = [];
+  let offset: string | undefined;
+  do {
+    const params = new URLSearchParams({ pageSize: "100" });
+    if (offset) params.set("offset", offset);
+    const page = (await request(`${encodeURIComponent(table)}?${params}`)) as {
+      records: AirtableRecord[];
+      offset?: string;
+    };
+    records.push(...page.records);
+    offset = page.offset;
+  } while (offset);
+  return records;
+}
+
+export async function createTableRecords(table: string, rows: Record<string, unknown>[]): Promise<void> {
+  const created: string[] = [];
+  try {
+    for (let i = 0; i < rows.length; i += 10) {
+      const result = (await request(encodeURIComponent(table), {
+        method: "POST",
+        body: JSON.stringify({ records: rows.slice(i, i + 10).map((fields) => ({ fields })) }),
+      })) as { records: AirtableRecord[] };
+      created.push(...result.records.map((record) => record.id));
+    }
+  } catch (error) {
+    // Preserve the previous draft if a later batch fails.
+    if (created.length) await deleteTableRecords(table, created);
+    throw error;
+  }
+}
+
+export async function deleteTableRecords(table: string, ids: string[]): Promise<void> {
+  for (let i = 0; i < ids.length; i += 10) {
+    const params = new URLSearchParams();
+    for (const id of ids.slice(i, i + 10)) params.append("records[]", id);
+    await request(`${encodeURIComponent(table)}?${params}`, { method: "DELETE" });
   }
 }
 

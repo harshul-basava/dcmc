@@ -1,19 +1,15 @@
 /**
  * The one place the dashboard talks to its data.
  *
- * Today every function reads the fixture arrays in `./fixtures`. When the real
- * Airtable base exists, these bodies become REST calls (plus the two-tier read
- * cache the source dashboard uses: a long TTL for directories, a short one for
- * schedules and the signed-in person's own record) and no page needs to change.
- *
- * Writes mutate the fixture arrays in place. That is honestly non-durable — a
- * server restart loses them — but it exercises the same code paths the real
- * writes will use.
+ * Reads and writes Airtable when configured, with in-memory fixtures for local
+ * development. Fixture writes are non-durable and reset on server restart.
  */
 
 import { safeEqual } from "../session";
 import {
   FEEDBACK_FIELD,
+  ASSIGNMENTS_TABLE,
+  PREFERENCES_TABLE,
   FIELD,
   GUEST_FIELD,
   GUEST_TABLE,
@@ -25,6 +21,8 @@ import {
   createSessionRecord,
   deleteSessionRecord,
   createFeedbackRecord,
+  createTableRecords,
+  deleteTableRecords,
   fetchFeedback,
   fetchGuests,
   fetchRoster,
@@ -32,6 +30,7 @@ import {
   fetchSettings,
   incrementGuestSignIns,
   incrementSignIns,
+  listTableRecords,
   patchRecord,
   patchSessionRecord,
   putSetting,
@@ -198,7 +197,24 @@ export async function getSession(id: string): Promise<Session | null> {
 }
 
 export async function getAssignments(): Promise<Assignment[]> {
-  return fixtures.assignments;
+  if (!airtableConfigured()) return fixtures.assignments;
+  if (!ASSIGNMENTS_TABLE) return [];
+  return (await listTableRecords(ASSIGNMENTS_TABLE)).flatMap((record) => {
+    const fields = record.fields;
+    const sessionId = (fields.Session as string[] | undefined)?.[0];
+    const attendeeId = (fields.Attendee as string[] | undefined)?.[0];
+    const guestId = (fields["Speaker / Guest"] as string[] | undefined)?.[0];
+    if (!sessionId || (!attendeeId && !guestId)) return [];
+    return [{
+      id: record.id,
+      sessionId,
+      personKey: (attendeeId ? `participant:${attendeeId}` : `guest:${guestId}`) as PersonKey,
+      group: text(fields.Group),
+      location: text(fields.Location),
+      kind: text(fields.Kind) === "Small group" ? "Small group" as const : "1:1" as const,
+      state: text(fields.State) === "published" ? "published" as const : "draft" as const,
+    }];
+  });
 }
 
 /**
@@ -206,20 +222,76 @@ export async function getAssignments(): Promise<Assignment[]> {
  * participant or guest is allowed to see about their own schedule.
  */
 export async function getPublishedAssignmentsFor(personKey: PersonKey): Promise<Assignment[]> {
-  return fixtures.assignments.filter(
+  return (await getAssignments()).filter(
     (a) => a.personKey === personKey && a.state === "published" && a.group !== PAIRING_EXCLUDED,
   );
 }
 
 /** Everyone sharing a group in a session, used to name a person's 1:1 partner. */
 export async function getGroupMembers(sessionId: string, group: string): Promise<Assignment[]> {
-  return fixtures.assignments.filter(
+  return (await getAssignments()).filter(
     (a) => a.sessionId === sessionId && a.group === group && a.state === "published",
   );
 }
 
-export async function getPreferences(): Promise<ConversationPreference[]> {
-  return fixtures.preferences;
+export async function getPreferences(day?: string): Promise<ConversationPreference[]> {
+  if (!airtableConfigured()) return fixtures.preferences.filter((p) => !day || !p.forDay || p.forDay === day);
+  const tablePreferences: ConversationPreference[] = PREFERENCES_TABLE ? (await listTableRecords(PREFERENCES_TABLE)).flatMap((record) => {
+    const f = record.fields;
+    const sourceType = text(f["Person Type"]);
+    const targetType = text(f["Target Type"]);
+    const sourceId = text(f["Person Record ID"]);
+    const targetId = text(f["Target Record ID"]);
+    const forDay = text(f["For Day"]);
+    if (!sourceId || !targetId || !["participant", "guest"].includes(sourceType) || !["participant", "guest"].includes(targetType)) return [];
+    if (day && forDay && forDay !== day) return [];
+    return [{ id: record.id, sourceKey: `${sourceType}:${sourceId}` as PersonKey,
+      targetKey: `${targetType}:${targetId}` as PersonKey, rank: count(f.Rank), forDay }];
+  }) : [];
+  // Feedback keeps the exact submitted keys too. It remains authoritative if
+  // the preference-table sync fails after the response itself was saved.
+  const responses = await getFeedback();
+  const feedbackSources = new Set<string>();
+  const fromFeedback = responses.flatMap((response) => {
+    if (!response.participantId || !response.preferenceTargets || !["friday", "saturday"].includes(response.form)) return [];
+    const next = new Date(`${response.date}T12:00:00Z`);
+    if (Number.isNaN(next.getTime())) return [];
+    next.setUTCDate(next.getUTCDate() + 1);
+    const forDay = next.toISOString().slice(0, 10);
+    const sourceKey: PersonKey = `participant:${response.participantId}`;
+    feedbackSources.add(`${sourceKey}|${forDay}`);
+    return response.preferenceTargets.map((targetKey, index) => ({
+      id: `${response.id}-${index}`, sourceKey, targetKey, rank: index + 1, forDay,
+    }));
+  });
+  return [...tablePreferences.filter((p) => !feedbackSources.has(`${p.sourceKey}|${p.forDay}`)), ...fromFeedback]
+    .filter((p) => !day || !p.forDay || p.forDay === day);
+}
+
+export async function replacePreferences(sourceKey: PersonKey, forDay: string, targets: PersonKey[]): Promise<void> {
+  if (!airtableConfigured()) {
+    const keep = fixtures.preferences.filter((p) => p.sourceKey !== sourceKey || p.forDay !== forDay);
+    fixtures.preferences.length = 0;
+    fixtures.preferences.push(...keep, ...targets.map((targetKey, index) => ({
+      id: `rec${`P${Date.now() % 100000}${index}`.padEnd(14, "X").slice(0, 14)}`,
+      sourceKey, targetKey, rank: index + 1, forDay,
+    })));
+    return;
+  }
+  if (!PREFERENCES_TABLE) return; // Saved in Portal Feedback's JSON until the table is ready.
+  const existing = (await listTableRecords(PREFERENCES_TABLE)).filter((r) =>
+    text(r.fields["Person Type"]) === sourceKey.split(":")[0] &&
+    text(r.fields["Person Record ID"]) === sourceKey.split(":")[1] &&
+    text(r.fields["For Day"]) === forDay,
+  );
+  const [sourceType, sourceId] = sourceKey.split(":");
+  await createTableRecords(PREFERENCES_TABLE, targets.map((targetKey, index) => {
+    const [targetType, targetId] = targetKey.split(":");
+    return { Preference: `${sourceId} > ${targetId} (${forDay}, ${index + 1})`,
+      "Person Type": sourceType, "Person Record ID": sourceId,
+      "Target Type": targetType, "Target Record ID": targetId, Rank: index + 1, "For Day": forDay };
+  }));
+  await deleteTableRecords(PREFERENCES_TABLE, existing.map((r) => r.id));
 }
 
 export type PasswordMatch = { role: Exclude<Role, "admin">; id: string };
@@ -243,11 +315,6 @@ export async function findPersonByPassword(password: string): Promise<PasswordMa
     }
   }
 
-  for (const person of airtableConfigured() ? [] : fixtures.participants) {
-    if (safeEqual(key, shortPasswordKey(person.shortPassword))) {
-      matches.push({ role: "participant", id: person.id });
-    }
-  }
   for (const person of await getGuests()) {
     if (person.shortPassword && safeEqual(key, shortPasswordKey(person.shortPassword))) {
       matches.push({ role: "guest", id: person.id });
@@ -398,7 +465,9 @@ export async function saveSession(id: string | null, fields: Omit<Session, "id" 
 
 export async function deleteSession(id: string): Promise<void> {
   if (airtableConfigured()) {
+    const assignments = ASSIGNMENTS_TABLE ? (await getAssignments()).filter((a) => a.sessionId === id).map((a) => a.id) : [];
     await deleteSessionRecord(id);
+    if (assignments.length) await deleteTableRecords(ASSIGNMENTS_TABLE, assignments);
     return;
   }
 
@@ -416,6 +485,22 @@ export async function replaceAssignments(
   rows: Omit<Assignment, "id" | "state">[],
   state: Assignment["state"],
 ): Promise<void> {
+  if (airtableConfigured()) {
+    if (!ASSIGNMENTS_TABLE) throw new Error("Set AIRTABLE_ASSIGNMENTS_TABLE before saving pairings");
+    const existing = (await getAssignments()).filter((a) =>
+      sessionIds.includes(a.sessionId) && a.state === state && a.group !== PAIRING_EXCLUDED,
+    );
+    await createTableRecords(ASSIGNMENTS_TABLE, rows.map((row) => {
+      const [role, id] = row.personKey.split(":");
+      return { Assignment: `${row.sessionId} · ${row.group} · ${id}`,
+        Session: [row.sessionId],
+        ...(role === "participant" ? { Attendee: [id] } : { "Speaker / Guest": [id] }),
+        Group: row.group,
+        Kind: row.kind, State: state, Location: row.location };
+    }));
+    await deleteTableRecords(ASSIGNMENTS_TABLE, existing.map((a) => a.id));
+    return;
+  }
   const ids = new Set(sessionIds);
   const added = rows.map((row, i) => ({
     id: `rec${`A${Date.now() % 100000}${i}`.padEnd(14, "X").slice(0, 14)}`,
@@ -445,6 +530,12 @@ function toFeedback(record: AirtableRecord): FeedbackResponse {
       return fallback;
     }
   };
+  const storedAnswers = parse(f[FEEDBACK_FIELD.answersJson], {} as Record<string, unknown>);
+  const { __questionLabels, __preferenceTargets, ...answers } = storedAnswers;
+  const requests = text(f[FEEDBACK_FIELD.requests]);
+  if (requests) answers["one-on-one-picks"] = requests;
+  const questionLabels = __questionLabels && typeof __questionLabels === "object" && !Array.isArray(__questionLabels)
+    ? __questionLabels as Record<string, string> : {};
 
   return {
     id: record.id,
@@ -453,8 +544,10 @@ function toFeedback(record: AirtableRecord): FeedbackResponse {
     participantName: text(f[FEEDBACK_FIELD.attendee]),
     date: text(f[FEEDBACK_FIELD.day]),
     sessions: parse(f[FEEDBACK_FIELD.sessionRatings], []),
-    answers: parse(f[FEEDBACK_FIELD.answersJson], {} as Record<string, string>),
+    answers: answers as Record<string, string>,
     ratings: parse(f[FEEDBACK_FIELD.ratings], {} as Record<string, number>),
+    questionLabels,
+    preferenceTargets: Array.isArray(__preferenceTargets) ? __preferenceTargets.filter((key): key is PersonKey => typeof key === "string" && /^(participant|guest):rec[A-Za-z0-9]{14}$/.test(key)) : [],
     submittedAt: text(f[FEEDBACK_FIELD.submittedAt]),
   };
 }
@@ -471,11 +564,19 @@ export async function getFeedback(): Promise<FeedbackResponse[]> {
  * Reads better in Airtable than a JSON blob: one labelled block per question,
  * in the order the form asked them.
  */
-function labelledAnswers(answers: Record<string, string>): string {
+function labelledAnswers(answers: Record<string, string>, labels: Record<string, string> = {}): string {
   return Object.entries(answers)
     .filter(([, value]) => value.trim())
-    .map(([question, value]) => `## ${question}\n${value.trim()}`)
+    .map(([question, value]) => `## ${labels[question] ?? question}\n${value.trim()}`)
     .join("\n\n");
+}
+
+function readableResponse(response: Omit<FeedbackResponse, "id">, written: Record<string, string>): string {
+  const prose = labelledAnswers(written, response.questionLabels);
+  const scores = Object.entries(response.ratings)
+    .map(([key, value]) => `## ${response.questionLabels?.[`scale-${key}`] ?? response.questionLabels?.[key] ?? key}\n${value}`)
+    .join("\n\n");
+  return [prose, scores].filter(Boolean).join("\n\n");
 }
 
 export async function saveFeedback(response: Omit<FeedbackResponse, "id">): Promise<void> {
@@ -507,8 +608,8 @@ export async function saveFeedback(response: Omit<FeedbackResponse, "id">): Prom
     [FEEDBACK_FIELD.day]: response.date,
     [FEEDBACK_FIELD.dayRating]: response.ratings.day ?? null,
     [FEEDBACK_FIELD.requests]: picks,
-    [FEEDBACK_FIELD.answers]: labelledAnswers(written),
-    [FEEDBACK_FIELD.answersJson]: JSON.stringify(written),
+    [FEEDBACK_FIELD.answers]: readableResponse(response, written),
+    [FEEDBACK_FIELD.answersJson]: JSON.stringify({ ...written, __questionLabels: response.questionLabels ?? {}, __preferenceTargets: response.preferenceTargets ?? [] }),
     [FEEDBACK_FIELD.ratings]: JSON.stringify(response.ratings),
     [FEEDBACK_FIELD.sessionRatings]: response.sessions.length
       ? JSON.stringify(response.sessions)
