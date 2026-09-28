@@ -1,3 +1,4 @@
+import HeadshotInput from "./HeadshotInput";
 import type { Guest } from "@/server/data/types";
 
 const field =
@@ -60,19 +61,16 @@ export default function GuestProfileForm({
         </label>
       </div>
 
-      <label className={label}>
+      <div className={label}>
         Headshot
-        <input
-          type="file"
-          name="headshot"
-          accept="image/jpeg,image/png,image/webp"
+        <HeadshotInput
           className="w-full rounded-card border border-rule bg-surface p-2.5 text-sm text-foreground file:mr-3 file:rounded file:border-0 file:bg-[color:var(--neutral-100)] file:px-3 file:py-1.5 file:text-xs file:text-foreground"
         />
         <span className="text-xs text-muted">
           A square or portrait photo works best. JPEG, PNG or WebP, up to 5MB.
           {guest.photo ? " Uploading a new one replaces the current photo." : ""}
         </span>
-      </label>
+      </div>
 
       <label className={label}>
         LinkedIn or personal site

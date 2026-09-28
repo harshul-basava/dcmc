@@ -2,6 +2,7 @@ import PortalShell from "@/components/dashboard/PortalShell";
 import PageHeading from "@/components/dashboard/PageHeading";
 import Directory from "@/components/dashboard/Directory";
 import StatusMark from "@/components/dashboard/StatusMark";
+import HeadshotInput from "@/components/dashboard/HeadshotInput";
 import { hasBio, hasHeadshot, profileComplete } from "@/server/people";
 import { requireParticipant } from "@/server/auth";
 import { updateProfile } from "./actions";
@@ -89,19 +90,16 @@ export default async function ProfilePage({
             </label>
           </div>
 
-          <label className="grid gap-1.5 text-xs text-muted">
+          <div className="grid gap-1.5 text-xs text-muted">
             Headshot
-            <input
-              type="file"
-              name="headshot"
-              accept="image/jpeg,image/png,image/webp"
+            <HeadshotInput
               className="w-full rounded-card border border-rule bg-surface p-2.5 text-sm text-foreground file:mr-3 file:rounded file:border-0 file:bg-[color:var(--neutral-100)] file:px-3 file:py-1.5 file:text-xs file:text-foreground"
             />
             <span className="text-xs text-muted">
               A square or portrait photo works best. JPEG, PNG or WebP, up to 5MB.
               {me.photo ? " Uploading a new one replaces the current photo." : ""}
             </span>
-          </label>
+          </div>
 
           <label className="grid gap-1.5 text-xs text-muted">
             LinkedIn or personal site
@@ -163,6 +161,7 @@ export default async function ProfilePage({
                 },
               ]}
               anchor="#profile-preview"
+              live
             />
           </div>
         </section>
