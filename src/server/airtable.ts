@@ -121,8 +121,10 @@ export type AirtableRecord = {
 
 function config(): { token: string; baseId: string } | null {
   const token = process.env.AIRTABLE_API_TOKEN || process.env.AIRTABLE_KEY;
-  const baseId = process.env.AIRTABLE_BASE_ID;
-  if (!token || !baseId) return null;
+  // This repository serves DCMC; the environment can override the base for
+  // another conference, but the existing Vercel token is sufficient here.
+  const baseId = process.env.AIRTABLE_BASE_ID || "appZ3PpQjBx0UzJ3u";
+  if (!token) return null;
   return { token, baseId };
 }
 

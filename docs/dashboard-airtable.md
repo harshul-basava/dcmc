@@ -1,9 +1,10 @@
 # Dashboard Airtable setup
 
 The dashboard's existing roster, schedule, settings, and feedback use the
-**DC Mini-Conference** base (`appZ3PpQjBx0UzJ3u`). Set `AIRTABLE_API_TOKEN`
-(or `AIRTABLE_KEY`) and `AIRTABLE_BASE_ID` in the environment that runs Next.js.
-A GitHub Actions secret by itself is not a runtime environment variable.
+**DC Mini-Conference** base (`appZ3PpQjBx0UzJ3u`). The app uses that base ID
+by default and reads the existing `AIRTABLE_API_TOKEN` from the Vercel runtime.
+`AIRTABLE_KEY` is also accepted as an alias. Set `AIRTABLE_BASE_ID` only when
+pointing this code at a different base.
 
 The running app's token needs `data.records:read` and `data.records:write` on
 this base. Airtable schema changes require `schema.bases:write` and creator
