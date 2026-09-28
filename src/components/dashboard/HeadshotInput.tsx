@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type PointerEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react";
 import { HEADSHOT_DRAFT_EVENT } from "./PhotoSlot";
 
 /** The on-screen crop frame, in CSS pixels. 4:5, the directory card's shape. */
@@ -32,7 +39,10 @@ type Crop = { zoom: number; x: number; y: number };
  */
 export default function HeadshotInput({ className }: { className?: string }) {
   const staged = useRef<HTMLInputElement>(null);
-  const [image, setImage] = useState<{ bitmap: ImageBitmap; url: string } | null>(null);
+  const [image, setImage] = useState<{
+    bitmap: ImageBitmap;
+    url: string;
+  } | null>(null);
   const [crop, setCrop] = useState<Crop>({ zoom: 1, x: 0, y: 0 });
   const drag = useRef<{ id: number; x: number; y: number } | null>(null);
   const draftUrl = useRef<string | null>(null);
@@ -135,7 +145,13 @@ export default function HeadshotInput({ className }: { className?: string }) {
     const cx = FRAME_W / 2;
     const cy = FRAME_H / 2;
     const ratio = zoom / crop.zoom;
-    setCrop(clamp({ zoom, x: cx - (cx - crop.x) * ratio, y: cy - (cy - crop.y) * ratio }));
+    setCrop(
+      clamp({
+        zoom,
+        x: cx - (cx - crop.x) * ratio,
+        y: cy - (cy - crop.y) * ratio,
+      }),
+    );
   }
 
   function onPointerDown(event: PointerEvent<HTMLDivElement>) {
@@ -188,48 +204,45 @@ export default function HeadshotInput({ className }: { className?: string }) {
       <input ref={staged} type="file" name="headshot" hidden tabIndex={-1} aria-hidden="true" />
 
       {image ? (
-        <div className="mt-2 flex flex-wrap items-end gap-5">
-          <div
-            role="img"
-            aria-label="Headshot crop. Drag, or use the arrow keys, to reposition."
-            tabIndex={0}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerUp}
-            onKeyDown={onKeyDown}
-            className="relative shrink-0 cursor-grab touch-none select-none overflow-hidden rounded-[5px] border border-rule bg-[color:var(--neutral-100)] outline-none focus-visible:border-accent active:cursor-grabbing"
-            style={{ width: FRAME_W, height: FRAME_H }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={image.url}
-              alt=""
-              draggable={false}
-              className="pointer-events-none absolute max-w-none"
-              style={{ left: crop.x, top: crop.y, width, height }}
+        <>
+          <div className="mt-2 flex items-stretch gap-3">
+            <div
+              role="img"
+              aria-label="Headshot crop. Drag, or use the arrow keys, to reposition."
+              tabIndex={0}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerUp}
+              onKeyDown={onKeyDown}
+              className="relative shrink-0 cursor-grab touch-none select-none overflow-hidden rounded-[5px] border border-rule bg-[color:var(--neutral-100)] outline-none focus-visible:border-accent active:cursor-grabbing"
+              style={{ width: FRAME_W, height: FRAME_H }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={image.url}
+                alt=""
+                draggable={false}
+                className="pointer-events-none absolute max-w-none"
+                style={{ left: crop.x, top: crop.y, width, height }}
+              />
+            </div>
+
+            {/* Vertical, as tall as the frame, with zoom-in at the top. */}
+            <input
+              type="range"
+              aria-label="Zoom"
+              min={1}
+              max={MAX_ZOOM}
+              step={0.01}
+              value={crop.zoom}
+              onChange={(event) => zoomTo(Number(event.currentTarget.value))}
+              className="w-5 accent-[color:var(--color-accent)] [direction:rtl] [writing-mode:vertical-lr]"
+              style={{ height: FRAME_H }}
             />
           </div>
-
-          <div className="grid min-w-40 flex-1 gap-3">
-            <label className="grid gap-1.5 text-xs text-muted">
-              Zoom
-              <input
-                type="range"
-                min={1}
-                max={MAX_ZOOM}
-                step={0.01}
-                value={crop.zoom}
-                onChange={(event) => zoomTo(Number(event.currentTarget.value))}
-                className="w-full accent-[color:var(--color-accent)]"
-              />
-            </label>
-            <p className="text-xs leading-relaxed text-muted">
-              Drag the photo to position it in the frame. The preview shows how it will look;
-              select your card there to see the full profile.
-            </p>
-          </div>
-        </div>
+          <p className="mt-2 text-xs text-muted">Drag the photo to position it in the frame.</p>
+        </>
       ) : null}
     </>
   );
