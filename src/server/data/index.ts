@@ -243,11 +243,6 @@ export async function findPersonByPassword(password: string): Promise<PasswordMa
     }
   }
 
-  for (const person of airtableConfigured() ? [] : fixtures.participants) {
-    if (safeEqual(key, shortPasswordKey(person.shortPassword))) {
-      matches.push({ role: "participant", id: person.id });
-    }
-  }
   for (const person of await getGuests()) {
     if (person.shortPassword && safeEqual(key, shortPasswordKey(person.shortPassword))) {
       matches.push({ role: "guest", id: person.id });

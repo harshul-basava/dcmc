@@ -8,6 +8,11 @@ import type { NextConfig } from "next";
  * To go back to a portable static bundle for GitHub Pages or any plain file
  * host, add `output: "export"` and `images: { unoptimized: true }`.
  */
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  // Profile forms post a headshot through a Server Action, and the default
+  // 1MB cap rejected the whole save. Kept under Vercel's 4.5MB request limit;
+  // HeadshotInput shrinks photos in the browser so they land well inside it.
+  experimental: { serverActions: { bodySizeLimit: "4mb" } },
+};
 
 export default nextConfig;

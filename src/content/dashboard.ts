@@ -280,7 +280,7 @@ export const logistics: {
  */
 export const organizers: { name: string; contact: string; photo?: string }[] = [
   { name: "Harshul Basava", contact: "+1 (408) 355-4218", photo: "/organizers/harshul-basava.jpg" },
-  { name: "Liam Robins", contact: "" },
+  { name: "Liam Robins", contact: "+1 (862) 240-3445", photo: "/organizers/liam-robins.jpg" },
   { name: "Seth Lifland", contact: "+1 (703) 269-8686", photo: "/organizers/seth-lifland.jpeg" },
   {
     name: "Binit Maharjan",

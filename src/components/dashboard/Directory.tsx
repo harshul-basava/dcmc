@@ -1,4 +1,5 @@
 import { initials } from "@/server/people";
+import PhotoSlot from "./PhotoSlot";
 
 export type DirectoryPerson = {
   id: string;
@@ -20,10 +21,13 @@ export type DirectoryPerson = {
 export default function Directory({
   people,
   anchor,
+  live = false,
 }: {
   people: DirectoryPerson[];
   /** Where the close button returns to. */
   anchor: string;
+  /** Profile-editor preview: photos follow an unsaved headshot crop. */
+  live?: boolean;
 }) {
   return (
     <>
@@ -39,18 +43,12 @@ export default function Directory({
                 href={`#person-${person.id}`}
                 className="group block rounded-card transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
-                {person.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={person.photo}
-                    alt=""
-                    className="aspect-[4/5] w-full rounded-[5px] object-cover"
-                  />
-                ) : (
-                  <span className="plate" aria-hidden="true">
-                    {initials(person.name)}
-                  </span>
-                )}
+                <PhotoSlot
+                  photo={person.photo}
+                  initials={initials(person.name)}
+                  imgClassName="aspect-[4/5] w-full rounded-[5px] object-cover"
+                  live={live}
+                />
                 <strong className="mt-4 block font-display text-lg font-medium leading-snug text-foreground group-hover:text-accent">
                   {person.name}
                 </strong>
@@ -84,14 +82,7 @@ export default function Directory({
             </a>
 
             <div className="profile-portrait">
-              {person.photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={person.photo} alt="" />
-              ) : (
-                <span className="plate" aria-hidden="true">
-                  {initials(person.name)}
-                </span>
-              )}
+              <PhotoSlot photo={person.photo} initials={initials(person.name)} live={live} />
             </div>
 
             <div className="profile-body">

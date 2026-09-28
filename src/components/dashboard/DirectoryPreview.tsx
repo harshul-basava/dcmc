@@ -34,6 +34,7 @@ export default function DirectoryPreview({
         <Directory
           people={[{ ...person, bio: person.bio || "No description yet." }]}
           anchor="#profile-preview"
+          live
         />
       </div>
     </section>

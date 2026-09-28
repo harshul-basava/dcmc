@@ -78,8 +78,6 @@ export default async function CodeOfConductPage() {
           <li>
             Please contact one of the main organizers with any concerns, in person or by call
             or text.
-            {/* Liam's number is not published yet; the line is here so it can
-                be filled in without touching the copy around it. */}
             <ul>
               <li>
                 Harshul Basava:{" "}
@@ -87,7 +85,12 @@ export default async function CodeOfConductPage() {
                   +1 (408) 355-4218
                 </a>
               </li>
-              <li>Liam Robins:</li>
+              <li>
+                Liam Robins:{" "}
+                <a href="tel:+18622403445" className="text-accent underline underline-offset-2">
+                  +1 (862) 240-3445
+                </a>
+              </li>
               <li>
                 Seth Lifland:{" "}
                 <a href="tel:+17032698686" className="text-accent underline underline-offset-2">
