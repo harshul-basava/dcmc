@@ -29,6 +29,7 @@ export const ADMIN_PAGES = [
   // Overview is removed for now; /dashboard/admin redirects to whatever is
   // first here.
   { key: "people", path: "/dashboard/admin/people", label: "People" },
+  { key: "directories", path: "/dashboard/admin/directories", label: "Directories" },
   { key: "schedule", path: "/dashboard/admin/schedule", label: "Schedule" },
   { key: "pairings", path: "/dashboard/admin/pairings", label: "Pairings ·  WIP" },
   { key: "feedback", path: "/dashboard/admin/feedback", label: "Feedback ·  WIP" },
