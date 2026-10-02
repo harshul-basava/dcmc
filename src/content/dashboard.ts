@@ -234,8 +234,8 @@ export const logistics: {
 } = {
   lead: [
     "The DC Mini-Conference on AI Governance will take place from ",
-    { bold: "7 PM Thursday, October 22nd to 6 PM Sunday October 25th" },
-    ". Arrival and check-in is from 4–6 PM on Thursday, October 22nd.",
+    { bold: "7 PM Thursday, October 22nd to 4 PM Sunday, October 25th" },
+    ". Arrival and check-in is from 4–7 PM on Thursday, October 22nd.",
   ],
   sections: [
     {
