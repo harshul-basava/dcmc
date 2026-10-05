@@ -5,7 +5,7 @@ import { getGuests, getParticipants } from "@/server/data";
 import MetricCard from "@/components/dashboard/MetricCard";
 import StatusMark from "@/components/dashboard/StatusMark";
 import { hasBio, hasHeadshot, profileComplete } from "@/server/people";
-import { changeAccessCount } from "../actions";
+import { changeAccessCount, startPreview } from "../actions";
 
 export default async function AdminPeople() {
   await requireAdmin();
@@ -61,11 +61,17 @@ export default async function AdminPeople() {
         <table className="w-full min-w-[60rem] border-collapse text-sm">
           <thead>
             <tr className="border-b border-rule text-left">
-              {["Name", "Role", "Affiliation", "Headshot", "Bio", "Password", "Sign-ins", ""].map((head) => (
-                <th key={head} scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-[0.08em] text-muted">
-                  {head}
-                </th>
-              ))}
+              {["Name", "Role", "Affiliation", "Headshot", "Bio", "Password", "Sign-ins", ""].map(
+                (head) => (
+                  <th
+                    key={head}
+                    scope="col"
+                    className="px-4 py-3 text-xs font-medium uppercase tracking-[0.08em] text-muted"
+                  >
+                    {head}
+                  </th>
+                ),
+              )}
             </tr>
           </thead>
           <tbody>
@@ -113,28 +119,41 @@ export default async function AdminPeople() {
                 </td>
                 <td className="px-4 py-3 tabular-nums text-muted">{person.accessCount}</td>
                 <td className="px-4 py-3">
-                  <form action={changeAccessCount} className="flex items-center gap-1">
-                    <input type="hidden" name="id" value={person.id} />
-                    <input type="hidden" name="role" value={person.role} />
-                    <input type="hidden" name="current" value={person.accessCount} />
-                    {(
-                      [
-                        ["decrement", "−"],
-                        ["increment", "+"],
-                        ["reset", "Reset"],
-                      ] as const
-                    ).map(([action, label]) => (
-                      <button
-                        key={action}
-                        type="submit"
-                        name="action"
-                        value={action}
-                        className="rounded border border-rule px-2 py-1 text-xs text-muted transition hover:border-border-strong hover:text-foreground"
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </form>
+                  <div className="flex items-center gap-3">
+                    {person.role === "participant" ? (
+                      <form action={startPreview}>
+                        <input type="hidden" name="id" value={person.id} />
+                        <button
+                          type="submit"
+                          className="rounded border border-rule px-2 py-1 text-xs text-muted transition hover:border-accent hover:text-accent"
+                        >
+                          Preview
+                        </button>
+                      </form>
+                    ) : null}
+                    <form action={changeAccessCount} className="flex items-center gap-1">
+                      <input type="hidden" name="id" value={person.id} />
+                      <input type="hidden" name="role" value={person.role} />
+                      <input type="hidden" name="current" value={person.accessCount} />
+                      {(
+                        [
+                          ["decrement", "−"],
+                          ["increment", "+"],
+                          ["reset", "Reset"],
+                        ] as const
+                      ).map(([action, label]) => (
+                        <button
+                          key={action}
+                          type="submit"
+                          name="action"
+                          value={action}
+                          className="rounded border border-rule px-2 py-1 text-xs text-muted transition hover:border-border-strong hover:text-foreground"
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </form>
+                  </div>
                 </td>
               </tr>
             ))}

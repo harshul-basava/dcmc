@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
+  PREVIEW_COOKIE,
   SESSION_COOKIE,
   adminPassword,
   createSessionToken,
@@ -77,5 +78,6 @@ export async function signIn(_state: { error: string } | null, formData: FormDat
 export async function signOut() {
   const store = await cookies();
   store.set(SESSION_COOKIE, "", sessionCookieOptions(0));
+  store.set(PREVIEW_COOKIE, "", sessionCookieOptions(0));
   redirect("/dashboard/login");
 }

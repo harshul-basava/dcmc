@@ -1,7 +1,9 @@
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import {
+  PREVIEW_COOKIE,
   SESSION_COOKIE,
+  readPreviewToken,
   readSessionToken,
   sessionSecret,
   type Session,
@@ -10,12 +12,30 @@ import { getGuest, getParticipant } from "./data";
 import type { Guest, Participant } from "./data/types";
 import { portalHome, portalPageOpen } from "./portal-pages";
 
+/** A session as pages see it: during an admin preview, the attendee's. */
+export type ViewSession = Session & { preview?: true };
+
 /**
  * The signed-in session, or null. Every page calls this and re-verifies the
  * signature; the root `proxy.ts` check is only a fast path, never the
  * authorization boundary.
+ *
+ * While an admin is previewing an attendee this returns that attendee's
+ * session, marked `preview`, so every attendee page renders exactly as it
+ * does for them. Admin pages use `getRealSession` and are unaffected.
  */
-export async function getSession(): Promise<Session | null> {
+export async function getSession(): Promise<ViewSession | null> {
+  const session = await getRealSession();
+  if (session?.role !== "admin") return session;
+
+  const participantId = await previewTarget();
+  return participantId
+    ? { role: "participant", participantId, expiresAt: session.expiresAt, preview: true }
+    : session;
+}
+
+/** The session the cookie actually carries, ignoring any preview. */
+export async function getRealSession(): Promise<Session | null> {
   // Read the cookie first, before any early return. Touching cookies() is what
   // marks the route dynamic; bailing out above it would let Next prerender a
   // signed-out redirect at build time and serve it to everyone.
@@ -25,6 +45,19 @@ export async function getSession(): Promise<Session | null> {
   const secret = sessionSecret();
   if (!secret) return null;
   return readSessionToken(token, secret);
+}
+
+/** The attendee id named by a valid preview cookie. Callers check for admin. */
+async function previewTarget(): Promise<string | null> {
+  const store = await cookies();
+  const secret = sessionSecret();
+  if (!secret) return null;
+  return readPreviewToken(store.get(PREVIEW_COOKIE)?.value, secret);
+}
+
+/** True while an admin is viewing the dashboard as an attendee. */
+export async function isPreviewing(): Promise<boolean> {
+  return Boolean((await getSession())?.preview);
 }
 
 /** Sends anyone without a session to the login screen, preserving where they were headed. */
@@ -66,7 +99,8 @@ export async function requireGuest(pageKey: string): Promise<Guest> {
  * does not advertise that it exists.
  */
 export async function requireAdmin(): Promise<void> {
-  const session = await getSession();
+  // The real session: admin pages keep working while a preview is open.
+  const session = await getRealSession();
   if (!session || session.role !== "admin") notFound();
 }
 

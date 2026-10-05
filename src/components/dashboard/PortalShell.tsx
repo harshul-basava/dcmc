@@ -1,6 +1,9 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { signOut } from "@/app/dashboard/actions";
+import { exitPreview } from "@/app/dashboard/admin/actions";
+import { getSession } from "@/server/auth";
+import { getParticipant } from "@/server/data";
 import { conference } from "@/content/site";
 import { Container } from "@/components/ui";
 import { ADMIN_PAGES, portalPagesFor } from "@/server/portal-pages";
@@ -29,7 +32,9 @@ export default async function PortalShell({
   children: ReactNode;
 }) {
   const items: NavItem[] =
-    role === "admin" ? ADMIN_PAGES : (await portalPagesFor(role)).map(({ key, path, label }) => ({ key, path, label }));
+    role === "admin"
+      ? ADMIN_PAGES
+      : (await portalPagesFor(role)).map(({ key, path, label }) => ({ key, path, label }));
 
   const home = role === "admin" ? "/dashboard/admin" : (items[0]?.path ?? "/dashboard");
 
@@ -37,9 +42,38 @@ export default async function PortalShell({
   // metric rows read better without a frame competing for attention.
   const isFramed = framed ?? role !== "admin";
 
+  // An admin viewing the attendee dashboard as someone: say so on every page,
+  // with the way back. Everything below the strip is the attendee's own view.
+  const session = role === "participant" ? await getSession() : null;
+  const previewing =
+    session?.preview && session.role === "participant"
+      ? await getParticipant(session.participantId)
+      : null;
+
   return (
     <div className={`min-h-screen ${isFramed ? "portal-backdrop" : "bg-sand"}`}>
       <header data-tone="ink" className="sticky top-0 z-50 border-b border-rule">
+        {previewing ? (
+          <div className="bg-accent text-on-accent">
+            <Container>
+              <form
+                action={exitPreview}
+                className="flex min-h-10 flex-wrap items-center justify-between gap-x-4 gap-y-1 py-1.5 text-xs"
+              >
+                <span>
+                  Previewing as <strong className="font-semibold">{previewing.name}</strong>.
+                  Read-only: nothing is saved to their account.
+                </span>
+                <button
+                  type="submit"
+                  className="rounded border border-current px-2.5 py-1 font-semibold transition hover:bg-white/15"
+                >
+                  Exit preview
+                </button>
+              </form>
+            </Container>
+          </div>
+        ) : null}
         <Container>
           <div className="flex h-16 items-center gap-6">
             <a
@@ -73,7 +107,10 @@ export default async function PortalShell({
                 >
                   {item.label}
                   {item.key === active ? (
-                    <span aria-hidden="true" className="absolute inset-x-0 -bottom-0.5 h-px bg-gold" />
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-x-0 -bottom-0.5 h-px bg-gold"
+                    />
                   ) : null}
                 </a>
               ))}
@@ -115,13 +152,8 @@ export default async function PortalShell({
         </Container>
       </header>
 
-      <main
-        id="main-content"
-        className={`portal ${isFramed ? "py-6 sm:py-8" : "py-10 sm:py-14"}`}
-      >
-        <Container>
-          {isFramed ? <div className="portal-card">{children}</div> : children}
-        </Container>
+      <main id="main-content" className={`portal ${isFramed ? "py-6 sm:py-8" : "py-10 sm:py-14"}`}>
+        <Container>{isFramed ? <div className="portal-card">{children}</div> : children}</Container>
       </main>
     </div>
   );

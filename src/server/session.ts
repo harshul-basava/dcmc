@@ -104,6 +104,31 @@ export function readSessionToken(token: string | undefined, secret: string): Ses
   return null;
 }
 
+/**
+ * Admin preview: "see the dashboard as this attendee". A second cookie, read
+ * only alongside a valid admin session, naming the attendee to render as.
+ *
+ * Signed with a key derived from the session secret, so a preview token can
+ * never pass as a session token or the other way round — copying it into the
+ * session cookie gets a rejected session, not that attendee's account.
+ */
+export const PREVIEW_COOKIE = SECURE ? "__Secure-dcmc_preview" : "dcmc_preview";
+export const PREVIEW_TTL_SECONDS = 60 * 60 * 2;
+
+function previewKey(secret: string): string {
+  return createHmac("sha256", secret).update("dcmc-admin-preview").digest("base64url");
+}
+
+export function createPreviewToken(participantId: string, secret: string): string {
+  return createSessionToken({ role: "participant", participantId }, previewKey(secret));
+}
+
+/** The attendee being previewed, or null. Expiry is checked as for sessions. */
+export function readPreviewToken(token: string | undefined, secret: string): string | null {
+  const claims = readSessionToken(token, previewKey(secret));
+  return claims?.role === "participant" ? claims.participantId : null;
+}
+
 /** Options shared by every write of the session cookie, including the clear. */
 export function sessionCookieOptions(maxAge: number = SESSION_TTL_SECONDS) {
   return {

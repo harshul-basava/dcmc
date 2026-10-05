@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { requireAdmin } from "@/server/auth";
 import {
   deleteSession,
+  getParticipant,
   getAssignments,
   getGuests,
   getParticipants,
@@ -19,7 +20,14 @@ import {
 } from "@/server/data";
 import { isSessionType } from "@/server/data/types";
 import type { PersonKey } from "@/server/data/types";
-import { HANDBOOK_RESOURCES_KEY, PORTAL_PAGES } from "@/server/portal-pages";
+import { HANDBOOK_RESOURCES_KEY, PORTAL_PAGES, portalHome } from "@/server/portal-pages";
+import {
+  PREVIEW_COOKIE,
+  PREVIEW_TTL_SECONDS,
+  createPreviewToken,
+  sessionCookieOptions,
+  sessionSecret,
+} from "@/server/session";
 import { FEEDBACK_FORMS } from "@/server/feedback";
 import { CONFERENCE_DAYS, LAST_DAY_COOKIE } from "@/server/schedule";
 import {
@@ -281,4 +289,26 @@ export async function hidePairings(formData: FormData) {
   await replaceAssignments([sessionId], [], "published");
   revalidatePath("/dashboard", "layout");
   redirect(`/dashboard/admin/pairings?hidden=${sessionId}`);
+}
+
+/**
+ * Opens the attendee dashboard as one attendee sees it, without their
+ * password. Read-only: every attendee write action refuses during a preview.
+ */
+export async function startPreview(formData: FormData) {
+  await requireAdmin();
+  const secret = sessionSecret();
+  const id = String(formData.get("id") ?? "");
+  if (!secret || !(await getParticipant(id))) redirect("/dashboard/admin/people");
+
+  const store = await cookies();
+  store.set(PREVIEW_COOKIE, createPreviewToken(id, secret), sessionCookieOptions(PREVIEW_TTL_SECONDS));
+  redirect(await portalHome("participant"));
+}
+
+export async function exitPreview() {
+  await requireAdmin();
+  const store = await cookies();
+  store.set(PREVIEW_COOKIE, "", sessionCookieOptions(0));
+  redirect("/dashboard/admin/people");
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireParticipant } from "@/server/auth";
+import { isPreviewing, requireParticipant } from "@/server/auth";
 import { getSessions, replacePreferences, saveFeedback } from "@/server/data";
 import { personLookup } from "@/server/people";
 import { getFeedbackQuestions } from "@/server/feedback-questions";
@@ -22,6 +22,8 @@ import {
  */
 export async function submitFeedback(formData: FormData) {
   const me = await requireParticipant("feedback");
+  // An admin preview is read-only: no feedback is recorded in the attendee's name.
+  if (await isPreviewing()) redirect("/dashboard/feedback");
 
   const key = String(formData.get("form") ?? "");
   const form = feedbackForm(key);

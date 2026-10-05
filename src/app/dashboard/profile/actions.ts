@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireParticipant } from "@/server/auth";
+import { isPreviewing, requireParticipant } from "@/server/auth";
 import { saveHeadshot, saveProfile } from "@/server/data";
 import { MAX_UPLOAD_BYTES } from "@/server/airtable";
 
@@ -11,6 +11,8 @@ const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export async function updateProfile(formData: FormData) {
   const me = await requireParticipant("profile");
+  // An admin preview is read-only: nothing is written to the attendee's record.
+  if (await isPreviewing()) redirect("/dashboard/profile");
 
   const firstName = String(formData.get("firstName") ?? "").trim().slice(0, 100);
   const lastName = String(formData.get("lastName") ?? "").trim().slice(0, 100);
