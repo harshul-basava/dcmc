@@ -16,6 +16,16 @@ function render(segments: Segment[]) {
   return segments.map((segment, index) =>
     typeof segment === "string" ? (
       segment
+    ) : "link" in segment ? (
+      <a
+        key={index}
+        href={segment.href}
+        target="_blank"
+        rel="noreferrer"
+        className="text-accent underline underline-offset-2"
+      >
+        {segment.link}
+      </a>
     ) : (
       <strong key={index} className="font-medium text-foreground">
         {segment.bold}

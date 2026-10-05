@@ -222,10 +222,10 @@ export const handbookLinks = [
  * A run of copy that needs emphasis inside it.
  *
  * Segments rather than a string with markup: this file is plain TypeScript,
- * and a `bold` flag keeps the copy editable here without moving it into the
- * page or teaching the page to parse anything.
+ * and a `bold` or `link` field keeps the copy editable here without moving it
+ * into the page or teaching the page to parse anything.
  */
-export type Segment = string | { bold: string };
+export type Segment = string | { bold: string } | { link: string; href: string };
 
 /** The Logistics dialog, opened from the handbook card of the same name. */
 export const logistics: {
@@ -240,10 +240,16 @@ export const logistics: {
   sections: [
     {
       title: "Reimbursements",
-      // "here" becomes a link once there is a form to point it at.
       body: [
         "Attendees will be reimbursed up to $400 for flight costs. Submit receipts through " +
-          "Hack Club here.",
+          "Hack Club ",
+        { link: "here", href: "https://tinyurl.com/dcmc-reimburse" },
+        ". See our ",
+        {
+          link: "Travel Policy",
+          href: "https://docs.google.com/document/d/1L57nhiPEJLYkJ4XarpQl6-MCguMu4bL6sfNNtnE_xdY/edit?tab=t.0#heading=h.ivnbt27vfxeu",
+        },
+        ".",
       ],
     },
     {
