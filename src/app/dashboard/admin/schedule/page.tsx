@@ -137,6 +137,9 @@ export default async function AdminSchedule({
             <p className="mt-1 text-sm text-muted">
               Editing an event here updates Airtable and both participant dashboards.
             </p>
+            <a href="/schedule" target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm text-muted underline underline-offset-4">
+              Public, view-only schedule ↗
+            </a>
           </div>
 
           <a

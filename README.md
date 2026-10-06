@@ -102,6 +102,11 @@ scroll).
 
 ## The private dashboard
 
+`/schedule` is the public, view-only programme for sharing with speakers. It
+reads the same sessions as the admin schedule and refreshes every minute while
+visible (or when the tab is reopened). It exposes no participant roster,
+pairings, or editing controls. Without JavaScript, reload to get updates.
+
 `/dashboard` is a password-gated area for participants, guests, and organisers.
 It is modelled on the AI risk workshop dashboard's information architecture,
 rebuilt in this site's stack and brand.
