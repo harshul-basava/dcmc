@@ -58,8 +58,11 @@ export default function ScheduleGrid({
   days,
   editBase,
   resizeFormId,
+  showDetails = true,
 }: {
   days: ScheduleDay[];
+  /** Public overview mode renders plain blocks with no detail dialogs. */
+  showDetails?: boolean;
   /**
    * Admin mode: blocks link to the editor for that event instead of opening a
    * participant dialog. A string rather than a callback, because this is a
@@ -234,13 +237,14 @@ export default function ScheduleGrid({
                   const dragging = resize?.sessionId === block.sessionId;
                   const endMinutes = dragging ? resize.endMinutes : block.endMinutes;
                   const duration = endMinutes - block.startMinutes;
+                  const Block = editBase || showDetails ? "a" : "div";
                   return (
-                    <a
+                    <Block
                       key={block.key}
                       href={
                         editBase
                           ? editLink(editBase, block.sessionId)
-                          : `#session-${block.key}`
+                          : showDetails ? `#session-${block.key}` : undefined
                       }
                       draggable={resizable ? false : undefined}
                       onClick={
@@ -305,7 +309,7 @@ export default function ScheduleGrid({
                           }}
                         />
                       ) : null}
-                    </a>
+                    </Block>
                   );
                 })}
               </div>
@@ -316,7 +320,7 @@ export default function ScheduleGrid({
 
       {/* The participant dialogs; in admin mode the block is a link to the
           editor, so there is nothing to open in place. */}
-      {editBase ? null : days.flatMap((day) =>
+      {editBase || !showDetails ? null : days.flatMap((day) =>
         day.blocks.map((block) => (
           <section
             key={block.key}

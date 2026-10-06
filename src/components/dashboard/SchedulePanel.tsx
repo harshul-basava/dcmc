@@ -26,9 +26,11 @@ import type { ScheduleDay } from "@/server/schedule";
 export default function SchedulePanel({
   days,
   legend,
+  showDetails = true,
 }: {
   days: ScheduleDay[];
   legend?: ReactNode;
+  showDetails?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   /** An ISO date, or "" for every day at once. */
@@ -154,7 +156,7 @@ export default function SchedulePanel({
       </div>
 
       <div className="schedule-panel-body">
-        <ScheduleGrid days={visible} />
+        <ScheduleGrid days={visible} showDetails={showDetails} />
       </div>
     </section>
   );
