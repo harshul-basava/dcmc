@@ -66,7 +66,6 @@ export default async function AdminDirectories({
             photo: p.photo,
             linkedin: p.linkedin,
           }))}
-          anchor="#directory"
         />
       </div>
     </PortalShell>

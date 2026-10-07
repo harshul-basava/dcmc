@@ -33,7 +33,6 @@ export default function DirectoryPreview({
       <div id="profile-preview" className="mt-5">
         <Directory
           people={[{ ...person, bio: person.bio || "No description yet." }]}
-          anchor="#profile-preview"
           live
         />
       </div>

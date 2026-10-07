@@ -34,7 +34,6 @@ export default async function DirectoryPage() {
             photo: p.photo,
             linkedin: p.linkedin,
           }))}
-          anchor="#directory"
         />
       </div>
     </PortalShell>
