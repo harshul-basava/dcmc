@@ -1,3 +1,13 @@
 .portal.public-schedule {
   --portal-header: 0px;
 }
+
+/*
+ * These pages' <main> carries id="top", which globals.css uses to give the
+ * homepage hero a warmer cream `--sand`. Here that turned the schedule
+ * toolbar (background: var(--sand)) into a darker box with hard edges against
+ * the page. Restore the page's own sand; the id selector is needed to win.
+ */
+#top.public-schedule {
+  --sand: var(--bg-page);
+}
