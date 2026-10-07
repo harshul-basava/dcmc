@@ -102,7 +102,13 @@ scroll).
 
 ## The private dashboard
 
-`/directory` is the public, view-only attendee directory. It shows the same
+`/directory` is a shareable, password-protected, view-only attendee directory.
+Its shared password grants directory access for 12 hours, using a signed,
+HttpOnly cookie scoped to `/directory`; it grants no dashboard access and
+requires the existing `DASHBOARD_SESSION_SECRET`.
+Directory and Schedule navigation tabs share this password session; the
+schedule tab at `/directory/schedule` matches the public `/schedule` overview.
+The directory shows the same
 completed profiles as the dashboard and refreshes every minute while visible.
 Only names, titles, affiliations, bios, photos, and LinkedIn links are exposed;
 emails, sign-in phrases, and sign-in counts remain private.
