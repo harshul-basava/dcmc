@@ -102,6 +102,11 @@ scroll).
 
 ## The private dashboard
 
+`/directory` is the public, view-only attendee directory. It shows the same
+completed profiles as the dashboard and refreshes every minute while visible.
+Only names, titles, affiliations, bios, photos, and LinkedIn links are exposed;
+emails, sign-in phrases, and sign-in counts remain private.
+
 `/schedule` is the public, view-only programme for sharing with speakers. It
 reads the same sessions as the admin schedule and refreshes every minute while
 visible (or when the tab is reopened). It exposes no participant roster,
