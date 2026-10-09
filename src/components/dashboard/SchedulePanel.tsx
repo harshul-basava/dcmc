@@ -120,8 +120,10 @@ export default function SchedulePanel({
                   type="button"
                   onClick={() => setFocus(day.date)}
                   aria-pressed={focus === day.date}
+                  aria-label={day.weekday}
                 >
-                  {day.weekday}
+                  <span className="day-focus-full">{day.weekday}</span>
+                  <span className="day-focus-short" aria-hidden="true">{day.weekday.slice(0, 3)}</span>
                 </button>
               ))}
             </div>

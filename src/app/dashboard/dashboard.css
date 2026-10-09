@@ -102,8 +102,26 @@
 
 @media (max-width: 64rem) {
   .calendar-grid {
-    grid-template-columns: 5.5rem repeat(var(--day-count), minmax(11.5rem, 1fr));
-    min-width: max-content;
+    grid-template-columns: 4rem repeat(var(--day-count), minmax(18rem, 1fr));
+    width: calc(4rem + var(--day-count) * 18rem);
+    min-width: 100%;
+  }
+
+  /* The horizontal scrollport is not vertically scrolled in the docked view.
+     Viewport offsets here would push headers down into the day's events. */
+  .calendar-scroll .calendar-head {
+    top: 0;
+  }
+
+  .calendar-scroll .rail-column {
+    position: sticky;
+    left: 0;
+    background: var(--card);
+  }
+
+  .calendar-scroll .time-rail span {
+    right: 0.5rem;
+    letter-spacing: 0;
   }
 }
 
@@ -555,6 +573,10 @@
   background: var(--neutral-100);
 }
 
+.day-focus-short {
+  display: none;
+}
+
 .day-focus :is(button, a) {
   padding: 0.4rem 0.7rem;
   text-decoration: none;
@@ -660,6 +682,97 @@
 
 body.schedule-expanded {
   overflow: hidden;
+}
+
+/* Keep the shared public and dashboard schedule readable on phones without
+   changing its time scale, day selection, or event positioning. */
+@media (max-width: 40rem) {
+  .schedule-panel,
+  .schedule-panel-body,
+  .calendar-scroll {
+    min-width: 0;
+  }
+
+  .schedule-panel-bar {
+    gap: 0.75rem;
+    padding-block: 0.75rem;
+  }
+
+  .schedule-panel-controls {
+    order: -1;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .schedule-panel-controls .day-focus {
+    display: flex;
+    width: 100%;
+  }
+
+  .schedule-panel-controls .day-focus button {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.4rem 0.2rem;
+    font-size: 0.6875rem;
+    white-space: nowrap;
+  }
+
+  .schedule-panel-controls .day-focus button:first-child {
+    flex-grow: 1.4;
+  }
+
+  .day-focus-full {
+    display: none;
+  }
+
+  .day-focus-short {
+    display: inline;
+  }
+
+  .schedule-expand {
+    min-height: 2.75rem;
+  }
+
+  .schedule-panel-bar > ul {
+    gap: 0.5rem 0.875rem;
+  }
+
+  .schedule-panel-bar > ul > li {
+    gap: 0.375rem;
+    font-size: 0.6875rem;
+    white-space: nowrap;
+  }
+
+  .calendar-grid {
+    /* A single selected day fills the available space. All days keep the
+       same readable width and scroll within the calendar, not the page. */
+    grid-template-columns: 3.5rem repeat(var(--day-count), minmax(0, 1fr));
+    width: calc(3.5rem + var(--day-count) * min(20rem, calc(100cqw - 3.5rem)));
+  }
+
+  .calendar-scroll {
+    container-type: inline-size;
+  }
+
+  .calendar-head {
+    height: 3.25rem;
+    padding-inline: 0.75rem;
+  }
+
+  .calendar-head-inner {
+    gap: 0.5rem;
+    white-space: nowrap;
+  }
+
+  .time-rail span {
+    font-size: 0.625rem;
+  }
+
+  .schedule-panel.is-expanded {
+    inset: 0.5rem;
+    padding: 0.75rem;
+  }
 }
 
 /* ---------- Reading list accordions ---------- */
