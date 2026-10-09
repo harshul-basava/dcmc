@@ -160,7 +160,6 @@ export default async function ProfilePage({
                   linkedin: me.linkedin,
                 },
               ]}
-              anchor="#profile-preview"
               live
             />
           </div>

@@ -34,7 +34,6 @@ export default async function GuestDirectoryPage() {
             photo: g.photo,
             linkedin: g.linkedin,
           }))}
-          anchor="#guests"
         />
       </div>
     </PortalShell>

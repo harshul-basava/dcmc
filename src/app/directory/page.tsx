@@ -47,7 +47,7 @@ async function DirectoryContent() {
     <>
       <AutoRefresh />
       <div id="directory">
-        <Directory people={people} anchor="#directory" />
+        <Directory people={people} />
       </div>
     </>
   );

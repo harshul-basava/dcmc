@@ -18,14 +18,19 @@ export type DirectoryPerson = {
  * Emails and sign-in phrases are never passed in — this component has no way
  * to render them by accident.
  */
+/**
+ * Where the close button and backdrop send the page. Deliberately an id no
+ * element has: that clears `:target`, closing the sheet, without scrolling.
+ * Linking back to the directory's own wrapper scrolled the page to the top,
+ * losing the reader's place in a long directory.
+ */
+const CLOSED = "#directory-closed";
+
 export default function Directory({
   people,
-  anchor,
   live = false,
 }: {
   people: DirectoryPerson[];
-  /** Where the close button returns to. */
-  anchor: string;
   /** Profile-editor preview: photos follow an unsaved headshot crop. */
   live?: boolean;
 }) {
@@ -75,9 +80,9 @@ export default function Directory({
           aria-modal="true"
           aria-label={person.name}
         >
-          <a className="overlay-backdrop" href={anchor} aria-label="Close" tabIndex={-1} />
+          <a className="overlay-backdrop" href={CLOSED} aria-label="Close" tabIndex={-1} />
           <div className="overlay-dialog overlay-dialog-wide">
-            <a className="overlay-close" href={anchor} aria-label="Close">
+            <a className="overlay-close" href={CLOSED} aria-label="Close">
               ✕
             </a>
 
