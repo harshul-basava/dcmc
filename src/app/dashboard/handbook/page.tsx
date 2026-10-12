@@ -51,9 +51,14 @@ export default async function HandbookPage() {
     .map((id) => (id === ORGANIZER ? "An organizer (to be confirmed)" : names.get(id)))
     .filter((name): name is string => Boolean(name));
 
+  // The roommate card only appears for attendees who have a room listed.
   const links = handbookLinks.filter(
-    (link) => resourcesOpen || link.href !== "/dashboard/handbook/resources",
+    (link) =>
+      (resourcesOpen || link.href !== "/dashboard/handbook/resources") &&
+      (roommates.length > 0 || link.href !== "#roommates"),
   );
+
+
 
   return (
     <PortalShell role="participant" active="handbook">
@@ -172,43 +177,36 @@ export default async function HandbookPage() {
         </div>
       </section>
 
-      <section
-        id="roommates"
-        className="overlay"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Your roommate"
-      >
-        <a className="overlay-backdrop" href="#handbook" aria-label="Close" tabIndex={-1} />
-        <div className="overlay-dialog">
-          <a className="overlay-close" href="#handbook" aria-label="Close">
-            ✕
-          </a>
+      {roommates.length ? (
+        <section
+          id="roommates"
+          className="overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Your roommate"
+        >
+          <a className="overlay-backdrop" href="#handbook" aria-label="Close" tabIndex={-1} />
+          <div className="overlay-dialog">
+            <a className="overlay-close" href="#handbook" aria-label="Close">
+              ✕
+            </a>
 
-          <h2 className="font-display text-2xl leading-tight tracking-tight text-foreground">
-            {roommates.length > 1 ? "Your roommates" : "Your roommate"}
-          </h2>
-          {roommates.length ? (
-            <>
-              <p className="mt-3 text-sm leading-relaxed text-muted">
-                You&rsquo;re sharing a room at the District Hotel with:
-              </p>
-              <ul className="mt-4 grid gap-2">
-                {roommates.map((name) => (
-                  <li key={name} className="text-base font-medium text-foreground">
-                    {name}
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : (
+            <h2 className="font-display text-2xl leading-tight tracking-tight text-foreground">
+              {roommates.length > 1 ? "Your roommates" : "Your roommate"}
+            </h2>
             <p className="mt-3 text-sm leading-relaxed text-muted">
-              You don&rsquo;t have a roommate listed. If you&rsquo;re staying at the District
-              Hotel and expected one, let one of the organizers know.
+              You&rsquo;re sharing a room at the District Hotel with:
             </p>
-          )}
-        </div>
-      </section>
+            <ul className="mt-4 grid gap-2">
+              {roommates.map((name) => (
+                <li key={name} className="text-base font-medium text-foreground">
+                  {name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      ) : null}
     </PortalShell>
   );
 }
