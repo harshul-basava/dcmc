@@ -12,7 +12,7 @@ import {
 import { ORGANIZER, rooms } from "@/content/roommates";
 import { ProfileContent, type DirectoryPerson } from "@/components/dashboard/Directory";
 import { getParticipants } from "@/server/data";
-import { initials } from "@/server/people";
+import { initials, profileComplete } from "@/server/people";
 import { handbookResourcesOpen } from "@/server/portal-pages";
 
 /** Copy with emphasis in it, as stored in the content module. */
@@ -50,11 +50,13 @@ export default async function HandbookPage() {
   const byId = new Map((await getParticipants()).map((p) => [p.id, p]));
   const isOrganizer = (id: string) => id.startsWith(`${ORGANIZER}:`);
 
-  const roommates: Omit<DirectoryPerson, "id">[] = room.flatMap((id) => {
+  // An unfinished profile (no headshot or bio yet) gets a line, not a sheet.
+  const roommates: (Omit<DirectoryPerson, "id"> & { complete: boolean })[] = room.flatMap((id) => {
     const p = isOrganizer(id) ? undefined : byId.get(id);
     return p
       ? [
           {
+            complete: profileComplete(p),
             name: p.name,
             title: p.title,
             organization: p.organization,
@@ -71,6 +73,8 @@ export default async function HandbookPage() {
   });
   const roommateNames = [...roommates, ...organizerMates].map((r) => r.name).join(" and ");
   const roomCount = roommates.length + organizerMates.length;
+  const profiles = roommates.filter((r) => r.complete);
+  const pending = roommates.filter((r) => !r.complete);
 
   // The roommate card only appears for attendees who have a room listed.
   const links = handbookLinks.filter(
@@ -212,25 +216,32 @@ export default async function HandbookPage() {
           <a className="overlay-backdrop" href="#handbook" aria-label="Close" tabIndex={-1} />
           <div
             className={`overlay-dialog ${
-              roommates.length === 1 && !organizerMates.length
+              profiles.length === 1 && roomCount === 1
                 ? "overlay-dialog-wide"
-                : roommates.length
+                : profiles.length
                   ? "overlay-dialog-stack"
-                  : ""
+                  : "grid gap-6"
             }`}
           >
             <a className="overlay-close" href="#handbook" aria-label="Close">
               ✕
             </a>
-            {roommates.length === 1 && !organizerMates.length ? (
-              <ProfileContent person={roommates[0]} />
+            {profiles.length === 1 && roomCount === 1 ? (
+              <ProfileContent person={profiles[0]} />
             ) : (
-              roommates.map((person) => (
+              profiles.map((person) => (
                 <div key={person.name} className="profile-row">
                   <ProfileContent person={person} />
                 </div>
               ))
             )}
+
+            {pending.map((person) => (
+              <p key={person.name} className="pr-8 text-base leading-relaxed text-muted">
+                <strong className="font-medium text-foreground">{person.name}</strong> is still
+                completing their profile!
+              </p>
+            ))}
 
             {organizerMates.length ? (
               <ul className="roommate-organizers">
