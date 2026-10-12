@@ -12,6 +12,7 @@ import {
 import { ORGANIZER, rooms } from "@/content/roommates";
 import { ProfileContent, type DirectoryPerson } from "@/components/dashboard/Directory";
 import { getParticipants } from "@/server/data";
+import { initials } from "@/server/people";
 import { handbookResourcesOpen } from "@/server/portal-pages";
 
 /** Copy with emphasis in it, as stored in the content module. */
@@ -44,42 +45,38 @@ export default async function HandbookPage() {
   const team = shuffledOrganizers();
 
   // Current profiles, so a roommate who edits theirs shows as they now are.
-  // Organizers appear as photo and name only: never their numbers.
-  const room = rooms.find((ids) => ids.includes(me.id));
+  // Organizers appear as name and photo only: never their numbers.
+  const room = (rooms.find((ids) => ids.includes(me.id)) ?? []).filter((id) => id !== me.id);
   const byId = new Map((await getParticipants()).map((p) => [p.id, p]));
-  const roommates: Omit<DirectoryPerson, "id">[] = (room ?? [])
-    .filter((id) => id !== me.id)
-    .flatMap((id) => {
-      if (id.startsWith(`${ORGANIZER}:`)) {
-        const name = id.slice(ORGANIZER.length + 1);
-        const team = organizers.find((o) => o.name === name);
-        // A named organizer gets their photo and role; anything else, like
-        // "Organizer (TBD)", is shown exactly as written in the pairings.
-        return [
-          { name, title: team ? "Organizer" : "", organization: "", bio: "", photo: team?.photo },
-        ];
-      }
-      const p = byId.get(id);
-      return p
-        ? [
-            {
-              name: p.name,
-              title: p.title,
-              organization: p.organization,
-              bio: p.bio,
-              photo: p.photo,
-              linkedin: p.linkedin,
-            },
-          ]
-        : [];
-    });
-  const roommateNames = roommates.map((r) => r.name).join(" and ");
+  const isOrganizer = (id: string) => id.startsWith(`${ORGANIZER}:`);
+
+  const roommates: Omit<DirectoryPerson, "id">[] = room.flatMap((id) => {
+    const p = isOrganizer(id) ? undefined : byId.get(id);
+    return p
+      ? [
+          {
+            name: p.name,
+            title: p.title,
+            organization: p.organization,
+            bio: p.bio,
+            photo: p.photo,
+            linkedin: p.linkedin,
+          },
+        ]
+      : [];
+  });
+  const organizerMates = room.filter(isOrganizer).map((id) => {
+    const name = id.slice(ORGANIZER.length + 1);
+    return { name, photo: organizers.find((o) => o.name === name)?.photo };
+  });
+  const roommateNames = [...roommates, ...organizerMates].map((r) => r.name).join(" and ");
+  const roomCount = roommates.length + organizerMates.length;
 
   // The roommate card only appears for attendees who have a room listed.
   const links = handbookLinks.filter(
     (link) =>
       (resourcesOpen || link.href !== "/dashboard/handbook/resources") &&
-      (roommates.length > 0 || link.href !== "#roommates"),
+      (roomCount > 0 || link.href !== "#roommates"),
   );
 
   return (
@@ -201,32 +198,59 @@ export default async function HandbookPage() {
         </div>
       </section>
 
-      {/* One roommate reads exactly like a directory profile; two or more stack
-          in one scrolling sheet. */}
-      {roommates.length ? (
+      {/* One attendee roommate reads exactly like a directory profile; two or
+          more stack in one scrolling sheet. Organizers follow as a row of
+          name-over-photo tiles. */}
+      {roomCount ? (
         <section
           id="roommates"
           className="overlay"
           role="dialog"
           aria-modal="true"
-          aria-label={roommates.length > 1 ? "Your roommates" : "Your roommate"}
+          aria-label={roomCount > 1 ? "Your roommates" : "Your roommate"}
         >
           <a className="overlay-backdrop" href="#handbook" aria-label="Close" tabIndex={-1} />
           <div
-            className={`overlay-dialog ${roommates.length > 1 ? "overlay-dialog-stack" : "overlay-dialog-wide"}`}
+            className={`overlay-dialog ${
+              roommates.length === 1 && !organizerMates.length
+                ? "overlay-dialog-wide"
+                : roommates.length
+                  ? "overlay-dialog-stack"
+                  : ""
+            }`}
           >
             <a className="overlay-close" href="#handbook" aria-label="Close">
               ✕
             </a>
-            {roommates.length > 1 ? (
+            {roommates.length === 1 && !organizerMates.length ? (
+              <ProfileContent person={roommates[0]} />
+            ) : (
               roommates.map((person) => (
                 <div key={person.name} className="profile-row">
                   <ProfileContent person={person} />
                 </div>
               ))
-            ) : (
-              <ProfileContent person={roommates[0]} />
             )}
+
+            {organizerMates.length ? (
+              <ul className="roommate-organizers">
+                {organizerMates.map((person) => (
+                  <li key={person.name}>
+                    <h2 className="font-display text-xl leading-tight tracking-tight text-foreground">
+                      {person.name}
+                    </h2>
+                    {person.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={person.photo} alt="" />
+                    ) : (
+                      <span className="plate" aria-hidden="true">
+                        {initials(person.name)}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
         </section>
       ) : null}
