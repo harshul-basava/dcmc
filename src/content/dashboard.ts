@@ -208,6 +208,7 @@ export const handbookLinks = [
   },
   {
     title: "Your roommate",
+    // Replaced on the page by the roommate's name(s).
     body: "Who you're sharing a room with at the hotel.",
     href: "#roommates",
   },

@@ -86,46 +86,65 @@ export default function Directory({
               ✕
             </a>
 
-            <div className="profile-portrait">
-              <PhotoSlot photo={person.photo} initials={initials(person.name)} live={live} />
-            </div>
-
-            <div className="profile-body">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <h2 className="font-display text-2xl leading-tight tracking-tight text-foreground">
-                    {person.name}
-                  </h2>
-                  {person.title ? (
-                    <p className="mt-1.5 text-base leading-snug text-muted">{person.title}</p>
-                  ) : null}
-                  {person.organization ? (
-                    <p className="mt-1.5 text-base leading-snug text-muted">
-                      {person.organization}
-                    </p>
-                  ) : null}
-                </div>
-
-                {person.linkedin ? (
-                  <a
-                    href={person.linkedin}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`${person.name} on LinkedIn`}
-                    className="profile-linkedin"
-                  >
-                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95C21.3 8.75 22 11 22 14.1V21h-4v-6.1c0-1.45-.03-3.32-2.05-3.32-2.05 0-2.36 1.58-2.36 3.21V21h-3.6z" />
-                    </svg>
-                  </a>
-                ) : null}
-              </div>
-
-              <p className="mt-6 text-base leading-relaxed text-muted">{person.bio}</p>
-            </div>
+            <ProfileContent person={person} live={live} />
           </div>
         </section>
       ))}
+    </>
+  );
+}
+
+/**
+ * The inside of a profile sheet: portrait on the left, name, role, affiliation,
+ * LinkedIn and bio on the right. Shared with the handbook's roommate popup so
+ * a roommate's profile reads exactly as it does in the directory.
+ */
+export function ProfileContent({
+  person,
+  live = false,
+}: {
+  person: Omit<DirectoryPerson, "id">;
+  live?: boolean;
+}) {
+  return (
+    <>
+      <div className="profile-portrait">
+        <PhotoSlot photo={person.photo} initials={initials(person.name)} live={live} />
+      </div>
+
+      <div className="profile-body">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="font-display text-2xl leading-tight tracking-tight text-foreground">
+              {person.name}
+            </h2>
+            {person.title ? (
+              <p className="mt-1.5 text-base leading-snug text-muted">{person.title}</p>
+            ) : null}
+            {person.organization ? (
+              <p className="mt-1.5 text-base leading-snug text-muted">{person.organization}</p>
+            ) : null}
+          </div>
+
+          {person.linkedin ? (
+            <a
+              href={person.linkedin}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`${person.name} on LinkedIn`}
+              className="profile-linkedin"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95C21.3 8.75 22 11 22 14.1V21h-4v-6.1c0-1.45-.03-3.32-2.05-3.32-2.05 0-2.36 1.58-2.36 3.21V21h-3.6z" />
+              </svg>
+            </a>
+          ) : null}
+        </div>
+
+        {person.bio ? (
+          <p className="mt-6 text-base leading-relaxed text-muted">{person.bio}</p>
+        ) : null}
+      </div>
     </>
   );
 }

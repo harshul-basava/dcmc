@@ -5,13 +5,14 @@ import { requireParticipant } from "@/server/auth";
 import {
   handbookLinks,
   logistics,
+  organizers,
   shuffledOrganizers,
   type Segment,
 } from "@/content/dashboard";
 import { ORGANIZER, rooms } from "@/content/roommates";
+import { ProfileContent, type DirectoryPerson } from "@/components/dashboard/Directory";
 import { getParticipants } from "@/server/data";
 import { handbookResourcesOpen } from "@/server/portal-pages";
-
 
 /** Copy with emphasis in it, as stored in the content module. */
 function render(segments: Segment[]) {
@@ -42,14 +43,37 @@ export default async function HandbookPage() {
   // A different order on every load, so no one is permanently first.
   const team = shuffledOrganizers();
 
-  // Current names, so a roommate who edits their profile name still shows
-  // as they now call themselves.
+  // Current profiles, so a roommate who edits theirs shows as they now are.
+  // Organizers appear as photo and name only: never their numbers.
   const room = rooms.find((ids) => ids.includes(me.id));
-  const names = new Map((await getParticipants()).map((p) => [p.id, p.name]));
-  const roommates = (room ?? [])
+  const byId = new Map((await getParticipants()).map((p) => [p.id, p]));
+  const roommates: Omit<DirectoryPerson, "id">[] = (room ?? [])
     .filter((id) => id !== me.id)
-    .map((id) => (id === ORGANIZER ? "An organizer (to be confirmed)" : names.get(id)))
-    .filter((name): name is string => Boolean(name));
+    .flatMap((id) => {
+      if (id.startsWith(`${ORGANIZER}:`)) {
+        const name = id.slice(ORGANIZER.length + 1);
+        const team = organizers.find((o) => o.name === name);
+        // A named organizer gets their photo and role; anything else, like
+        // "Organizer (TBD)", is shown exactly as written in the pairings.
+        return [
+          { name, title: team ? "Organizer" : "", organization: "", bio: "", photo: team?.photo },
+        ];
+      }
+      const p = byId.get(id);
+      return p
+        ? [
+            {
+              name: p.name,
+              title: p.title,
+              organization: p.organization,
+              bio: p.bio,
+              photo: p.photo,
+              linkedin: p.linkedin,
+            },
+          ]
+        : [];
+    });
+  const roommateNames = roommates.map((r) => r.name).join(" and ");
 
   // The roommate card only appears for attendees who have a room listed.
   const links = handbookLinks.filter(
@@ -57,8 +81,6 @@ export default async function HandbookPage() {
       (resourcesOpen || link.href !== "/dashboard/handbook/resources") &&
       (roommates.length > 0 || link.href !== "#roommates"),
   );
-
-
 
   return (
     <PortalShell role="participant" active="handbook">
@@ -82,7 +104,9 @@ export default async function HandbookPage() {
               <strong className="font-display text-lg font-medium tracking-tight text-foreground">
                 {link.title}
               </strong>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted">{link.body}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted">
+                {link.href === "#roommates" ? roommateNames : link.body}
+              </p>
             </a>
           </li>
         ))}
@@ -95,8 +119,8 @@ export default async function HandbookPage() {
         {/* Full width of the panel: the measure that suits a long document
             leaves a single sentence broken in half across a wide page. */}
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          For anything urgent during the conference, or anything you would rather raise
-          privately, contact one of the organizers below or submit the anytime form on the{" "}
+          For anything urgent during the conference, or anything you would rather raise privately,
+          contact one of the organizers below or submit the anytime form on the{" "}
           <Link href="/dashboard/feedback" className="text-accent underline underline-offset-2">
             feedback page
           </Link>
@@ -177,33 +201,32 @@ export default async function HandbookPage() {
         </div>
       </section>
 
+      {/* One roommate reads exactly like a directory profile; two or more stack
+          in one scrolling sheet. */}
       {roommates.length ? (
         <section
           id="roommates"
           className="overlay"
           role="dialog"
           aria-modal="true"
-          aria-label="Your roommate"
+          aria-label={roommates.length > 1 ? "Your roommates" : "Your roommate"}
         >
           <a className="overlay-backdrop" href="#handbook" aria-label="Close" tabIndex={-1} />
-          <div className="overlay-dialog">
+          <div
+            className={`overlay-dialog ${roommates.length > 1 ? "overlay-dialog-stack" : "overlay-dialog-wide"}`}
+          >
             <a className="overlay-close" href="#handbook" aria-label="Close">
               ✕
             </a>
-
-            <h2 className="font-display text-2xl leading-tight tracking-tight text-foreground">
-              {roommates.length > 1 ? "Your roommates" : "Your roommate"}
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-muted">
-              You&rsquo;re sharing a room at the District Hotel with:
-            </p>
-            <ul className="mt-4 grid gap-2">
-              {roommates.map((name) => (
-                <li key={name} className="text-base font-medium text-foreground">
-                  {name}
-                </li>
-              ))}
-            </ul>
+            {roommates.length > 1 ? (
+              roommates.map((person) => (
+                <div key={person.name} className="profile-row">
+                  <ProfileContent person={person} />
+                </div>
+              ))
+            ) : (
+              <ProfileContent person={roommates[0]} />
+            )}
           </div>
         </section>
       ) : null}
