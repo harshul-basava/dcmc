@@ -99,7 +99,7 @@ export default async function HandbookPage() {
               className="block rounded-card border border-rule bg-surface px-6 py-5 transition hover:border-border-strong"
             >
               <strong className="font-display text-lg font-medium tracking-tight text-foreground">
-                {link.title}
+                {link.href === "#roommates" && roomCount > 1 ? "Your roommates" : link.title}
               </strong>
               <p className="mt-1.5 text-sm leading-relaxed text-muted">
                 {link.href === "#roommates" ? roommateNames : link.body}
