@@ -79,8 +79,17 @@ export default async function AdminPeople() {
               <tr key={person.id} className="border-b border-rule last:border-0">
                 <td className="px-4 py-3">
                   <span className="flex items-center gap-3">
-                    {/* Gradient plate only — no monogram until real headshots land. */}
-                    <span className="plate h-9 w-7 shrink-0" aria-hidden="true" />
+                    {/* Their headshot once it's in; until then a gradient plate. */}
+                    {person.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={person.photo}
+                        alt=""
+                        className="h-9 w-7 shrink-0 rounded-[5px] object-cover"
+                      />
+                    ) : (
+                      <span className="plate h-9 w-7 shrink-0" aria-hidden="true" />
+                    )}
                     <span>
                       {person.role === "guest" ? (
                         <a
