@@ -8,6 +8,8 @@ import {
   shuffledOrganizers,
   type Segment,
 } from "@/content/dashboard";
+import { ORGANIZER, rooms } from "@/content/roommates";
+import { getParticipants } from "@/server/data";
 import { handbookResourcesOpen } from "@/server/portal-pages";
 
 
@@ -35,10 +37,19 @@ function render(segments: Segment[]) {
 }
 
 export default async function HandbookPage() {
-  await requireParticipant("handbook");
+  const me = await requireParticipant("handbook");
   const resourcesOpen = await handbookResourcesOpen();
   // A different order on every load, so no one is permanently first.
   const team = shuffledOrganizers();
+
+  // Current names, so a roommate who edits their profile name still shows
+  // as they now call themselves.
+  const room = rooms.find((ids) => ids.includes(me.id));
+  const names = new Map((await getParticipants()).map((p) => [p.id, p.name]));
+  const roommates = (room ?? [])
+    .filter((id) => id !== me.id)
+    .map((id) => (id === ORGANIZER ? "An organizer (to be confirmed)" : names.get(id)))
+    .filter((name): name is string => Boolean(name));
 
   const links = handbookLinks.filter(
     (link) => resourcesOpen || link.href !== "/dashboard/handbook/resources",
@@ -158,6 +169,44 @@ export default async function HandbookPage() {
               </div>
             ))}
           </dl>
+        </div>
+      </section>
+
+      <section
+        id="roommates"
+        className="overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Your roommate"
+      >
+        <a className="overlay-backdrop" href="#handbook" aria-label="Close" tabIndex={-1} />
+        <div className="overlay-dialog">
+          <a className="overlay-close" href="#handbook" aria-label="Close">
+            ✕
+          </a>
+
+          <h2 className="font-display text-2xl leading-tight tracking-tight text-foreground">
+            {roommates.length > 1 ? "Your roommates" : "Your roommate"}
+          </h2>
+          {roommates.length ? (
+            <>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                You&rsquo;re sharing a room at the District Hotel with:
+              </p>
+              <ul className="mt-4 grid gap-2">
+                {roommates.map((name) => (
+                  <li key={name} className="text-base font-medium text-foreground">
+                    {name}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="mt-3 text-sm leading-relaxed text-muted">
+              You don&rsquo;t have a roommate listed. If you&rsquo;re staying at the District
+              Hotel and expected one, let one of the organizers know.
+            </p>
+          )}
         </div>
       </section>
     </PortalShell>
