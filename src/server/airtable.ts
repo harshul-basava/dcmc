@@ -288,6 +288,9 @@ export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
  * Replaces the headshot. Uses Airtable's upload endpoint, which takes the file
  * inline as base64 — so no second storage service and no public URL needed.
  * Note this host differs from the REST API's.
+ *
+ * That endpoint appends rather than replaces, so once the new file is stored
+ * the older ones are dropped, leaving only the newest in the field.
  */
 export async function uploadHeadshot(
   recordId: string,
@@ -318,15 +321,30 @@ export async function uploadHeadshot(
   );
 
   if (!response.ok) throw new Error(`Headshot upload failed: ${response.status}`);
+
+  // Trimming is tidiness, not correctness: attachmentUrl already reads the
+  // newest, so a failure here must not fail an upload that succeeded.
+  try {
+    const attachments = (await fetchRecord(recordId, table)).fields[fieldId];
+    if (Array.isArray(attachments) && attachments.length > 1) {
+      const newest = attachments[attachments.length - 1] as AirtableAttachment;
+      await patchRecord(recordId, { [fieldId]: [{ id: newest.id }] }, table);
+    }
+  } catch {}
+
   if (table === GUEST_TABLE) invalidateGuests();
   else invalidateRoster();
 }
 
-/** First attachment URL, if any. Airtable's URLs are short-lived by design. */
+/**
+ * The newest attachment's URL, if any. Airtable appends uploads to the end of
+ * the field, so the last one is the latest photo. Airtable's URLs are
+ * short-lived by design.
+ */
 export function attachmentUrl(value: unknown): string | undefined {
   if (!Array.isArray(value) || value.length === 0) return undefined;
-  const first = value[0] as Partial<AirtableAttachment>;
-  return typeof first?.url === "string" ? first.url : undefined;
+  const newest = value[value.length - 1] as Partial<AirtableAttachment>;
+  return typeof newest?.url === "string" ? newest.url : undefined;
 }
 
 export function text(value: unknown): string {
