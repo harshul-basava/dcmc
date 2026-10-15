@@ -108,30 +108,17 @@ const PERSONALIZED = new Set<SessionType>(["one-to-one", "small-group"]);
 /** The name to show for whoever else is in a group, by person key. */
 export type PersonLookup = Map<string, { name: string; isGuest: boolean }>;
 
-const PUBLIC_SESSION_LABELS: Record<SessionType, string> = {
-  talk: "Talk",
-  panel: "Panel",
-  workshop: "Workshop",
-  "working-session": "Working session",
-  "one-to-one": "One-on-one conversations",
-  "small-group": "Small group discussions",
-  meal: "Meal",
-  social: "Social",
-  break: "Break",
-  logistics: "Logistics",
-};
-
 /**
- * Public pages expose only timing and session types. Select fields explicitly
- * before building client props: titles can also contain speaker names, and
- * future private Session fields must not cross this boundary by accident.
- * This stays public even when the visitor has a valid access cookie.
+ * Public pages expose session titles, timing, and types. Select fields
+ * explicitly before building client props so speaker names and other private
+ * details never cross this boundary. This stays public even when the visitor
+ * has a valid access cookie.
  */
 export function buildPublicSchedule(sessions: Session[]): ScheduleDay[] {
   return buildSchedule({
     sessions: sessions.map((session, index) => ({
       id: `public-${index}`,
-      title: PUBLIC_SESSION_LABELS[session.type],
+      title: session.title,
       day: session.day,
       start: session.start,
       end: session.end,

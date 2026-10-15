@@ -16,7 +16,7 @@ const { buildPublicSchedule, buildSchedule } = exportsUnderTest;
 
 const session = {
   id: "private-session-id",
-  title: "Private Speaker: An unpublished talk",
+  title: "The AI policy landscape in Washington",
   day: "2026-10-23",
   start: "2026-10-23T09:00",
   end: "2026-10-23T10:00",
@@ -31,14 +31,14 @@ const session = {
   futurePrivateField: "Private future field",
 };
 
-test("public payload excludes private fields, including names embedded in titles", () => {
+test("public payload includes session titles while excluding private fields", () => {
   const days = buildPublicSchedule([session]);
   const payload = JSON.stringify(days);
-  for (const field of ["id", "title", "track", "location", "speaker", "description", "slidoUrl", "futurePrivateField"]) {
+  for (const field of ["id", "track", "location", "speaker", "description", "slidoUrl", "futurePrivateField"]) {
     assert.equal(payload.includes(session[field]), false, `${field} leaked`);
   }
   const block = days[0].blocks[0];
-  assert.equal(block.title, "Talk");
+  assert.equal(block.title, session.title);
   assert.equal(block.startMinutes, 540);
   assert.equal(block.endMinutes, 600);
   assert.equal(block.speaker, "");
@@ -47,8 +47,15 @@ test("public payload excludes private fields, including names embedded in titles
 });
 
 test("later edits to private details do not change the public schedule", () => {
-  const updated = { ...session, title: "Updated private title", speaker: "Another speaker", description: "New details", location: "Another room" };
+  const updated = { ...session, speaker: "Another speaker", description: "New details", location: "Another room" };
   assert.equal(JSON.stringify(buildPublicSchedule([updated])), JSON.stringify(buildPublicSchedule([session])));
+});
+
+test("public schedule reflects updated titles without exposing speakers", () => {
+  const updated = { ...session, title: "An updated talk title", speaker: "Updated speaker" };
+  const days = buildPublicSchedule([updated]);
+  assert.equal(days[0].blocks[0].title, updated.title);
+  assert.equal(JSON.stringify(days).includes(updated.speaker), false);
 });
 
 test("protected schedule retains updated session details", () => {
