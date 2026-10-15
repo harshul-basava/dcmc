@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireGuest } from "@/server/auth";
 import { saveAvailability, saveGuestProfile, saveHeadshot } from "@/server/data";
 import { readGuestProfile } from "@/server/guest-profile";
+import { sniffImageType } from "@/server/airtable";
 import { serializeAvailability } from "@/server/availability";
 
 export async function updateAvailability(formData: FormData) {
@@ -29,11 +30,16 @@ export async function updateGuestProfile(formData: FormData) {
   await saveGuestProfile(me.id, parsed.edit);
 
   if (parsed.headshot) {
+    // The browser's type comes from the file name; check what it really is.
+    const buffer = Buffer.from(await parsed.headshot.arrayBuffer());
+    const contentType = sniffImageType(buffer);
+    if (!contentType) redirect("/dashboard/guest?view=profile&error=type");
+
     await saveHeadshot(
       me.id,
       {
-        buffer: Buffer.from(await parsed.headshot.arrayBuffer()),
-        contentType: parsed.headshot.type,
+        buffer,
+        contentType,
         filename: parsed.headshot.name || "headshot",
       },
       "guest",

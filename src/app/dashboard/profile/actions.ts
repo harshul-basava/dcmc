@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isPreviewing, requireParticipant } from "@/server/auth";
 import { saveHeadshot, saveProfile } from "@/server/data";
-import { MAX_UPLOAD_BYTES } from "@/server/airtable";
+import { MAX_UPLOAD_BYTES, sniffImageType } from "@/server/airtable";
 
 /** What a browser may actually send us as a headshot. */
 const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -35,9 +35,13 @@ export async function updateProfile(formData: FormData) {
     if (!IMAGE_TYPES.has(headshot.type)) redirect("/dashboard/profile?error=type");
     if (headshot.size > MAX_UPLOAD_BYTES) redirect("/dashboard/profile?error=size");
 
+    const buffer = Buffer.from(await headshot.arrayBuffer());
+    const contentType = sniffImageType(buffer);
+    if (!contentType) redirect("/dashboard/profile?error=type");
+
     await saveHeadshot(me.id, {
-      buffer: Buffer.from(await headshot.arrayBuffer()),
-      contentType: headshot.type,
+      buffer,
+      contentType,
       filename: headshot.name || "headshot",
     });
   }
