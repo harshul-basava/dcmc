@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import SchedulePanel from "@/components/dashboard/SchedulePanel";
 import ScheduleLegend from "@/components/dashboard/ScheduleLegend";
 import { getSessions } from "@/server/data";
-import { buildSchedule } from "@/server/schedule";
+import { buildPublicSchedule } from "@/server/schedule";
 import AutoRefresh from "./AutoRefresh";
 import "../dashboard/dashboard.css";
 import "./schedule.css";
@@ -20,13 +20,7 @@ export default async function PublicSchedule() {
   // Only programme data crosses the public boundary. No roster or pairings
   // are needed to render the shared schedule.
   const sessions = await getSessions();
-  const days = buildSchedule({ sessions, assignments: [], people: new Map() });
-  // The public overview has no detail UI; omit those fields from its payload too.
-  for (const day of days) {
-    for (const block of day.blocks) {
-      block.detail = { location: "", speaker: "", description: "" };
-    }
-  }
+  const days = buildPublicSchedule(sessions);
 
   return (
     <main id="top" className="portal public-schedule mx-auto w-full max-w-[1600px] px-4 py-8 sm:px-8 sm:py-12">

@@ -22,13 +22,12 @@ export default async function ProtectedSchedule({ searchParams }: {
   if (!unlocked) return <DirectoryPortal active="schedule" unlocked={false} error={error} />;
 
   const days = buildSchedule({ sessions: await getSessions(), assignments: [], people: new Map() });
-  for (const day of days) {
-    for (const block of day.blocks) block.detail = { location: "", speaker: "", description: "" };
-  }
   return (
     <DirectoryPortal active="schedule" unlocked>
       <AutoRefresh />
-      <SchedulePanel days={days} legend={<ScheduleLegend />} showDetails={false} />
+      <div id="schedule">
+        <SchedulePanel days={days} legend={<ScheduleLegend />} />
+      </div>
     </DirectoryPortal>
   );
 }
