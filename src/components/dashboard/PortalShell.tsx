@@ -157,8 +157,7 @@ export default async function PortalShell({
           {role !== "admin" ? (
             <aside aria-label="Schedule privacy" className="mb-5 rounded-card border border-rule bg-card px-4 py-3 text-sm leading-relaxed text-foreground sm:px-5">
               <strong className="font-semibold">Please keep schedule details private.</strong>{" "}
-              Do not share speaker names or session details publicly. To share the conference schedule, use the{" "}
-              <a href="/schedule" className="text-accent underline underline-offset-2">public schedule</a>.
+              Do not share speaker names or session details publicly.
             </aside>
           ) : null}
           {isFramed ? <div className="portal-card">{children}</div> : children}
