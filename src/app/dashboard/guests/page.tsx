@@ -7,7 +7,9 @@ import { profileComplete } from "@/server/people";
 
 export default async function GuestDirectoryPage() {
   await requireParticipant("guests");
-  const everyone = await getGuests();
+  // Guests an organizer has hidden are left out entirely, including from the
+  // "still to add" count, so nothing on the page hints that they exist.
+  const everyone = (await getGuests()).filter((guest) => !guest.hidden);
   // Same rule as the attendee directory: a card with no headshot and no bio
   // tells a participant nothing, so it waits until there is something to read.
   const guests = everyone.filter(profileComplete);

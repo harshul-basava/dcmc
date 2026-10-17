@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/server/auth";
-import { getGuest, saveGuestProfile, saveHeadshot } from "@/server/data";
+import { getGuest, saveGuestProfile, saveHeadshot, setGuestHidden } from "@/server/data";
 import { readGuestProfile } from "@/server/guest-profile";
 import { sniffImageType } from "@/server/airtable";
 
@@ -48,4 +48,15 @@ export async function updateGuestProfileAsAdmin(formData: FormData) {
 
   revalidatePath("/dashboard", "layout");
   redirect(`${here}?saved=1`);
+}
+
+/** Shows or hides a guest in the guest directory, independent of their profile. */
+export async function setGuestDirectoryVisibility(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!(await getGuest(id))) redirect("/dashboard/admin/people");
+
+  await setGuestHidden(id, formData.get("hidden") === "true");
+  revalidatePath("/dashboard", "layout");
+  redirect(`/dashboard/admin/guests/${id}`);
 }

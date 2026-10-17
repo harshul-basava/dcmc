@@ -24,7 +24,12 @@ export default async function AdminDirectories({
   const { view: requested } = await searchParams;
   const view = requested === "guests" ? "guests" : "attendees";
 
-  const everyone = view === "guests" ? await getGuests() : await getParticipants();
+  // The same rule as the real directories, hidden guests included, so this
+  // stays an exact preview.
+  const allGuests = view === "guests" ? await getGuests() : [];
+  const hiddenGuests = allGuests.filter((guest) => guest.hidden).length;
+  const everyone =
+    view === "guests" ? allGuests.filter((guest) => !guest.hidden) : await getParticipants();
   const listed = everyone.filter(profileComplete);
   const pending = everyone.length - listed.length;
   const noun = view === "guests" ? "guest" : "attendee";
@@ -35,9 +40,16 @@ export default async function AdminDirectories({
         <PageHeading
           title={view === "guests" ? "Guest directory" : "Attendee directory"}
           lead={
-            pending > 0
-              ? `${pending} ${pending === 1 ? `${noun} has` : `${noun}s have`} still to add a headshot and bio, so ${pending === 1 ? "is" : "are"} not shown here or to anyone else.`
-              : undefined
+            [
+              pending > 0
+                ? `${pending} ${pending === 1 ? `${noun} has` : `${noun}s have`} still to add a headshot and bio, so ${pending === 1 ? "is" : "are"} not shown here or to anyone else.`
+                : "",
+              hiddenGuests > 0
+                ? `${hiddenGuests} ${hiddenGuests === 1 ? "guest is" : "guests are"} hidden by an organizer.`
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" ") || undefined
           }
           actions={
             <nav aria-label="Directory" className="flex gap-1 rounded-card border border-rule p-1">

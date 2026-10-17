@@ -107,6 +107,11 @@ export default async function AdminPeople() {
                 </td>
                 <td className="px-4 py-3 text-muted">
                   {person.role === "guest" ? "Guest" : "Participant"}
+                  {person.role === "guest" && person.hidden ? (
+                    <span className="ml-2 rounded bg-[color:var(--neutral-100)] px-1.5 py-0.5 text-xs text-muted">
+                      Hidden
+                    </span>
+                  ) : null}
                 </td>
                 <td className="px-4 py-3 text-muted">{person.extra}</td>
                 <td className="px-4 py-3">

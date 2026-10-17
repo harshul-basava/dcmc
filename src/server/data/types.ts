@@ -44,6 +44,8 @@ export type Guest = Person & {
   /** CSV rows of `date,start,end` in local time, as stored in one long-text
    *  Airtable field so it stays hand-editable there. */
   availability: string;
+  /** Kept out of the guest directory by an organizer, whatever the profile. */
+  hidden: boolean;
 };
 
 /**

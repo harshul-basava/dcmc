@@ -65,6 +65,8 @@ export const GUEST_FIELD = {
   linkedin: process.env.AIRTABLE_FIELD_GUEST_LINKEDIN ?? "fldfEjImCbqeUCbwf",
   signInPhrase: process.env.AIRTABLE_FIELD_GUEST_PHRASE ?? "fldgjaHKO2ZS9122R",
   signIns: process.env.AIRTABLE_FIELD_GUEST_SIGN_INS ?? "fldhBgkqn6ipeNe1u",
+  /** Checkbox. Ticked keeps the guest out of the guest directory. Admin-set. */
+  hidden: process.env.AIRTABLE_FIELD_GUEST_HIDDEN ?? "fldt5NbuBLSJfqglK",
 } as const;
 
 /** The affirmative choice on the guest RSVP question. */

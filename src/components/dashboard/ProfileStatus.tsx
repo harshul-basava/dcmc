@@ -15,14 +15,17 @@ export default function ProfileStatus({
   person,
   directory,
   subject = "Your profile",
+  hidden = false,
 }: {
   person: Person;
   /** e.g. "attendee directory" — named in both the live and pending copy. */
   directory: string;
   /** "Your profile", or "Jakub's profile" when an organizer is editing. */
   subject?: string;
+  /** Held back by an organizer. Only the organizer's view passes this. */
+  hidden?: boolean;
 }) {
-  const live = profileComplete(person);
+  const live = profileComplete(person) && !hidden;
 
   return (
     <div
@@ -33,7 +36,9 @@ export default function ProfileStatus({
       <p className="text-sm text-foreground">
         {live
           ? `${subject} is live in the ${directory}.`
-          : `${subject} is not in the ${directory} yet. A headshot and a bio are both needed for it to appear.`}
+          : hidden
+            ? `${subject} is hidden from the ${directory}. Switch it on above to show it.`
+            : `${subject} is not in the ${directory} yet. A headshot and a bio are both needed for it to appear.`}
       </p>
 
       <ul className="mt-4 flex flex-wrap gap-x-8 gap-y-3">
