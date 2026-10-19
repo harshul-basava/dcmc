@@ -35,7 +35,10 @@ export function initials(name: string): string {
   return name
     .replace(/^(Dr|Mr|Ms|Mrs|Prof)\.?\s+/i, "")
     .split(/\s+/)
+    // Words with no letters (a stray "&", "(TBD)"'s bracket) can't give one.
+    .map((part) => part.match(/\p{L}/u)?.[0] ?? "")
+    .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
+    .map((letter) => letter.toUpperCase())
     .join("");
 }

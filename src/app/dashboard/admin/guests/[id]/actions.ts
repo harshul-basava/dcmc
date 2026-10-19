@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/server/auth";
-import { getGuest, saveGuestProfile, saveHeadshot } from "@/server/data";
+import { getGuest, saveGuestProfile, saveHeadshot, setGuestHidden } from "@/server/data";
 import { readGuestProfile } from "@/server/guest-profile";
+import { sniffImageType } from "@/server/airtable";
 
 /**
  * An organizer filling in a guest's directory profile on their behalf.
@@ -29,11 +30,16 @@ export async function updateGuestProfileAsAdmin(formData: FormData) {
   await saveGuestProfile(id, parsed.edit);
 
   if (parsed.headshot) {
+    // The browser's type comes from the file name; check what it really is.
+    const buffer = Buffer.from(await parsed.headshot.arrayBuffer());
+    const contentType = sniffImageType(buffer);
+    if (!contentType) redirect(`${here}?error=type`);
+
     await saveHeadshot(
       id,
       {
-        buffer: Buffer.from(await parsed.headshot.arrayBuffer()),
-        contentType: parsed.headshot.type,
+        buffer,
+        contentType,
         filename: parsed.headshot.name || "headshot",
       },
       "guest",
@@ -42,4 +48,15 @@ export async function updateGuestProfileAsAdmin(formData: FormData) {
 
   revalidatePath("/dashboard", "layout");
   redirect(`${here}?saved=1`);
+}
+
+/** Shows or hides a guest in the guest directory, independent of their profile. */
+export async function setGuestDirectoryVisibility(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!(await getGuest(id))) redirect("/dashboard/admin/people");
+
+  await setGuestHidden(id, formData.get("hidden") === "true");
+  revalidatePath("/dashboard", "layout");
+  redirect(`/dashboard/admin/guests/${id}`);
 }

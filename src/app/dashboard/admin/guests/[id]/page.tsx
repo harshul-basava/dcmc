@@ -8,7 +8,7 @@ import GuestProfileForm from "@/components/dashboard/GuestProfileForm";
 import { requireAdmin } from "@/server/auth";
 import { getGuest } from "@/server/data";
 import { GUEST_PROFILE_ERRORS, type GuestProfileError } from "@/server/guest-profile";
-import { updateGuestProfileAsAdmin } from "./actions";
+import { setGuestDirectoryVisibility, updateGuestProfileAsAdmin } from "./actions";
 
 export default async function AdminGuestProfile({
   params,
@@ -34,8 +34,45 @@ export default async function AdminGuestProfile({
         lead="Editing this guest's directory profile on their behalf."
       />
 
+      {/* Separate from the profile: an organizer's call about who appears, so
+          a "private" guest can be held back however complete they are. */}
+      <form
+        action={setGuestDirectoryVisibility}
+        className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-card border border-rule bg-card p-5"
+      >
+        <input type="hidden" name="id" value={guest.id} />
+        <input type="hidden" name="hidden" value={guest.hidden ? "false" : "true"} />
+        <div>
+          <p className="text-sm font-medium text-foreground">
+            {guest.hidden ? "Hidden from the guest directory" : "Shown in the guest directory"}
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            {guest.hidden
+              ? "Attendees can't see this guest, even once the profile is complete."
+              : "Attendees see this guest once the profile has a headshot and bio."}
+          </p>
+        </div>
+        <button
+          type="submit"
+          role="switch"
+          aria-checked={!guest.hidden}
+          aria-label="Show in the guest directory"
+          className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+            guest.hidden ? "bg-[color:var(--neutral-200)]" : "bg-accent"
+          }`}
+        >
+          <span
+            aria-hidden="true"
+            className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${
+              guest.hidden ? "left-1" : "left-6"
+            }`}
+          />
+        </button>
+      </form>
+
       <ProfileStatus
         person={guest}
+        hidden={guest.hidden}
         directory="guest directory"
         subject={`${firstName}'s profile`}
         guest

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import {
   SLOT_MINUTES,
   formatHour,
@@ -8,6 +8,21 @@ import {
   hourMarks,
   type ScheduleDay,
 } from "@/server/schedule";
+
+/**
+ * Closes a session dialog by moving the fragment to an id that matches
+ * nothing. `#schedule` would scroll the page to the top of the schedule, and
+ * `replaceState` leaves `:target` stuck on the open dialog, so this is the
+ * one way to close it in place.
+ */
+export function closeSessionDialog() {
+  window.location.hash = "schedule-closed";
+}
+
+function handleDialogClose(event: MouseEvent<HTMLAnchorElement>) {
+  event.preventDefault();
+  closeSessionDialog();
+}
 
 const ROW_HEIGHT = 28; // px per 15-minute slot; mirrors --slot-height.
 
@@ -330,9 +345,20 @@ export default function ScheduleGrid({
             aria-modal="true"
             aria-label={block.title}
           >
-            <a className="overlay-backdrop" href="#schedule" aria-label="Close" tabIndex={-1} />
+            <a
+              className="overlay-backdrop"
+              href="#schedule"
+              onClick={handleDialogClose}
+              aria-label="Close"
+              tabIndex={-1}
+            />
             <div className="overlay-dialog">
-              <a className="overlay-close" href="#schedule" aria-label="Close">
+              <a
+                className="overlay-close"
+                href="#schedule"
+                onClick={handleDialogClose}
+                aria-label="Close"
+              >
                 ✕
               </a>
 

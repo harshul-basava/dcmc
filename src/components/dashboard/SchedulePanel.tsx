@@ -8,7 +8,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import ScheduleGrid from "@/components/dashboard/ScheduleGrid";
+import ScheduleGrid, { closeSessionDialog } from "@/components/dashboard/ScheduleGrid";
 import type { ScheduleDay } from "@/server/schedule";
 
 /**
@@ -86,7 +86,7 @@ export default function SchedulePanel({
       // The dialogs are driven by `:target`, so clearing the hash closes them.
       if (window.location.hash.startsWith("#session-")) {
         event.preventDefault();
-        window.location.hash = "#schedule";
+        closeSessionDialog();
         return;
       }
       if (expanded) {

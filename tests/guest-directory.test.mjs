@@ -49,3 +49,33 @@ test("guest cards include organizations without requiring photos or exposing bio
     assert.equal(field in card.props.people[0], false);
   }
 });
+
+test("guest directory honors organizer hiding without requiring a complete profile", async () => {
+  const visible = { id: "visible", name: "Visible guest", organization: "Example", bio: "", hidden: false };
+  const hidden = { ...visible, id: "hidden", hidden: true };
+  const GuestDirectory = () => null;
+  const { default: Page } = load("../src/app/dashboard/guests/page.tsx", {
+    "react/jsx-runtime": { jsx, jsxs },
+    "@/components/dashboard/PortalShell": { default: () => null },
+    "@/components/dashboard/PageHeading": { default: () => null },
+    "@/components/dashboard/GuestDirectory": { default: GuestDirectory },
+    "@/server/auth": { requireParticipant: async () => {} },
+    "@/server/data": { getGuests: async () => [visible, hidden] },
+  });
+  const page = await Page();
+  const directory = page.props.children.props.children.find((child) => child.type === GuestDirectory);
+  assert.equal(directory.props.guests.length, 1);
+  assert.equal(directory.props.guests[0].id, "visible");
+});
+
+test("organizer profile status respects hidden guests even though guest profiles need no bio", () => {
+  const { default: ProfileStatus } = load("../src/components/dashboard/ProfileStatus.tsx", {
+    "react/jsx-runtime": { jsx, jsxs },
+    "@/components/dashboard/StatusMark": { default: () => null },
+    "@/server/people": { hasBio: () => false, hasHeadshot: () => false, profileComplete: () => false },
+  });
+  const status = ProfileStatus({ person: { bio: "" }, directory: "guest directory", guest: true, hidden: true });
+  assert.match(status.props.children[0].props.children, /is hidden from the guest directory/);
+  const visible = ProfileStatus({ person: { bio: "" }, directory: "guest directory", guest: true });
+  assert.match(visible.props.children[0].props.children, /is ready for the guest directory/);
+});

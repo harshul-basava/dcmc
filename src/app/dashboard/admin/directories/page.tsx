@@ -26,7 +26,9 @@ export default async function AdminDirectories({
   const { view: requested } = await searchParams;
   const view = requested === "guests" ? "guests" : "attendees";
 
-  const guests = view === "guests" ? await getGuests() : [];
+  const allGuests = view === "guests" ? await getGuests() : [];
+  const hiddenGuests = allGuests.filter((guest) => guest.hidden).length;
+  const guests = allGuests.filter((guest) => !guest.hidden);
   const attendees = view === "attendees" ? await getParticipants() : [];
   const listed = attendees.filter(profileComplete);
   const pending = attendees.length - listed.length;
@@ -45,9 +47,14 @@ export default async function AdminDirectories({
         <PageHeading
           title={view === "guests" ? "Guest directory" : "Attendee directory"}
           lead={
-            view === "attendees" && pending > 0
-              ? `${pending} ${pending === 1 ? "attendee has" : "attendees have"} still to add a headshot and bio, so ${pending === 1 ? "is" : "are"} not shown here or to anyone else.`
-              : undefined
+            [
+              view === "attendees" && pending > 0
+                ? `${pending} ${pending === 1 ? "attendee has" : "attendees have"} still to add a headshot and bio, so ${pending === 1 ? "is" : "are"} not shown here or to anyone else.`
+                : "",
+              hiddenGuests > 0
+                ? `${hiddenGuests} ${hiddenGuests === 1 ? "guest is" : "guests are"} hidden by an organizer.`
+                : "",
+            ].filter(Boolean).join(" ") || undefined
           }
           actions={
             <nav aria-label="Directory" className="flex gap-1 rounded-card border border-rule p-1">

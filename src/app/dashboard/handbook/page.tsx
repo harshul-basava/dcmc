@@ -5,11 +5,15 @@ import { requireParticipant } from "@/server/auth";
 import {
   handbookLinks,
   logistics,
+  organizers,
   shuffledOrganizers,
   type Segment,
 } from "@/content/dashboard";
+import { ORGANIZER, rooms } from "@/content/roommates";
+import { ProfileContent, type DirectoryPerson } from "@/components/dashboard/Directory";
+import { getParticipants } from "@/server/data";
+import { initials, profileComplete } from "@/server/people";
 import { handbookResourcesOpen } from "@/server/portal-pages";
-
 
 /** Copy with emphasis in it, as stored in the content module. */
 function render(segments: Segment[]) {
@@ -35,13 +39,48 @@ function render(segments: Segment[]) {
 }
 
 export default async function HandbookPage() {
-  await requireParticipant("handbook");
+  const me = await requireParticipant("handbook");
   const resourcesOpen = await handbookResourcesOpen();
   // A different order on every load, so no one is permanently first.
   const team = shuffledOrganizers();
 
+  // Current profiles, so a roommate who edits theirs shows as they now are.
+  // Organizers appear as name and photo only: never their numbers.
+  const room = (rooms.find((ids) => ids.includes(me.id)) ?? []).filter((id) => id !== me.id);
+  const byId = new Map((await getParticipants()).map((p) => [p.id, p]));
+  const isOrganizer = (id: string) => id.startsWith(`${ORGANIZER}:`);
+
+  // An unfinished profile (no headshot or bio yet) gets a line, not a sheet.
+  const roommates: (Omit<DirectoryPerson, "id"> & { complete: boolean })[] = room.flatMap((id) => {
+    const p = isOrganizer(id) ? undefined : byId.get(id);
+    return p
+      ? [
+          {
+            complete: profileComplete(p),
+            name: p.name,
+            title: p.title,
+            organization: p.organization,
+            bio: p.bio,
+            photo: p.photo,
+            linkedin: p.linkedin,
+          },
+        ]
+      : [];
+  });
+  const organizerMates = room.filter(isOrganizer).map((id) => {
+    const name = id.slice(ORGANIZER.length + 1);
+    return { name, photo: organizers.find((o) => o.name === name)?.photo };
+  });
+  const roommateNames = [...roommates, ...organizerMates].map((r) => r.name).join(" and ");
+  const roomCount = roommates.length + organizerMates.length;
+  const profiles = roommates.filter((r) => r.complete);
+  const pending = roommates.filter((r) => !r.complete);
+
+  // The roommate card only appears for attendees who have a room listed.
   const links = handbookLinks.filter(
-    (link) => resourcesOpen || link.href !== "/dashboard/handbook/resources",
+    (link) =>
+      (resourcesOpen || link.href !== "/dashboard/handbook/resources") &&
+      (roomCount > 0 || link.href !== "#roommates"),
   );
 
   return (
@@ -64,9 +103,11 @@ export default async function HandbookPage() {
               className="block rounded-card border border-rule bg-surface px-6 py-5 transition hover:border-border-strong"
             >
               <strong className="font-display text-lg font-medium tracking-tight text-foreground">
-                {link.title}
+                {link.href === "#roommates" && roomCount > 1 ? "Your roommates" : link.title}
               </strong>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted">{link.body}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted">
+                {link.href === "#roommates" ? roommateNames : link.body}
+              </p>
             </a>
           </li>
         ))}
@@ -79,8 +120,8 @@ export default async function HandbookPage() {
         {/* Full width of the panel: the measure that suits a long document
             leaves a single sentence broken in half across a wide page. */}
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          For anything urgent during the conference, or anything you would rather raise
-          privately, contact one of the organizers below or submit the anytime form on the{" "}
+          For anything urgent during the conference, or anything you would rather raise privately,
+          contact one of the organizers below or submit the anytime form on the{" "}
           <Link href="/dashboard/feedback" className="text-accent underline underline-offset-2">
             feedback page
           </Link>
@@ -160,6 +201,70 @@ export default async function HandbookPage() {
           </dl>
         </div>
       </section>
+
+      {/* One attendee roommate reads exactly like a directory profile; two or
+          more stack in one scrolling sheet. Organizers follow as a row of
+          name-over-photo tiles. */}
+      {roomCount ? (
+        <section
+          id="roommates"
+          className="overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={roomCount > 1 ? "Your roommates" : "Your roommate"}
+        >
+          <a className="overlay-backdrop" href="#handbook" aria-label="Close" tabIndex={-1} />
+          <div
+            className={`overlay-dialog ${
+              profiles.length === 1 && roomCount === 1
+                ? "overlay-dialog-wide"
+                : profiles.length
+                  ? "overlay-dialog-stack"
+                  : "grid gap-6"
+            }`}
+          >
+            <a className="overlay-close" href="#handbook" aria-label="Close">
+              ✕
+            </a>
+            {profiles.length === 1 && roomCount === 1 ? (
+              <ProfileContent person={profiles[0]} />
+            ) : (
+              profiles.map((person) => (
+                <div key={person.name} className="profile-row">
+                  <ProfileContent person={person} />
+                </div>
+              ))
+            )}
+
+            {pending.map((person) => (
+              <p key={person.name} className="pr-8 text-base leading-relaxed text-muted">
+                <strong className="font-medium text-foreground">{person.name}</strong> is still
+                completing their profile!
+              </p>
+            ))}
+
+            {organizerMates.length ? (
+              <ul className="roommate-organizers">
+                {organizerMates.map((person) => (
+                  <li key={person.name}>
+                    <h2 className="font-display text-xl leading-tight tracking-tight text-foreground">
+                      {person.name}
+                    </h2>
+                    {person.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={person.photo} alt="" />
+                    ) : (
+                      <span className="plate" aria-hidden="true">
+                        {initials(person.name)}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
     </PortalShell>
   );
 }

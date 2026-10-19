@@ -16,6 +16,7 @@ export default function ProfileStatus({
   directory,
   subject = "Your profile",
   guest = false,
+  hidden = false,
 }: {
   person: Person;
   /** e.g. "attendee directory" — named in both the live and pending copy. */
@@ -24,8 +25,10 @@ export default function ProfileStatus({
   subject?: string;
   /** Guest cards need no bio and are released separately by organizers. */
   guest?: boolean;
+  /** Held back by an organizer. Only the organizer's view passes this. */
+  hidden?: boolean;
 }) {
-  const live = guest || profileComplete(person);
+  const live = (guest || profileComplete(person)) && !hidden;
 
   return (
     <div
@@ -34,11 +37,13 @@ export default function ProfileStatus({
       }`}
     >
       <p className="text-sm text-foreground">
-        {guest
-          ? `${subject} is ready for the ${directory}. Organizers control when it opens to attendees. Bios are not shown.`
-          : live
-          ? `${subject} is live in the ${directory}.`
-          : `${subject} is not in the ${directory} yet. A headshot and a bio are both needed for it to appear.`}
+        {hidden
+          ? `${subject} is hidden from the ${directory}. Switch it on above to show it.`
+          : guest
+            ? `${subject} is ready for the ${directory}. Organizers control when it opens to attendees. Bios are not shown.`
+            : live
+              ? `${subject} is live in the ${directory}.`
+              : `${subject} is not in the ${directory} yet. A headshot and a bio are both needed for it to appear.`}
       </p>
 
       <ul className="mt-4 flex flex-wrap gap-x-8 gap-y-3">

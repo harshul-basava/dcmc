@@ -116,6 +116,7 @@ function toGuest(record: AirtableRecord): Guest {
     // RSVP form's own answer is prose ("Oct 23 before 7pm") and lives in a
     // separate column, so it is never parsed as rows or overwritten here.
     availability: text(f[GUEST_FIELD.availability]),
+    hidden: f[GUEST_FIELD.hidden] === true,
   };
 }
 
@@ -669,6 +670,16 @@ export type GuestProfileEdit = {
   bio: string;
   linkedin: string;
 };
+
+/** Shows or hides a guest in the guest directory. Organizers only. */
+export async function setGuestHidden(id: string, hidden: boolean): Promise<void> {
+  if (!airtableConfigured()) {
+    const guest = fixtures.guests.find((g) => g.id === id);
+    if (guest) guest.hidden = hidden;
+    return;
+  }
+  await patchRecord(id, { [GUEST_FIELD.hidden]: hidden }, GUEST_TABLE);
+}
 
 /**
  * Saves a guest's directory profile. Used both by the guest editing their own

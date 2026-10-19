@@ -6,7 +6,7 @@ import { getGuests } from "@/server/data";
 
 export default async function GuestDirectoryPage() {
   await requireParticipant("guests");
-  const guests = await getGuests();
+  const guests = (await getGuests()).filter((guest) => !guest.hidden);
 
   return (
     <PortalShell role="participant" active="guests">

@@ -65,6 +65,8 @@ export const GUEST_FIELD = {
   linkedin: process.env.AIRTABLE_FIELD_GUEST_LINKEDIN ?? "fldfEjImCbqeUCbwf",
   signInPhrase: process.env.AIRTABLE_FIELD_GUEST_PHRASE ?? "fldgjaHKO2ZS9122R",
   signIns: process.env.AIRTABLE_FIELD_GUEST_SIGN_INS ?? "fldhBgkqn6ipeNe1u",
+  /** Checkbox. Ticked keeps the guest out of the guest directory. Admin-set. */
+  hidden: process.env.AIRTABLE_FIELD_GUEST_HIDDEN ?? "fldt5NbuBLSJfqglK",
 } as const;
 
 /** The affirmative choice on the guest RSVP question. */
@@ -285,9 +287,34 @@ export async function patchRecord(
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 /**
+ * The image format a file actually is, read from its first bytes, or null
+ * for anything but JPEG, PNG or WebP. The browser's own `type` comes from the
+ * file name, so an iPhone HEIC photo named ".jpg" passes as image/jpeg and
+ * then shows as a broken image in every browser but Safari.
+ */
+export function sniffImageType(buffer: Buffer): "image/jpeg" | "image/png" | "image/webp" | null {
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return "image/jpeg";
+  }
+  if (buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+    return "image/png";
+  }
+  if (
+    buffer.subarray(0, 4).toString("latin1") === "RIFF" &&
+    buffer.subarray(8, 12).toString("latin1") === "WEBP"
+  ) {
+    return "image/webp";
+  }
+  return null;
+}
+
+/**
  * Replaces the headshot. Uses Airtable's upload endpoint, which takes the file
  * inline as base64 — so no second storage service and no public URL needed.
  * Note this host differs from the REST API's.
+ *
+ * That endpoint appends rather than replaces, so once the new file is stored
+ * the older ones are dropped, leaving only the newest in the field.
  */
 export async function uploadHeadshot(
   recordId: string,
@@ -318,15 +345,30 @@ export async function uploadHeadshot(
   );
 
   if (!response.ok) throw new Error(`Headshot upload failed: ${response.status}`);
+
+  // Trimming is tidiness, not correctness: attachmentUrl already reads the
+  // newest, so a failure here must not fail an upload that succeeded.
+  try {
+    const attachments = (await fetchRecord(recordId, table)).fields[fieldId];
+    if (Array.isArray(attachments) && attachments.length > 1) {
+      const newest = attachments[attachments.length - 1] as AirtableAttachment;
+      await patchRecord(recordId, { [fieldId]: [{ id: newest.id }] }, table);
+    }
+  } catch {}
+
   if (table === GUEST_TABLE) invalidateGuests();
   else invalidateRoster();
 }
 
-/** First attachment URL, if any. Airtable's URLs are short-lived by design. */
+/**
+ * The newest attachment's URL, if any. Airtable appends uploads to the end of
+ * the field, so the last one is the latest photo. Airtable's URLs are
+ * short-lived by design.
+ */
 export function attachmentUrl(value: unknown): string | undefined {
   if (!Array.isArray(value) || value.length === 0) return undefined;
-  const first = value[0] as Partial<AirtableAttachment>;
-  return typeof first?.url === "string" ? first.url : undefined;
+  const newest = value[value.length - 1] as Partial<AirtableAttachment>;
+  return typeof newest?.url === "string" ? newest.url : undefined;
 }
 
 export function text(value: unknown): string {

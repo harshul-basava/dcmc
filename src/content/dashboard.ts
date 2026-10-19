@@ -207,6 +207,12 @@ export const handbookLinks = [
     href: "#logistics",
   },
   {
+    title: "Your roommate",
+    // Replaced on the page by the roommate's name(s).
+    body: "Who you're sharing a room with at the hotel.",
+    href: "#roommates",
+  },
+  {
     title: "Conference resources",
     body: "Slide decks, reading lists, and the career resources we mention during the weekend.",
     href: "/dashboard/handbook/resources",

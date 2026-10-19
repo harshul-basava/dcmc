@@ -314,6 +314,59 @@
   overflow: hidden;
 }
 
+/*
+ * Several profiles in one sheet (the handbook's roommates): each row is laid
+ * out like a single profile sheet, and the sheet scrolls as a whole.
+ */
+.overlay-dialog-stack {
+  display: grid;
+  gap: 2rem;
+  width: min(58rem, 100%);
+  padding: 2rem;
+}
+
+.profile-row {
+  display: flex;
+  gap: 2rem;
+}
+
+.profile-row + .profile-row {
+  padding-top: 2rem;
+  border-top: 1px solid var(--rule);
+}
+
+.profile-row .profile-body {
+  overflow: visible;
+}
+
+/* Organizer roommates: name over photo, side by side, wrapping on a phone. */
+.roommate-organizers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  /* Clear of the close control in the corner. */
+  padding-right: 2rem;
+}
+
+.roommate-organizers li {
+  flex: 0 1 12rem;
+  min-width: 9rem;
+}
+
+.roommate-organizers img,
+.roommate-organizers .plate {
+  margin-top: 0.75rem;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.profile-row + .roommate-organizers {
+  padding-top: 2rem;
+  border-top: 1px solid var(--rule);
+}
+
 .profile-portrait {
   flex: 0 0 18rem;
   align-self: stretch;
@@ -366,7 +419,8 @@
 
 /* Too narrow for two columns: the portrait becomes a banner. */
 @media (max-width: 40rem) {
-  .overlay-dialog-wide {
+  .overlay-dialog-wide,
+  .profile-row {
     flex-direction: column;
   }
 
