@@ -28,7 +28,7 @@ const daily = [
 
 const defaults: Record<EditableForm, FeedbackQuestion[]> = {
   goals: [
-    question("goal-blockers", "What are your biggest blockers to working in AI governance right now?", 1, "text", true),
+    question("goal-blockers", "What are your biggest blockers to working in AI governance?", 1, "text", true),
     question("goal-questions", "What questions do you want answered before you leave?", 2, "text", true),
     question("goal-outcome", "If these three days go as well as they possibly could, what happens?", 3, "text", true),
     question("goal-actions", "What can you do to make this happen?", 4, "text", true),
