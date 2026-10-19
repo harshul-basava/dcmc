@@ -1,0 +1,3 @@
+Built-in image_gen edit; identity-preserve.
+
+Generate a higher-resolution restoration/upscale of this EXACT photograph, at least 1024x1024. Preserve the same person's identity, facial geometry, glasses, curly hair, beard, expression, blue patterned collared shirt, pose, crop, colors, and the US Capitol and trees in the background. Improve resolution and reduce pixelation and JPEG artifacts conservatively. Do not beautify, change age, invent distinctive facial details, change clothes, relight, recompose, add text, or replace the scene. It should look like a clean higher-resolution copy of the supplied photo.

@@ -351,16 +351,20 @@ export function invalidateSettings(): void {
 export async function fetchSettings(): Promise<AirtableRecord[]> {
   if (settingsCache && Date.now() - settingsCache.at < TTL_MS) return settingsCache.records;
 
-  try {
-    const page = (await request(
-      `${SETTINGS_TABLE}?pageSize=100&returnFieldsByFieldId=true`,
-    )) as { records: AirtableRecord[] };
-    settingsCache = { at: Date.now(), records: page.records };
-    return page.records;
-  } catch (error) {
-    if (settingsCache) return settingsCache.records;
-    throw error;
-  }
+  const records: AirtableRecord[] = [];
+  let offset: string | undefined;
+  do {
+    const params = new URLSearchParams({ pageSize: "100", returnFieldsByFieldId: "true" });
+    if (offset) params.set("offset", offset);
+    const page = (await request(`${SETTINGS_TABLE}?${params}`)) as {
+      records: AirtableRecord[];
+      offset?: string;
+    };
+    records.push(...page.records);
+    offset = page.offset;
+  } while (offset);
+  settingsCache = { at: Date.now(), records };
+  return records;
 }
 
 /**

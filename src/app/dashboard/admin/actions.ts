@@ -18,7 +18,9 @@ import {
   setSessionTimes,
   setAccessCount,
 } from "@/server/data";
-import { isSessionType } from "@/server/data/types";
+import { parseAvailability } from "@/server/availability";
+import { minutesOf, SLOT_MINUTES } from "@/server/schedule";
+import { PAIRING_EXCLUDED, isSessionType } from "@/server/data/types";
 import type { PersonKey } from "@/server/data/types";
 import { HANDBOOK_RESOURCES_KEY, PORTAL_PAGES, portalHome } from "@/server/portal-pages";
 import {
@@ -34,7 +36,6 @@ import {
   conversationCounts,
   excludedFrom,
   generateOneToOne,
-  generateSmallGroups,
 } from "@/server/pairings";
 
 export async function savePortalPages(formData: FormData) {
@@ -230,7 +231,7 @@ export async function generatePairings(formData: FormData) {
   const sessionId = String(formData.get("sessionId") ?? "");
   const sessions = await getSessions();
   const session = sessions.find((s) => s.id === sessionId);
-  if (!session) redirect("/dashboard/admin/pairings?error=1");
+  if (!session || session.type !== "one-to-one") redirect("/dashboard/admin/pairings?error=session");
 
   const [roster, preferences, assignments] = await Promise.all([
     rosterFor(sessionId),
@@ -238,20 +239,26 @@ export async function generatePairings(formData: FormData) {
     getAssignments(),
   ]);
 
-  const rows =
-    session.type === "small-group"
-      ? generateSmallGroups({
-          sessionId,
-          roster,
-          size: Number(formData.get("size") ?? 5),
-        })
-      : generateOneToOne({
-          sessionId,
-          roster,
-          preferences,
-          // Spread conversations across the whole conference, not just this block.
-          existingCounts: conversationCounts(assignments.filter((a) => a.sessionId !== sessionId)),
-        });
+  const guests = await getGuests();
+  const start = minutesOf(session.start);
+  const end = minutesOf(session.end);
+  const mid = start + Math.round((end - start) / 2 / SLOT_MINUTES) * SLOT_MINUTES;
+  const eligible = (from: number, to: number) => roster.filter((key) => {
+    if (!key.startsWith("guest:")) return true;
+    const guest = guests.find((g) => `guest:${g.id}` === key);
+    return parseAvailability(guest?.availability ?? "").some(
+      (window) => window.date === session.day && window.start <= from && window.end >= to,
+    );
+  });
+  const rows = generateOneToOne({
+    sessionId,
+    roster,
+    rosterByHalf: { S1: eligible(start, mid), S2: eligible(mid, end) },
+    preferences,
+    existingCounts: conversationCounts(assignments.filter((a) => a.sessionId !== sessionId)),
+    location: session.location,
+  });
+  if (!rows.length) redirect("/dashboard/admin/pairings?error=roster");
 
   // Generation only ever writes a draft. Publishing is a separate, deliberate act.
   await replaceAssignments([sessionId], rows, "draft");
@@ -264,9 +271,12 @@ export async function publishPairings(formData: FormData) {
   await requireAdmin();
 
   const sessionId = String(formData.get("sessionId") ?? "");
+  if (!(await getSessions()).some((s) => s.id === sessionId && s.type === "one-to-one")) {
+    redirect("/dashboard/admin/pairings?error=session");
+  }
   const assignments = await getAssignments();
   const draft = assignments
-    .filter((a) => a.sessionId === sessionId && a.state === "draft")
+    .filter((a) => a.sessionId === sessionId && a.state === "draft" && a.group !== PAIRING_EXCLUDED)
     .map(({ sessionId: s, personKey, group, location, kind }) => ({
       sessionId: s,
       personKey,
@@ -286,6 +296,9 @@ export async function publishPairings(formData: FormData) {
 export async function hidePairings(formData: FormData) {
   await requireAdmin();
   const sessionId = String(formData.get("sessionId") ?? "");
+  if (!(await getSessions()).some((s) => s.id === sessionId && s.type === "one-to-one")) {
+    redirect("/dashboard/admin/pairings?error=session");
+  }
   await replaceAssignments([sessionId], [], "published");
   revalidatePath("/dashboard", "layout");
   redirect(`/dashboard/admin/pairings?hidden=${sessionId}`);

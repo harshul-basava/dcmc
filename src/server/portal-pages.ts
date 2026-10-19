@@ -51,10 +51,13 @@ export async function handbookResourcesOpen(): Promise<boolean> {
   return stored?.enabled ?? true;
 }
 
-/** Pages default to open; only an explicit stored row can close one. */
+/** Pages default to open except the unreleased guest directory. */
 export async function portalPageState(): Promise<Map<string, boolean>> {
   const state = new Map<string, boolean>();
-  for (const page of PORTAL_PAGES) state.set(`${page.role}:${page.key}`, true);
+  for (const page of PORTAL_PAGES) {
+    // The speaker directory stays unreleased even when settings are absent.
+    state.set(`${page.role}:${page.key}`, page.key !== "guests");
+  }
   for (const setting of await getPortalPageSettings()) {
     const id = `${setting.audience}:${setting.key}`;
     if (state.has(id)) state.set(id, setting.enabled);

@@ -23,21 +23,21 @@ export default async function AdminPairings({
     personLookup(),
   ]);
 
-  const blocks = sessions.filter((s) => s.personalized);
+  const blocks = sessions.filter((s) => s.type === "one-to-one");
   const storageReady = !airtableConfigured() || Boolean(ASSIGNMENTS_TABLE);
 
   return (
     <PortalShell role="admin" active="pairings">
       <PageHeading
         title="Pairings"
-        lead="Drafts stay private. Participants see a block only once it is released."
+        lead="Generate two conversations per 1:1 block, review the draft, then release it to attendee schedules. Guests are included only during their submitted availability."
       />
 
       {airtableConfigured() && !ASSIGNMENTS_TABLE ? <WipNotice>Pairing storage needs to be connected before drafts can be saved or released.</WipNotice> : null}
 
       {flags.error ? (
         <p role="alert" className="mb-6 rounded-card border border-accent bg-[color:var(--red-50)] p-4 text-sm text-accent">
-          Nothing to do — generate a draft first.
+          {flags.error === "roster" ? "No pairs could be made. Check the roster and guest availability." : flags.error === "session" ? "Choose a 1:1 session from the schedule." : "Generate a draft before releasing pairings."}
         </p>
       ) : null}
       {flags.published ? (
@@ -51,6 +51,8 @@ export default async function AdminPairings({
         </p>
       ) : null}
 
+      {flags.generated ? <p role="status" className="mb-6 text-sm text-muted">Draft saved. Review the pairs below before releasing.</p> : null}
+      {!blocks.length ? <p className="text-sm text-muted">No 1:1 blocks yet. Add a session with type “1:1s” on the <a href="/dashboard/admin/schedule" className="text-accent underline">schedule</a> to generate pairings.</p> : null}
       <div className="grid gap-6">
         {blocks.map((session) => {
           const rows = assignments.filter(
@@ -61,7 +63,7 @@ export default async function AdminPairings({
 
           // Group the draft so it reads as pairs and groups, not a list of rows.
           const groups = new Map<string, string[]>();
-          for (const row of draft) {
+          for (const row of (draft.length ? draft : published)) {
             if (!groups.has(row.group)) groups.set(row.group, []);
             groups.get(row.group)!.push(people.get(row.personKey)?.name ?? row.personKey);
           }
@@ -99,19 +101,6 @@ export default async function AdminPairings({
               <div className="mt-5 flex flex-wrap items-end gap-3">
                 <form action={generatePairings} className="flex items-end gap-2">
                   <input type="hidden" name="sessionId" value={session.id} />
-                  {session.type === "small-group" ? (
-                    <label className="grid gap-1 text-xs text-muted">
-                      Group size
-                      <input
-                        type="number"
-                        name="size"
-                        min={2}
-                        max={12}
-                        defaultValue={5}
-                        className="w-20 rounded-card border border-rule bg-surface px-2 py-1.5 text-sm text-foreground"
-                      />
-                    </label>
-                  ) : null}
                   <button
                     type="submit"
                     disabled={!storageReady}
@@ -149,7 +138,7 @@ export default async function AdminPairings({
               {groups.size ? (
                 <details className="mt-5">
                   <summary className="cursor-pointer text-xs text-muted">
-                    Read the draft ({groups.size} {session.type === "small-group" ? "groups" : "pairs"})
+                    {draft.length ? "Read the draft" : "Read live pairings"} ({groups.size} pairs)
                   </summary>
                   <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
                     {[...groups.entries()].map(([group, names]) => (
@@ -161,7 +150,7 @@ export default async function AdminPairings({
                   </ul>
                 </details>
               ) : (
-                <p className="mt-5 text-xs text-muted">No draft yet.</p>
+                <p className="mt-5 text-xs text-muted">No pairings yet. Each round may leave one person unpaired if its roster is odd.</p>
               )}
             </section>
           );

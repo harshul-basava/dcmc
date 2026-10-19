@@ -110,7 +110,7 @@ export default async function GuestPortal({
 
         {view === "profile" ? (
           <>
-            <ProfileStatus person={me} directory="guest directory" />
+            <ProfileStatus person={me} directory="guest directory" guest />
 
             {error ? (
               <p
@@ -124,7 +124,7 @@ export default async function GuestPortal({
 
             <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
               <GuestProfileForm guest={me} action={updateGuestProfile} />
-              <DirectoryPreview person={me} />
+              <DirectoryPreview person={{ ...me, bio: "" }} lead="How your card will appear when organizers open the directory. Bios are omitted." />
             </div>
           </>
         ) : null}

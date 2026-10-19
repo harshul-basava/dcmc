@@ -121,7 +121,9 @@ export default function Directory({
                 ) : null}
               </div>
 
-              <p className="mt-6 text-base leading-relaxed text-muted">{person.bio}</p>
+              {person.bio.trim() ? (
+                <p className="mt-6 text-base leading-relaxed text-muted">{person.bio}</p>
+              ) : null}
             </div>
           </div>
         </section>

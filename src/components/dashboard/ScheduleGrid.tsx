@@ -283,7 +283,7 @@ export default function ScheduleGrid({
                           ? formatRange(block.startMinutes, endMinutes)
                           : block.timeLabel}
                       </span>
-                      {block.speaker ? (
+                      {showDetails && block.speaker ? (
                         <em className="program-block-speaker">{block.speaker}</em>
                       ) : null}
 

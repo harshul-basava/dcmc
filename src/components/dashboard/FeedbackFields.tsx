@@ -2,19 +2,22 @@ import RatingScale from "./RatingScale";
 import TextQuestion from "./TextQuestion";
 import type { FeedbackQuestion } from "@/server/feedback-questions";
 
-export default function FeedbackFields({ questions }: {
+export default function FeedbackFields({ questions, answers = {}, ratings = {} }: {
   questions: FeedbackQuestion[];
+  answers?: Record<string, string>;
+  ratings?: Record<string, number>;
 }) {
   return questions.filter((q) => q.enabled).map((q) => {
     if (q.type !== "text" && q.type !== "rating") return null;
     if (q.type === "rating") {
       const outOfTen = q.scale === "0-10";
       return <RatingScale key={q.key} name={q.key} legend={q.label} required={q.required}
+        defaultValue={ratings[q.key.startsWith("scale-") ? q.key.slice(6) : q.key]}
         kind={outOfTen ? "numbers" : "stars"} minimum={outOfTen ? 0 : 1}
         maximum={outOfTen ? 10 : 5} leftLabel={outOfTen ? "Not at all" : ""}
         rightLabel={outOfTen ? "Extremely" : ""} />;
     }
     return <TextQuestion key={q.key} name={q.key} label={q.label} required={q.required}
-      rows={q.key === "comment" ? 8 : 4} />;
+      defaultValue={answers[q.key]} rows={q.key === "comment" ? 8 : 4} />;
   });
 }

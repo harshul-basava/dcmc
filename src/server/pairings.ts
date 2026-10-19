@@ -43,12 +43,14 @@ export function generateOneToOne({
   preferences,
   existingCounts = new Map(),
   location = "",
+  rosterByHalf,
 }: {
   sessionId: string;
   roster: PersonKey[];
   preferences: ConversationPreference[];
   existingCounts?: Map<string, number>;
   location?: string;
+  rosterByHalf?: { S1: PersonKey[]; S2: PersonKey[] };
 }): Omit<Assignment, "id" | "state">[] {
   const ranks = new Map<string, number>();
   for (const p of preferences) ranks.set(`${p.sourceKey}>${p.targetKey}`, p.rank);
@@ -60,12 +62,13 @@ export function generateOneToOne({
   const pairKey = (a: PersonKey, b: PersonKey) => [a, b].sort().join("|");
 
   for (const half of ["S1", "S2"] as const) {
+    const eligible = [...new Set(rosterByHalf?.[half] ?? roster)];
     // Score every possible pair for this round.
     const edges: { a: PersonKey; b: PersonKey; score: number }[] = [];
-    for (let i = 0; i < roster.length; i += 1) {
-      for (let j = i + 1; j < roster.length; j += 1) {
-        const a = roster[i];
-        const b = roster[j];
+    for (let i = 0; i < eligible.length; i += 1) {
+      for (let j = i + 1; j < eligible.length; j += 1) {
+        const a = eligible[i];
+        const b = eligible[j];
         if (usedPairs.has(pairKey(a, b))) continue;
 
         const forward = ranks.get(`${a}>${b}`);
@@ -86,16 +89,41 @@ export function generateOneToOne({
     );
 
     const occupied = new Set<PersonKey>();
-    let pair = 0;
+    const pairs: [PersonKey, PersonKey][] = [];
     for (const edge of edges) {
       if (occupied.has(edge.a) || occupied.has(edge.b)) continue;
       occupied.add(edge.a);
       occupied.add(edge.b);
-      usedPairs.add(pairKey(edge.a, edge.b));
-      pair += 1;
+      pairs.push([edge.a, edge.b]);
+    }
 
+    // Greedy choices can strand two people who met in round one. Rewire
+    // the weakest available pair so both get a new partner, when possible.
+    // The forbidden edges are disjoint (one prior partner per person), so
+    // this single swap suffices whenever at least four people are eligible.
+    const unmatched = eligible.filter((person) => !occupied.has(person));
+    if (unmatched.length === 2) {
+      const [u, v] = unmatched;
+      for (let i = pairs.length - 1; i >= 0; i -= 1) {
+        const [a, b] = pairs[i];
+        if (!usedPairs.has(pairKey(u, a)) && !usedPairs.has(pairKey(v, b))) {
+          pairs[i] = [u, a];
+          pairs.push([v, b]);
+          break;
+        }
+        if (!usedPairs.has(pairKey(u, b)) && !usedPairs.has(pairKey(v, a))) {
+          pairs[i] = [u, b];
+          pairs.push([v, a]);
+          break;
+        }
+      }
+    }
+
+    for (const [index, members] of pairs.entries()) {
+      usedPairs.add(pairKey(...members));
+      const pair = index + 1;
       const group = `${half} · 1:1 ${String(pair).padStart(2, "0")}`;
-      for (const person of [edge.a, edge.b]) {
+      for (const person of members) {
         counts.set(person, (counts.get(person) ?? 0) + 1);
         rows.push({
           sessionId,

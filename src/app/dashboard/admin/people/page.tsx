@@ -17,7 +17,7 @@ export default async function AdminPeople() {
   const everyone = [...participants, ...guests];
   const headshots = everyone.filter(hasHeadshot).length;
   const bios = everyone.filter(hasBio).length;
-  const ready = everyone.filter(profileComplete).length;
+  const ready = participants.filter(profileComplete).length + guests.length;
   const signedIn = everyone.filter((p) => p.accessCount > 0).length;
   const signIns = everyone.reduce((sum, p) => sum + p.accessCount, 0);
 
@@ -50,7 +50,7 @@ export default async function AdminPeople() {
           tint="var(--warning-bg)"
         />
         <MetricCard
-          label="In the directory"
+          label="Directory-ready"
           value={`${ready} / ${everyone.length}`}
           detail={`${signedIn} signed in · ${signIns} sign-ins`}
           tint="var(--red-50)"

@@ -1,7 +1,6 @@
 import PortalShell from "@/components/dashboard/PortalShell";
 import PageHeading from "@/components/dashboard/PageHeading";
 import MetricCard from "@/components/dashboard/MetricCard";
-import WipNotice from "@/components/dashboard/WipNotice";
 import { requireAdmin } from "@/server/auth";
 import { getFeedback, getParticipants } from "@/server/data";
 
@@ -68,7 +67,7 @@ export default async function AdminFeedback({
     <PortalShell role="admin" active="feedback">
       <PageHeading title="Feedback" actions={<a href="/dashboard/admin/feedback/questions" className="inline-flex min-h-10 items-center rounded-card bg-accent px-4 text-xs font-semibold text-on-accent">Edit questions</a>} />
 
-      <WipNotice>Charts below count only session ratings from the overall form.</WipNotice>
+      <p className="mb-6 text-sm text-muted">Charts below count only session ratings from the overall form.</p>
 
       <section className="mb-10">
         <h2 className="font-display text-lg tracking-tight text-foreground">

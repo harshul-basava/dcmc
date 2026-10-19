@@ -38,6 +38,7 @@ export default async function AdminGuestProfile({
         person={guest}
         directory="guest directory"
         subject={`${firstName}'s profile`}
+        guest
       />
 
       {saved ? (
@@ -70,8 +71,8 @@ export default async function AdminGuestProfile({
         </div>
 
         <DirectoryPreview
-          person={guest}
-          lead="How this guest will appear to participants once the profile is complete."
+          person={{ ...guest, bio: "" }}
+          lead="How this guest will appear when organizers open the directory. Bios are omitted."
         />
       </div>
     </PortalShell>

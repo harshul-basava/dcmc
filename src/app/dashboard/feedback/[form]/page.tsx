@@ -8,7 +8,7 @@ import TextQuestion from "@/components/dashboard/TextQuestion";
 import FeedbackFields from "@/components/dashboard/FeedbackFields";
 import RankedNames from "@/components/dashboard/RankedNames";
 import { requireParticipant } from "@/server/auth";
-import { getSessions } from "@/server/data";
+import { getFeedback, getSessions } from "@/server/data";
 import { getFeedbackQuestions } from "@/server/feedback-questions";
 import { MAX_ONE_TO_ONE_PICKS, feedbackForm, feedbackFormOpen, oneToOneCandidates, oneToOneConversations } from "@/server/feedback";
 import { submitFeedback } from "../actions";
@@ -36,6 +36,9 @@ export default async function FeedbackFormPage({ params, searchParams }: {
   );
 
   const [questions, sessions] = await Promise.all([getFeedbackQuestions(key), getSessions()]);
+  const previousGoals = key === "goals"
+    ? (await getFeedback()).find((response) => response.form === "goals" && response.participantId === me.id)
+    : undefined;
   const rated = key === "overall" ? sessions.filter((s) => ["talk", "panel", "workshop"].includes(s.type)) : [];
   const conversations = key === "one-on-ones" ? await oneToOneConversations(me.id) : [];
   const daily = key === "friday" || key === "saturday";
@@ -46,12 +49,13 @@ export default async function FeedbackFormPage({ params, searchParams }: {
       <div className="mx-auto w-full max-w-2xl">
         <BackLink href="/dashboard/feedback">All feedback forms</BackLink>
         <PageHeading title={form.title} lead={form.description} />
-        {error ? <p role="alert" className="mb-6 rounded-card border border-accent bg-[color:var(--red-50)] p-4 text-sm text-accent">Please answer the required questions before submitting.</p> : null}
+        {key === "goals" ? <p className="mb-6 text-sm text-muted">You can return to review and update your goals. Your responses are also visible to conference organizers.</p> : null}
+        {error ? <p role="alert" className="mb-6 rounded-card border border-accent bg-[color:var(--red-50)] p-4 text-sm text-accent">{error === "save" ? "Your response could not be saved. Please try again." : "Please answer the required questions before submitting."}</p> : null}
         <form action={submitFeedback} className="grid gap-8">
           <input type="hidden" name="form" value={key} />
           {questions.filter((q) => q.enabled).map((q) => {
             if (q.type === "text" || q.type === "rating") {
-              return <FeedbackFields key={q.key} questions={[q]} />;
+              return <FeedbackFields key={q.key} questions={[q]} answers={previousGoals?.answers} ratings={previousGoals?.ratings} />;
             }
             if (q.type === "ranked" && daily) return (
               <div key={q.key} className="grid gap-2">
@@ -92,7 +96,7 @@ export default async function FeedbackFormPage({ params, searchParams }: {
             );
             return null;
           })}
-          <div><button type="submit" className="min-h-11 rounded-card bg-accent px-7 text-sm font-semibold text-on-accent transition hover:bg-accent-hover">Submit feedback</button></div>
+          <div><button type="submit" className="min-h-11 rounded-card bg-accent px-7 text-sm font-semibold text-on-accent transition hover:bg-accent-hover">{key === "goals" ? "Save goals" : "Submit feedback"}</button></div>
         </form>
       </div>
     </PortalShell>

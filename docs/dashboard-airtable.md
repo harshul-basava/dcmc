@@ -56,3 +56,36 @@ Pairings are saved as drafts in Schedule Assignments. Publishing them updates
 their state and makes them visible to attendees; hiding them restores draft
 state. Feedback submissions and ranked requests are saved to Portal Feedback,
 and ranked requests are also synchronized to Conversation Preferences.
+
+## Admin controls and verification
+
+- `/dashboard/admin/pairings` offers only `one-to-one` sessions. Each block
+  generates two rounds, prioritizes ranked requests, and avoids repeating the
+  same partner within the block. Guests require submitted Portal Availability
+  covering the relevant half; attendees with exclusion markers are omitted.
+  Draft generation does not change released pairings. Release replaces the live
+  rows, and Hide removes the live rows while retaining an existing draft.
+- `/dashboard/admin/feedback/questions` edits wording, order, required status,
+  visibility, and rating scales, and adds written/rating questions.
+- `/dashboard/admin/pages` controls the attendee Feedback page and each form.
+  Both the page and the individual form must be enabled. Anytime remains open
+  whenever the Feedback page is enabled. Other daily forms require an explicit
+  admin release; they do not open automatically by date.
+- `/dashboard/feedback/goals` has five required questions: blockers to working
+  in AI governance, questions to resolve, the best possible three-day outcome,
+  actions, and obstacles. Saved goals reload for review and updating. Goal
+  responses are stored in Portal Feedback and visible to organizers, unlike the
+  attendee-only goal responses in the original Lateral Workshop dashboard.
+- Feedback success is shown only after Portal Feedback saves. A failed secondary
+  preference sync does not invalidate that save, since ranked person keys are
+  also stored in Answers JSON. Conversation ratings accept only the attendee's
+  published conversations and snapshot the partner and time in their labels.
+
+`npm test` covers pairing round conflicts, guest availability, exclusions,
+release/hide behavior, feedback validation, anonymity, closed forms, preview
+protection, storage errors, question editing, settings pagination, and all six
+forms' Airtable field serialization/readback using a mocked HTTP service.
+Browser checks use local fixture accounts; fixture writes reset on restart.
+Live schema inspection confirms the default table/field mappings. A live app
+submission still requires testing with the deployed runtime's Airtable token;
+the connector's access to the base does not prove that token's write access.

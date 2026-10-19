@@ -109,6 +109,33 @@ const PERSONALIZED = new Set<SessionType>(["one-to-one", "small-group"]);
 export type PersonLookup = Map<string, { name: string; isGuest: boolean }>;
 
 /**
+ * Public pages expose session titles, timing, and types. Select fields
+ * explicitly before building client props so speaker names and other private
+ * details never cross this boundary. This stays public even when the visitor
+ * has a valid access cookie.
+ */
+export function buildPublicSchedule(sessions: Session[]): ScheduleDay[] {
+  return buildSchedule({
+    sessions: sessions.map((session, index) => ({
+      id: `public-${index}`,
+      title: session.title,
+      day: session.day,
+      start: session.start,
+      end: session.end,
+      type: session.type,
+      track: "",
+      status: "confirmed",
+      location: "",
+      speaker: "",
+      description: "",
+      personalized: false,
+    })),
+    assignments: [],
+    people: new Map(),
+  });
+}
+
+/**
  * Builds one person's schedule: the shared programme, with personalized blocks
  * resolved against their own published assignments.
  *

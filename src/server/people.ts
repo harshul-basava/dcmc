@@ -2,10 +2,9 @@ import { getGuests, getParticipants } from "./data";
 import type { PersonLookup } from "./schedule";
 
 /**
- * A profile is complete once it has both a headshot and a bio. Incomplete
- * profiles are held back from the directory — a wall of blank plates helps
- * nobody — and the admin People page reports the two halves separately so
- * organisers can see who to chase.
+ * An attendee profile is complete once it has both a headshot and a bio.
+ * Incomplete attendee profiles are held back from their directory. Guests
+ * have a separate, organizer-released directory that does not require bios.
  *
  * One definition, used by the directory, the admin table and the profile page
  * alike, so they can never disagree about who is visible.

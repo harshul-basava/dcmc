@@ -10,7 +10,7 @@ import {
 } from "./data";
 import type { PersonKey } from "./data/types";
 import { personLookup, profileComplete } from "./people";
-import { formatRange, minutesOf } from "./schedule";
+import { formatRange, minutesOf, SLOT_MINUTES } from "./schedule";
 
 /**
  * Which feedback forms exist, in the order they are offered. Dates are derived
@@ -65,7 +65,7 @@ export const FEEDBACK_FORMS = [
 /**
  * Forms that are open before an admin touches anything: goal-setting, because
  * it is meant to be filled in before arrival, and anytime, which never closes.
- * The rest open as their day arrives.
+ * An admin opens the remaining forms explicitly.
  */
 const OPEN_BY_DEFAULT = new Set(["goals", "anytime"]);
 
@@ -124,6 +124,10 @@ export async function oneToOneConversations(participantId: string): Promise<Conv
       .join(" and ");
     if (!partner) continue;
 
+    const start = minutesOf(session.start);
+    const end = minutesOf(session.end);
+    const mid = start + Math.round((end - start) / 2 / SLOT_MINUTES) * SLOT_MINUTES;
+    const second = assignment.group.startsWith("S2");
     conversations.push({
       id: assignment.id,
       partner,
@@ -132,7 +136,7 @@ export async function oneToOneConversations(participantId: string): Promise<Conv
         weekday: "long",
         timeZone: "UTC",
       }),
-      timeLabel: formatRange(minutesOf(session.start), minutesOf(session.end)),
+      timeLabel: formatRange(second ? mid : start, second ? end : mid),
     });
   }
 

@@ -94,7 +94,7 @@ export default async function FeedbackIndex({
               role="alert"
               className="mt-5 rounded-card border border-accent bg-[color:var(--red-50)] p-3 text-sm text-accent"
             >
-              Please write something before submitting.
+              {error === "save" ? "Your response could not be saved. Please try again." : "Please answer the required questions before submitting."}
             </p>
           ) : null}
 

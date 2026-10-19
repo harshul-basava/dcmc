@@ -11,6 +11,7 @@ export default function RatingScale({
   leftLabel = "Not valuable",
   rightLabel = "Extremely valuable",
   kind = "stars",
+  defaultValue,
 }: {
   name: string;
   legend: string;
@@ -20,6 +21,7 @@ export default function RatingScale({
   leftLabel?: string;
   rightLabel?: string;
   kind?: "stars" | "numbers";
+  defaultValue?: number;
 }) {
   const values = Array.from({ length: maximum - minimum + 1 }, (_, i) => minimum + i);
 
@@ -41,6 +43,7 @@ export default function RatingScale({
               type="radio"
               name={name}
               value={value}
+              defaultChecked={value === defaultValue}
               required={required}
               aria-label={`${value} out of ${maximum}`}
             />

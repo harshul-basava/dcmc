@@ -147,7 +147,15 @@ editor for labels, order, required status, rating scale, and visibility.
 
 **Portal pages** (`/dashboard/admin/pages`) control which pages each audience
 can use. A closed page leaves the navigation *and* redirects direct requests —
-it is a gate, not a hidden link.
+it is a gate, not a hidden link. The guest directory defaults to closed, even
+without a stored setting.
+
+**Speaker/guest preview.** Organizers can open
+`/dashboard/admin/directories?view=guests` to review the attendee cards while
+the directory remains disabled. It uses the same component as the attendee
+page: all RSVP-Yes guests, names, organizations, photos (or initials), and no
+bios. The preview requires an admin session and does not change portal settings.
+Attendee profile completeness rules are unchanged.
 
 **Pairings** are drafted and released separately. Generating writes a private
 draft; participants see a block only once it is released, and `Hide` withdraws

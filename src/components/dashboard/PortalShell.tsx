@@ -153,7 +153,15 @@ export default async function PortalShell({
       </header>
 
       <main id="main-content" className={`portal ${isFramed ? "py-6 sm:py-8" : "py-10 sm:py-14"}`}>
-        <Container>{isFramed ? <div className="portal-card">{children}</div> : children}</Container>
+        <Container>
+          {role !== "admin" ? (
+            <aside aria-label="Schedule privacy" className="mb-5 rounded-card border border-rule bg-card px-4 py-3 text-sm leading-relaxed text-foreground sm:px-5">
+              <strong className="font-semibold">Please keep schedule details private.</strong>{" "}
+              Do not share speaker names or session details publicly.
+            </aside>
+          ) : null}
+          {isFramed ? <div className="portal-card">{children}</div> : children}
+        </Container>
       </main>
     </div>
   );

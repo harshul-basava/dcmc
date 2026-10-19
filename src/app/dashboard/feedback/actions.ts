@@ -13,6 +13,7 @@ import {
   feedbackFormOpen,
   markFormCompleted,
   oneToOneCandidates,
+  oneToOneConversations,
 } from "@/server/feedback";
 
 /**
@@ -75,13 +76,15 @@ export async function submitFeedback(formData: FormData) {
     }
   }
   if (key === "one-on-ones" && showConversations) {
-    for (const [name, value] of formData.entries()) {
-      if (typeof value !== "string") continue;
-      if (name.startsWith("conv-comment-")) answers[name] = value.slice(0, 4000);
-      if (name.startsWith("scale-conv-")) {
-        const n = Number(value);
-        if (Number.isInteger(n) && n >= 1 && n <= 5) ratings[name.slice(6)] = n;
-      }
+    for (const conversation of await oneToOneConversations(me.id)) {
+      const commentKey = `conv-comment-${conversation.id}`;
+      const ratingKey = `conv-${conversation.id}`;
+      answers[commentKey] = String(formData.get(commentKey) ?? "").slice(0, 4000);
+      questionLabels[commentKey] = `${conversation.partner} · ${conversation.day} · ${conversation.timeLabel} — Comments`;
+      questionLabels[ratingKey] = `${conversation.partner} · ${conversation.day} · ${conversation.timeLabel} — Rating`;
+      const raw = formData.get(`scale-${ratingKey}`);
+      const n = raw === null || raw === "" ? NaN : Number(raw);
+      if (Number.isInteger(n) && n >= 1 && n <= 5) ratings[ratingKey] = n;
     }
   }
 
@@ -132,23 +135,33 @@ export async function submitFeedback(formData: FormData) {
     }
   }
 
-  await saveFeedback({
-    form: key,
-    participantId: anonymous ? "" : me.id,
-    participantName: anonymous ? "" : me.name,
-    date: form.day,
-    sessions: sessionFeedback,
-    answers,
-    ratings,
-    questionLabels,
-    preferenceTargets: selectedTargets,
-    submittedAt: new Date().toISOString(),
-  });
+  try {
+    await saveFeedback({
+      form: key,
+      participantId: anonymous ? "" : me.id,
+      participantName: anonymous ? "" : me.name,
+      date: form.day,
+      sessions: sessionFeedback,
+      answers,
+      ratings,
+      questionLabels,
+      preferenceTargets: selectedTargets,
+      submittedAt: new Date().toISOString(),
+    });
+  } catch {
+    redirect(`${back}?error=save`);
+  }
 
   if (daily) {
     const day = new Date(`${form.day}T12:00:00Z`);
     day.setUTCDate(day.getUTCDate() + 1);
-    await replacePreferences(`participant:${me.id}`, day.toISOString().slice(0, 10), selectedTargets);
+    try {
+      await replacePreferences(`participant:${me.id}`, day.toISOString().slice(0, 10), selectedTargets);
+    } catch {
+      // Portal Feedback already contains the authoritative ranked targets.
+      // Pairing generation reads them even if this secondary sync fails.
+      console.error("Conversation preference sync failed after feedback was saved");
+    }
   }
 
   // Repeatable forms never get a completion tick.

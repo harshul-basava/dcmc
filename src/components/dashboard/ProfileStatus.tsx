@@ -6,8 +6,8 @@ type Person = { photo?: string; bio: string };
 /**
  * Says plainly whether a profile is listed yet, and what is missing if not.
  *
- * Both directories hide incomplete profiles, so this is the only place that
- * tells someone why they cannot find themselves in one. Shared by the
+ * Attendees need complete profiles; guest cards can appear without bios or
+ * headshots once organizers open their directory. Shared by the
  * attendee and guest editors, and by the organizer editing on their behalf —
  * the rule it reports is the same `profileComplete` the directories filter on.
  */
@@ -15,14 +15,17 @@ export default function ProfileStatus({
   person,
   directory,
   subject = "Your profile",
+  guest = false,
 }: {
   person: Person;
   /** e.g. "attendee directory" — named in both the live and pending copy. */
   directory: string;
   /** "Your profile", or "Jakub's profile" when an organizer is editing. */
   subject?: string;
+  /** Guest cards need no bio and are released separately by organizers. */
+  guest?: boolean;
 }) {
-  const live = profileComplete(person);
+  const live = guest || profileComplete(person);
 
   return (
     <div
@@ -31,7 +34,9 @@ export default function ProfileStatus({
       }`}
     >
       <p className="text-sm text-foreground">
-        {live
+        {guest
+          ? `${subject} is ready for the ${directory}. Organizers control when it opens to attendees. Bios are not shown.`
+          : live
           ? `${subject} is live in the ${directory}.`
           : `${subject} is not in the ${directory} yet. A headshot and a bio are both needed for it to appear.`}
       </p>
@@ -44,10 +49,12 @@ export default function ProfileStatus({
           />
           Headshot
         </li>
-        <li className="flex items-center gap-2.5 text-sm text-muted">
-          <StatusMark done={hasBio(person)} label={hasBio(person) ? "Bio written" : "No bio yet"} />
-          Bio
-        </li>
+        {!guest ? (
+          <li className="flex items-center gap-2.5 text-sm text-muted">
+            <StatusMark done={hasBio(person)} label={hasBio(person) ? "Bio written" : "No bio yet"} />
+            Bio
+          </li>
+        ) : null}
       </ul>
     </div>
   );

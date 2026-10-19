@@ -19,7 +19,7 @@ export default function GuestProfileForm({
   action,
   submitLabel = "Save profile",
   idField,
-  bioHint = "A few sentences participants will read before meeting you. Written in the third person reads best for speakers.",
+  bioHint = "Optional. Bios are not shown in the guest directory for now.",
 }: {
   guest: Guest;
   action: (formData: FormData) => void | Promise<void>;
