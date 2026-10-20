@@ -24,7 +24,7 @@ const daily = [
   question("day-comments", "Comments", 2),
   question("learned", "What is one valuable thing that you learned today?", 3, "text", true),
   question("detracting", "Is anything detracting from the workshop, and is there anything that would improve your experience?", 4),
-  question("most-value", "Who have you gotten the most value from talking to?", 5),
+  question("most-value", "Who did you get the most value from talking to today?", 5),
   question("additional", "Is there anything else you would like us to know?", 6),
 ];
 
@@ -101,6 +101,9 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
       const parsed = validateQuestions(current, form)?.filter((q) => q.type !== "conversations" && !(form === "overall" && q.key === "one-on-ones-overall"));
       if (parsed) {
         for (const q of parsed) {
+          if ((form === "friday" || form === "saturday") && q.key === "most-value" && q.label === "Who have you gotten the most value from talking to?") {
+            q.label = "Who did you get the most value from talking to today?";
+          }
           if (q.key === "one-on-one-picks" && ["List up to 10 people you would like to have 1:1s with tomorrow.", "List up to 10 attendees and guests you would like to have 1:1s with tomorrow, in order of preference."].includes(q.label)) {
             q.label = defaults.friday.find((item) => item.key === q.key)!.label;
           }
