@@ -2,8 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { isPreviewing, requireParticipant } from "@/server/auth";
-import { getSessions, replacePreferences, saveFeedback } from "@/server/data";
+import { replacePreferences, saveFeedback } from "@/server/data";
 import { getFeedbackQuestions } from "@/server/feedback-questions";
+import { sessionRatingOptions } from "@/server/session-ratings";
 import type { PersonKey } from "@/server/data/types";
 import {
   MAX_ONE_TO_ONE_PICKS,
@@ -12,7 +13,6 @@ import {
   feedbackFormOpen,
   markFormCompleted,
   oneToOneCandidates,
-  oneToOneConversations,
   normalizePreferenceName,
 } from "@/server/feedback";
 
@@ -33,14 +33,10 @@ export async function submitFeedback(formData: FormData) {
   const questions = (await getFeedbackQuestions(key)).filter((q) => q.enabled);
   const rankedQuestion = questions.find((q) => q.type === "ranked");
   const showSessionRatings = questions.some((q) => q.type === "sessions");
-  const showConversations = questions.some((q) => q.type === "conversations");
 
-  const sessions = await getSessions();
-  // Mirrors the page: only the overall form rates individual sessions.
-  const rated =
-    key === "overall" && showSessionRatings
-      ? sessions.filter((s) => ["talk", "panel", "workshop"].includes(s.type))
-      : [];
+  // Rebuild the same participant-specific options used by the page. Forged
+  // session, facilitator, and conversation ids are never accepted.
+  const rated = key === "overall" && showSessionRatings ? await sessionRatingOptions(me.id) : [];
 
   const sessionFeedback = rated.map((session) => {
     const raw = formData.get(`rating-${session.id}`);
@@ -75,19 +71,6 @@ export async function submitFeedback(formData: FormData) {
       if (Number.isInteger(n) && n >= min && n <= max) ratings[q.key.startsWith("scale-") ? q.key.slice(6) : q.key] = n;
     }
   }
-  if (key === "overall" && showConversations) {
-    for (const conversation of await oneToOneConversations(me.id)) {
-      const commentKey = `conv-comment-${conversation.id}`;
-      const ratingKey = `conv-${conversation.id}`;
-      answers[commentKey] = String(formData.get(commentKey) ?? "").slice(0, 4000);
-      questionLabels[commentKey] = `${conversation.partner} · ${conversation.day} · ${conversation.timeLabel} — Comments`;
-      questionLabels[ratingKey] = `${conversation.partner} · ${conversation.day} · ${conversation.timeLabel} — Rating`;
-      const raw = formData.get(`scale-${ratingKey}`);
-      const n = raw === null || raw === "" ? NaN : Number(raw);
-      if (Number.isInteger(n) && n >= 1 && n <= 5) ratings[ratingKey] = n;
-    }
-  }
-
   // Preserve the written answer exactly, even when a name cannot be matched.
   // Matching names is only a convenience for the pairing generator.
   const daily = key === "friday" || key === "saturday";

@@ -12,6 +12,7 @@ export default function RatingScale({
   rightLabel = "Extremely valuable",
   kind = "stars",
   defaultValue,
+  allowSkip = false,
 }: {
   name: string;
   legend: string;
@@ -22,6 +23,7 @@ export default function RatingScale({
   rightLabel?: string;
   kind?: "stars" | "numbers";
   defaultValue?: number;
+  allowSkip?: boolean;
 }) {
   const values = Array.from({ length: maximum - minimum + 1 }, (_, i) => minimum + i);
 
@@ -51,6 +53,11 @@ export default function RatingScale({
           </label>
         ))}
       </div>
+
+      {allowSkip && !required ? <label className="mt-3 flex items-center gap-2 text-xs text-muted">
+        <input type="radio" name={name} value="" defaultChecked={defaultValue === undefined} />
+        Didn’t attend / skip
+      </label> : null}
 
       {/* The end labels explain an unfamiliar scale; on a plain "how good was
           it" star row they only restate the stars. */}

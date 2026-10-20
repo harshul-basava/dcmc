@@ -56,6 +56,9 @@ function feedbackHarness(data = {}) {
   });
 }
 const feedback = feedbackHarness();
+const scheduleHelpers = load('server/schedule.ts');
+const sessionRatings = load('server/session-ratings.ts', { './data': {}, './feedback': {}, './schedule': scheduleHelpers });
+const talkSession = { id: 'talk', type: 'talk', title: 'A talk', speaker: '', day: '2026-10-23', start: '2026-10-23T10:00', end: '2026-10-23T11:00' };
 
 function actionHarness({ open = true, preview = false, failSave = false, failSync = false, questions, conversations = [] } = {}) {
   const saved = [], synced = [], completed = [];
@@ -65,6 +68,7 @@ function actionHarness({ open = true, preview = false, failSave = false, failSyn
     '@/server/data': { getSessions: async () => [{ id: 'talk', type: 'talk', title: 'A talk' }],
       saveFeedback: async r => { if (failSave) throw Error('offline'); saved.push(r); },
       replacePreferences: async (...args) => { if (failSync) throw Error('offline'); synced.push(args); } },
+    '@/server/session-ratings': { sessionRatingOptions: async () => sessionRatings.buildSessionRatingOptions([talkSession], conversations, 'Kuhan Jeyapragasan') },
     '@/server/people': { personLookup: async () => new Map([[roster[1], { name: 'Partner' }]]) },
     '@/server/feedback-questions': { getFeedbackQuestions: async () => questions ?? [{ key: 'comment', type: 'text', enabled: true, required: true, label: 'A question' }] },
     '@/server/feedback': { normalizePreferenceName: feedback.normalizePreferenceName, MAX_ONE_TO_ONE_PICKS: 10, REPEATABLE_FORMS: new Set(['anytime']),
@@ -165,14 +169,53 @@ test('0–10 ratings preserve zero and reject out-of-range required values', asy
   assert.equal(h.saved[0].ratings.value, 0);
   assert.match(await submit(h, { form: 'overall', 'scale-value': '11' }), /error=1/);
 });
-test('overall conversation ratings only accept actual published conversations and save partner labels', async () => {
-  const h = actionHarness({ questions: [{ key: 'conversation-ratings', type: 'conversations', enabled: true }],
-    conversations: [{ id: 'own', partner: 'Partner', day: 'Saturday', timeLabel: '9–9:30' }] });
-  await submit(h, { form: 'overall', 'scale-conv-own': '5', 'scale-conv-forged': '1', 'conv-comment-forged': 'junk' });
-  assert.equal(h.saved[0].ratings['conv-own'], 5);
-  assert.equal(h.saved[0].ratings['conv-forged'], undefined);
-  assert.equal(h.saved[0].answers['conv-comment-forged'], undefined);
-  assert.match(h.saved[0].questionLabels['conv-own'], /Partner/);
+test('overall session ratings accept only actual options and allow every rating to be skipped', async () => {
+  const questions = [{ key: 'session-ratings', type: 'sessions', enabled: true }];
+  const conversations = [{ id: 'own', partner: 'Partner', day: 'Saturday', date: '2026-10-24', start: '2026-10-24T09:00', timeLabel: '9–9:30' }];
+  const h = actionHarness({ questions, conversations });
+  await submit(h, { form: 'overall', 'rating-conv-own': '5', 'rating-conv-forged': '1', 'comment-conv-forged': 'junk', 'rating-informal-socializing': '4' });
+  assert.equal(h.saved[0].sessions.find(s => s.sessionId === 'conv-own').rating, 5);
+  assert.match(h.saved[0].sessions.find(s => s.sessionId === 'conv-own').title, /Partner/);
+  assert.ok(!h.saved[0].sessions.some(s => s.sessionId === 'conv-forged'));
+  assert.equal(h.saved[0].sessions.find(s => s.sessionId === 'informal-socializing').rating, 4);
+  const skipped = actionHarness({ questions, conversations });
+  assert.match(await submit(skipped, { form: 'overall', 'rating-conv-own': '' }), /saved=1/);
+  assert.ok(skipped.saved[0].sessions.every(s => s.rating === null));
+  const hidden = actionHarness({ questions: [{ ...questions[0], enabled: false }], conversations });
+  await submit(hidden, { form: 'overall', 'rating-conv-own': '5' });
+  assert.equal(hidden.saved[0].sessions.length, 0);
+});
+
+test('session rating options consolidate Thursday, exclude logistics, and split rotating Q&A and published 1:1s', () => {
+  const make = (id, title, type = 'talk', day = '2026-10-23', speaker = '') => ({ ...talkSession, id, title, type, day, speaker, start: `${day}T10:00`, end: `${day}T11:00` });
+  const sessions = [
+    make('thurs-arrival', 'Arrival', 'logistics', '2026-10-22'),
+    make('thurs-dinner', 'Welcome dinner', 'meal', '2026-10-22'),
+    make('thurs-games', 'Board Game Night', 'social', '2026-10-22'),
+    make('breakfast', 'Informal Breakfast and Coworking', 'meal'),
+    make('reflection', 'Daily Reflection', 'working-session'),
+    make('morning', 'Morning Reflection', 'working-session'),
+    make('transition', 'Q&A / Transition Period'),
+    make('break', 'Break'), make('long-break', 'Long break', 'break'),
+    make('monument', 'Optional Monument Trip and Headshots', 'social'),
+    make('talk', 'A talk'), make('lunch', 'Lunch', 'meal'),
+    make('pairs', '1:1s', 'one-to-one'),
+    make('qa-fri', 'Rotating Q&As', 'small-group', '2026-10-23', 'Guest A, Guest B'),
+    make('qa-sat', 'Rotating Q&As', 'small-group', '2026-10-24', 'Guest C, Guest D'),
+  ];
+  const conversations = ['S1', 'S2'].map((half, i) => ({ id: half, sessionId: 'pairs', date: '2026-10-23', start: `2026-10-23T10:${i ? '30' : '00'}`, day: 'Friday', timeLabel: i ? '10:30–11' : '10–10:30', partner: `Partner ${i + 1}` }));
+  const options = sessionRatings.buildSessionRatingOptions(sessions, conversations, 'Kuhan Jeyapragasan');
+  const titles = options.map(s => s.title);
+  assert.equal(titles.filter(t => t === 'Thursday evening dinner and activities').length, 1);
+  assert.ok(titles.includes('Informal socializing'));
+  assert.ok(titles.includes('Lunch'));
+  assert.ok(!titles.some(t => /break|reflection|transition|monument|welcome dinner|board game|^1:1s$/i.test(t)));
+  assert.equal(titles.filter(t => t.startsWith('1:1 with ')).length, 2);
+  assert.equal(titles.filter(t => t.startsWith('Rotating Q&A with ')).length, 5);
+  assert.ok(options.some(s => s.title === 'Rotating Q&A with Kuhan Jeyapragasan' && s.timeLabel.startsWith('Saturday')));
+  assert.ok(!options.some(s => s.id === 'qa-fri' || s.id === 'qa-sat'));
+  assert.equal(new Set(options.map(s => s.id)).size, options.length);
+  assert.equal(sessions.find(s => s.id === 'qa-sat').speaker, 'Guest C, Guest D', 'private addition never mutates the schedule');
 });
 
 // Exercise the real data mapper and HTTP client; the fake service keeps Airtable
@@ -245,29 +288,24 @@ test('question editor definitions persist and restore order, scale, required and
   assert.equal(q.validateQuestions([{...questions[0], type:'ranked'}], 'goals'), null);
 });
 
-test('overall feedback includes 1:1 questions for new and previously customized forms', async () => {
+test('overall feedback retires duplicate conversation sections and preserves customized questions', async () => {
   const settings = [];
   const q = load('server/feedback-questions.ts', { './data': {
-    getPortalPageSettings: async () => settings,
-    savePortalPageSetting: async () => {},
+    getPortalPageSettings: async () => settings, savePortalPageSetting: async () => {},
   } });
-  assert.ok(!q.EDITABLE_FORMS.includes('one-on-ones'));
   const defaults = q.defaultFeedbackQuestions('overall');
-  assert.equal(defaults.filter(q => q.type === 'conversations').length, 1);
-  assert.ok(q.validateQuestions(defaults, 'overall'));
+  assert.equal(defaults.filter(q => q.type === 'conversations').length, 0);
+  assert.equal(defaults.filter(q => q.type === 'sessions').length, 1);
   settings.push({ audience: 'all', key: 'questions:overall', label: JSON.stringify([
     { ...defaults[0], label: 'Custom overall question', position: 10 },
+    { ...defaults[0], key: 'conversation-ratings', type: 'conversations', position: 11 },
+    { ...defaults.find(q => q.type === 'sessions'), enabled: false, position: 12 },
   ]) });
   const migrated = await q.getFeedbackQuestions('overall');
   assert.equal(migrated[0].label, 'Custom overall question');
-  assert.equal(migrated.filter(q => q.type === 'conversations').length, 1);
+  assert.equal(migrated.filter(q => q.type === 'conversations').length, 0);
+  assert.equal(migrated.find(q => q.type === 'sessions').enabled, false);
   assert.ok(migrated.some(q => q.key === 'one-on-ones-overall'));
-  const conversation = migrated.find(q => q.type === 'conversations');
-  conversation.enabled = false;
-  settings[0].label = JSON.stringify(migrated);
-  const restored = await q.getFeedbackQuestions('overall');
-  assert.equal(restored.filter(q => q.type === 'conversations').length, 1);
-  assert.equal(restored.find(q => q.type === 'conversations').enabled, false);
 });
 
 test('admin generation respects availability/exclusions, drafts stay private, and release/hide preserve the draft', async () => {

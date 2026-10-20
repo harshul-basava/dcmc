@@ -8,9 +8,10 @@ import TextQuestion from "@/components/dashboard/TextQuestion";
 import FeedbackFields from "@/components/dashboard/FeedbackFields";
 import OneToOneRequests from "@/components/dashboard/OneToOneRequests";
 import { isPreviewing, requireParticipant } from "@/server/auth";
-import { getFeedback, getSessions } from "@/server/data";
+import { getFeedback } from "@/server/data";
 import { getFeedbackQuestions } from "@/server/feedback-questions";
-import { feedbackForm, feedbackFormOpen, oneToOneGuestOptions, oneToOneConversations } from "@/server/feedback";
+import { feedbackForm, feedbackFormOpen, oneToOneGuestOptions } from "@/server/feedback";
+import { sessionRatingOptions } from "@/server/session-ratings";
 import { submitFeedback } from "../actions";
 
 export default async function FeedbackFormPage({ params, searchParams }: {
@@ -37,12 +38,12 @@ export default async function FeedbackFormPage({ params, searchParams }: {
     </PortalShell>
   );
 
-  const [questions, sessions] = await Promise.all([getFeedbackQuestions(key), getSessions()]);
+  const questions = await getFeedbackQuestions(key);
   const previousGoals = key === "goals"
     ? (await getFeedback()).find((response) => response.form === "goals" && response.participantId === me.id)
     : undefined;
-  const rated = key === "overall" ? sessions.filter((s) => ["talk", "panel", "workshop"].includes(s.type)) : [];
-  const conversations = key === "overall" ? await oneToOneConversations(me.id) : [];
+  const rated = key === "overall" && questions.some((q) => q.enabled && q.type === "sessions")
+    ? await sessionRatingOptions(me.id) : [];
   const daily = key === "friday" || key === "saturday";
   const guestOptions = daily ? await oneToOneGuestOptions(key) : [];
 
@@ -64,27 +65,16 @@ export default async function FeedbackFormPage({ params, searchParams }: {
             if (q.type === "ranked" && daily) return (
               <OneToOneRequests key={q.key} question={q} guests={guestOptions} />
             );
-            if (q.type === "conversations" && key === "overall") return (
-              <section key={q.key} className="grid gap-6">
-                <h2 className="font-display text-lg tracking-tight text-foreground">{q.label}</h2>
-                {conversations.length ? conversations.map((conversation) => (
-                  <div key={conversation.id} className="grid gap-3 rounded-card border border-rule bg-card p-5">
-                    <div><strong className="font-display text-base font-medium text-foreground">{conversation.partner}</strong>
-                      <span className="block text-xs text-muted">{conversation.day} · {conversation.timeLabel}</span></div>
-                    <RatingScale name={`scale-conv-${conversation.id}`} legend="How valuable was it?" required={false} />
-                    <TextQuestion name={`conv-comment-${conversation.id}`} label="Anything to add?" rows={2} />
-                  </div>
-                )) : <p className="rounded-card border border-dashed border-rule px-6 py-10 text-center text-sm text-muted">Your conversations will appear once pairings are released.</p>}
-              </section>
-            );
             if (q.type === "sessions" && key === "overall" && rated.length) return (
               <section key={q.key} className="grid gap-6">
                 <h2 className="font-display text-lg tracking-tight text-foreground">{q.label}</h2>
+                <p className="text-sm text-muted">All ratings are optional. Only rate activities you attended and rotating Q&A guests you spoke with. Each 1:1 conversation is listed separately once pairings are released.</p>
                 {rated.map((session) => (
                   <div key={session.id} className="grid gap-3 rounded-card border border-rule bg-card p-5">
                     <div><strong className="font-display text-base font-medium text-foreground">{session.title}</strong>
+                      <span className="block text-xs text-muted">{session.timeLabel}</span>
                       {session.speaker ? <span className="block text-xs text-muted">{session.speaker}</span> : null}</div>
-                    <RatingScale name={`rating-${session.id}`} legend="How valuable was it?" required={false} />
+                    <RatingScale name={`rating-${session.id}`} legend="How valuable was it?" required={false} allowSkip />
                     <TextQuestion name={`comment-${session.id}`} label="Anything to add?" rows={2} />
                   </div>
                 ))}

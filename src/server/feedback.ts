@@ -87,6 +87,9 @@ export type Conversation = {
   /** Who they actually sat with. */
   partner: string;
   sessionTitle: string;
+  sessionId: string;
+  date: string;
+  start: string;
   day: string;
   timeLabel: string;
 };
@@ -125,6 +128,9 @@ export async function oneToOneConversations(participantId: string): Promise<Conv
       id: assignment.id,
       partner,
       sessionTitle: session.title,
+      sessionId: session.id,
+      date: session.day,
+      start: `${session.day}T${String(Math.floor((second ? mid : start) / 60)).padStart(2, "0")}:${String((second ? mid : start) % 60).padStart(2, "0")}`,
       day: new Date(`${session.day}T12:00:00Z`).toLocaleDateString("en-US", {
         weekday: "long",
         timeZone: "UTC",

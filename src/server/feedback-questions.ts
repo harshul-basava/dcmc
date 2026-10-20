@@ -39,7 +39,6 @@ const defaults: Record<EditableForm, FeedbackQuestion[]> = {
   overall: [
     question("scale-satisfaction", "Overall, how satisfied were you with the conference?", 1, "rating"),
     question("scale-recommend", "How likely are you to recommend it to someone like you?", 2, "rating"),
-    question("conversation-ratings", "Your 1:1 conversations", 4, "conversations"),
     question("one-on-ones-overall", "What did you think of the one-on-ones overall?", 5, "text", true),
     question("one-on-ones-more", "Anyone you wish you had met?", 6),
     question("learned", "One valuable thing you learned", 7, "text", true),
@@ -83,7 +82,9 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
   const stored = (await getPortalPageSettings()).find((s) => s.audience === "all" && s.key === `questions:${form}`);
   if (stored) {
     try {
-      const parsed = validateQuestions(JSON.parse(stored.label), form);
+      // Conversations now belong to session ratings, so retire the old
+      // separate section while retaining existing responses and other edits.
+      const parsed = validateQuestions(JSON.parse(stored.label), form)?.filter((q) => q.type !== "conversations");
       if (parsed) {
         for (const q of parsed) {
           if (q.key === "one-on-one-picks" && q.label === "List up to 10 people you would like to have 1:1s with tomorrow.") {
@@ -95,7 +96,7 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
         if (form === "overall") {
           const keys = new Set(parsed.map((q) => q.key));
           const additions = defaults.overall.filter((q) =>
-            ["conversation-ratings", "one-on-ones-overall", "one-on-ones-more"].includes(q.key) && !keys.has(q.key));
+            ["one-on-ones-overall", "one-on-ones-more"].includes(q.key) && !keys.has(q.key));
           const lastPosition = Math.max(0, ...parsed.map((q) => q.position));
           return [...parsed, ...additions.map((q, index) => ({ ...q, position: lastPosition + index + 1 }))];
         }
