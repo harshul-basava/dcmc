@@ -201,6 +201,9 @@ test('session rating options consolidate Thursday, exclude logistics, and split 
     make('break', 'Break'), make('long-break', 'Long break', 'break'),
     make('monument', 'Optional Monument Trip and Headshots', 'social'),
     make('talk', 'A talk'), make('lunch', 'Lunch', 'meal'),
+    make('dinner', 'Dinner', 'meal'), make('untyped-dinner', 'Dinner', 'social'),
+    make('prep', 'Happy Hour Prep Session', 'working-session'),
+    make('photo', 'Group Photo', 'social'), make('happy-hour', 'Happy Hour', 'social'),
     make('pairs', '1:1s', 'one-to-one'),
     make('qa-fri', 'Rotating Q&As', 'small-group', '2026-10-23', 'Guest A, Guest B'),
     make('qa-sat', 'Rotating Q&As', 'small-group', '2026-10-24', 'Guest C, Guest D'),
@@ -210,7 +213,11 @@ test('session rating options consolidate Thursday, exclude logistics, and split 
   const titles = options.map(s => s.title);
   assert.equal(titles.filter(t => t === 'Thursday evening dinner and activities').length, 1);
   assert.ok(titles.includes('Informal socializing'));
-  assert.ok(titles.includes('Lunch'));
+  assert.ok(!titles.includes('Lunch'));
+  assert.ok(!titles.includes('Dinner'));
+  assert.ok(!titles.includes('Happy Hour Prep Session'));
+  assert.ok(!titles.includes('Group Photo'));
+  assert.ok(titles.includes('Happy Hour'));
   assert.ok(!titles.some(t => /break|reflection|transition|monument|welcome dinner|board game|^1:1s$/i.test(t)));
   assert.equal(titles.filter(t => t.startsWith('1:1 with ')).length, 2);
   assert.equal(titles.filter(t => t.startsWith('Rotating Q&A with ')).length, 5);

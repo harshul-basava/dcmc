@@ -30,8 +30,8 @@ export function buildSessionRatingOptions(
 
   for (const session of sessions) {
     if (weekday(session.day) === "Thursday") continue;
-    if (["break", "logistics", "one-to-one"].includes(session.type)) continue;
-    if (/breakfast|reflection|transition|\bbreak\b|monument/i.test(session.title)) continue;
+    if (["break", "logistics", "one-to-one", "meal"].includes(session.type)) continue;
+    if (/breakfast|\blunch\b|\bdinner\b|reflection|transition|\bbreak\b|monument|happy\s+hour\s+prep|group\s+photo/i.test(session.title)) continue;
     const timeLabel = `${weekday(session.day)} · ${formatRange(minutesOf(session.start), minutesOf(session.end))}`;
     const rotating = /rotating\s+q\s*&\s*a/i.test(session.title) && !/introduction|norms/i.test(session.title);
     if (rotating) {
