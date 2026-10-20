@@ -13,7 +13,6 @@ export default function RatingScale({
   kind = "stars",
   defaultValue,
   allowSkip = false,
-  showOptional = false,
 }: {
   name: string;
   legend: string;
@@ -25,14 +24,12 @@ export default function RatingScale({
   kind?: "stars" | "numbers";
   defaultValue?: number;
   allowSkip?: boolean;
-  showOptional?: boolean;
 }) {
   const values = Array.from({ length: maximum - minimum + 1 }, (_, i) => minimum + i);
 
   return (
     <fieldset className={`rating-kind-${kind}`}>
-      <legend className={`mb-2 text-sm text-foreground ${showOptional ? "w-full" : ""}`}>
-        {showOptional && !required ? <span className="rating-optional">Optional</span> : null}
+      <legend className="mb-2 text-sm text-foreground">
         {legend}
         {required ? (
           <span aria-hidden="true" className="text-accent">
@@ -60,7 +57,7 @@ export default function RatingScale({
       {/* The end labels explain an unfamiliar scale; on a plain "how good was
           it" star row they only restate the stars. */}
       {leftLabel || rightLabel ? (
-        <div aria-hidden="true" className="rating-endpoints mt-1.5 flex justify-between text-[0.6875rem] text-muted">
+        <div aria-hidden="true" className="mt-1.5 flex justify-between text-[0.6875rem] text-muted">
           <span>{leftLabel}</span>
           <span>{rightLabel}</span>
         </div>

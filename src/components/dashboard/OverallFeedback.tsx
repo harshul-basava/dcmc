@@ -58,7 +58,7 @@ export default function OverallFeedback({ questions, sessions }: {
           <div key={day} className="overall-feedback-day">
             <h3 className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">{day}</h3>
             {items.map((session) => (
-              <article key={session.id} className={`overall-feedback-session ${session.guests ? "overall-feedback-open-stars" : ""}`} aria-labelledby={`session-${session.id}`}>
+              <article key={session.id} className="overall-feedback-session" aria-labelledby={`session-${session.id}`}>
                 <header className="mb-4 flex gap-3">
                   <span aria-hidden="true" className="mt-1 w-6 shrink-0 text-xs tabular-nums text-muted">{String(++number).padStart(2, "0")}</span>
                   <div>
@@ -68,7 +68,7 @@ export default function OverallFeedback({ questions, sessions }: {
                   </div>
                 </header>
                 <div className="sm:pl-9">
-                  <RatingScale name={`rating-${session.id}`} legend={session.guests ? "How valuable was this session?" : "How valuable was it?"} required={false} allowSkip showOptional={Boolean(session.guests)} />
+                  <RatingScale name={`rating-${session.id}`} legend={session.guests ? "How valuable was this session?" : "How valuable was it?"} required={false} allowSkip />
                   {session.guests?.length ? (
                     <section className="overall-feedback-guests" aria-label={`Rate each guest in ${session.title}`}>
                       <div>
@@ -76,7 +76,7 @@ export default function OverallFeedback({ questions, sessions }: {
                         <p className="mt-2 text-xs text-muted">Only rate guests you spoke with.</p>
                       </div>
                       {session.guests.map((guest) => (
-                        <RatingScale key={guest.id} name={`rating-${guest.id}`} legend={guest.name} required={false} allowSkip showOptional />
+                        <RatingScale key={guest.id} name={`rating-${guest.id}`} legend={guest.name} required={false} allowSkip />
                       ))}
                     </section>
                   ) : null}
@@ -92,7 +92,7 @@ export default function OverallFeedback({ questions, sessions }: {
       </Section> : null}
       {experience.length ? <Section id="overall-experience" title="Overall experience" description="Tell us what worked well and what could be better.">
         <div className="grid gap-8">
-          {amenities.length ? <div className="overall-feedback-open-stars grid gap-8 sm:grid-cols-2"><FeedbackFields questions={amenities} /></div> : null}
+          {amenities.length ? <div className="grid gap-8 sm:grid-cols-2"><FeedbackFields questions={amenities} /></div> : null}
           <FeedbackFields questions={otherExperience} />
         </div>
       </Section> : null}
