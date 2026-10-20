@@ -44,14 +44,7 @@ export const FEEDBACK_FORMS = [
     label: "Overall",
     title: "Overall Feedback",
     day: "",
-    description: "The conference as a whole",
-  },
-  {
-    key: "one-on-ones",
-    label: "One-on-ones",
-    title: "One-on-ones",
-    day: "",
-    description: "Rate your 1-1 conversations",
+    description: "The conference as a whole, including your 1:1 conversations",
   },
   {
     key: "anytime",
@@ -99,7 +92,7 @@ export type Conversation = {
 };
 
 /**
- * Every published one-on-one this participant had, so the 1-1 form can ask
+ * Every published one-on-one this participant had, so overall feedback can ask
  * about each by name rather than in the abstract.
  */
 export async function oneToOneConversations(participantId: string): Promise<Conversation[]> {

@@ -7,7 +7,7 @@ import RatingScale from "@/components/dashboard/RatingScale";
 import TextQuestion from "@/components/dashboard/TextQuestion";
 import FeedbackFields from "@/components/dashboard/FeedbackFields";
 import RankedNames from "@/components/dashboard/RankedNames";
-import { requireParticipant } from "@/server/auth";
+import { isPreviewing, requireParticipant } from "@/server/auth";
 import { getFeedback, getSessions } from "@/server/data";
 import { getFeedbackQuestions } from "@/server/feedback-questions";
 import { MAX_ONE_TO_ONE_PICKS, feedbackForm, feedbackFormOpen, oneToOneCandidates, oneToOneConversations } from "@/server/feedback";
@@ -15,15 +15,17 @@ import { submitFeedback } from "../actions";
 
 export default async function FeedbackFormPage({ params, searchParams }: {
   params: Promise<{ form: string }>;
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ saved?: string; tested?: string; error?: string }>;
 }) {
   const me = await requireParticipant("feedback");
   const { form: key } = await params;
-  const { saved, error } = await searchParams;
+  const { saved, tested, error } = await searchParams;
+  const testing = await isPreviewing();
+  if (key === "one-on-ones") redirect("/dashboard/feedback/overall");
   const form = feedbackForm(key);
   if (!form) notFound();
   if (key === "anytime") redirect("/dashboard/feedback");
-  if (!(await feedbackFormOpen(key))) redirect("/dashboard/feedback");
+  if (!testing && !(await feedbackFormOpen(key))) redirect("/dashboard/feedback");
 
   if (saved) return (
     <PortalShell role="participant" active="feedback">
@@ -40,7 +42,7 @@ export default async function FeedbackFormPage({ params, searchParams }: {
     ? (await getFeedback()).find((response) => response.form === "goals" && response.participantId === me.id)
     : undefined;
   const rated = key === "overall" ? sessions.filter((s) => ["talk", "panel", "workshop"].includes(s.type)) : [];
-  const conversations = key === "one-on-ones" ? await oneToOneConversations(me.id) : [];
+  const conversations = key === "overall" ? await oneToOneConversations(me.id) : [];
   const daily = key === "friday" || key === "saturday";
   const candidates = daily ? await oneToOneCandidates(me.id) : [];
 
@@ -49,6 +51,8 @@ export default async function FeedbackFormPage({ params, searchParams }: {
       <div className="mx-auto w-full max-w-2xl">
         <BackLink href="/dashboard/feedback">All feedback forms</BackLink>
         <PageHeading title={form.title} lead={form.description} />
+        {testing ? <p className="mb-6 rounded-card border border-rule bg-card p-4 text-sm text-muted">Feedback test: closed forms are available. Submitting checks your answers without saving a response or changing pairing requests. <a href="/dashboard/admin/feedback" className="text-accent underline">Back to admin feedback</a></p> : null}
+        {testing && tested ? <p role="status" className="mb-6 text-sm text-[color:var(--color-success)]">Test passed. Your answers were valid. Nothing was saved.</p> : null}
         {key === "goals" ? <p className="mb-6 text-sm text-muted">You can return to review and update your goals. Your responses are also visible to conference organizers.</p> : null}
         {error ? <p role="alert" className="mb-6 rounded-card border border-accent bg-[color:var(--red-50)] p-4 text-sm text-accent">{error === "save" ? "Your response could not be saved. Please try again." : "Please answer the required questions before submitting."}</p> : null}
         <form action={submitFeedback} className="grid gap-8">
@@ -68,7 +72,7 @@ export default async function FeedbackFormPage({ params, searchParams }: {
                 ) : <p className="rounded-card border border-dashed border-rule px-5 py-6 text-sm text-muted">Names will appear here as profiles are completed.</p>}
               </div>
             );
-            if (q.type === "conversations" && key === "one-on-ones") return (
+            if (q.type === "conversations" && key === "overall") return (
               <section key={q.key} className="grid gap-6">
                 <h2 className="font-display text-lg tracking-tight text-foreground">{q.label}</h2>
                 {conversations.length ? conversations.map((conversation) => (
@@ -96,7 +100,7 @@ export default async function FeedbackFormPage({ params, searchParams }: {
             );
             return null;
           })}
-          <div><button type="submit" className="min-h-11 rounded-card bg-accent px-7 text-sm font-semibold text-on-accent transition hover:bg-accent-hover">{key === "goals" ? "Save goals" : "Submit feedback"}</button></div>
+          <div><button type="submit" className="min-h-11 rounded-card bg-accent px-7 text-sm font-semibold text-on-accent transition hover:bg-accent-hover">{testing ? "Test submission" : key === "goals" ? "Save goals" : "Submit feedback"}</button></div>
         </form>
       </div>
     </PortalShell>

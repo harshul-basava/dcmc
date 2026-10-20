@@ -2,17 +2,18 @@ import PortalShell from "@/components/dashboard/PortalShell";
 import PageHeading from "@/components/dashboard/PageHeading";
 import FeedbackFields from "@/components/dashboard/FeedbackFields";
 import { getFeedbackQuestions } from "@/server/feedback-questions";
-import { requireParticipant } from "@/server/auth";
+import { isPreviewing, requireParticipant } from "@/server/auth";
 import { FEEDBACK_FORMS, completedForms, feedbackFormOpen } from "@/server/feedback";
 import { submitFeedback } from "./actions";
 
 export default async function FeedbackIndex({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ saved?: string; tested?: string; error?: string }>;
 }) {
   const me = await requireParticipant("feedback");
-  const { saved, error } = await searchParams;
+  const { saved, tested, error } = await searchParams;
+  const testing = await isPreviewing();
   const done = await completedForms(me.id);
   const anytimeQuestions = await getFeedbackQuestions("anytime");
 
@@ -20,7 +21,7 @@ export default async function FeedbackIndex({
   const linked = await Promise.all(
     FEEDBACK_FORMS.filter((form) => form.key !== "anytime").map(async (form) => ({
       ...form,
-      open: await feedbackFormOpen(form.key),
+      open: testing || await feedbackFormOpen(form.key),
     })),
   );
 
@@ -29,6 +30,7 @@ export default async function FeedbackIndex({
   return (
     <PortalShell role="participant" active="feedback">
       <PageHeading title="Feedback" />
+      {testing ? <p className="mb-6 rounded-card border border-rule bg-card p-4 text-sm text-muted">Feedback test: all forms are available. Test submissions validate answers without saving feedback or changing pairing requests. <a href="/dashboard/admin/feedback" className="text-accent underline">Back to admin feedback</a></p> : null}
 
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-12">
         {/* The dated forms, stacked. */}
@@ -83,6 +85,7 @@ export default async function FeedbackIndex({
           </h2>
           <p className="mt-2 text-sm text-muted">{anytime.description}</p>
 
+          {testing && tested ? <p role="status" className="mt-5 text-sm text-[color:var(--color-success)]">Test passed. Your answers were valid. Nothing was saved.</p> : null}
           {saved ? (
             <p className="mt-5 rounded-card border border-rule bg-card p-3 text-sm text-[color:var(--color-success)]">
               Thank you — your comment was saved.
@@ -112,7 +115,7 @@ export default async function FeedbackIndex({
                 type="submit"
                 className="min-h-11 rounded-card bg-accent px-7 text-sm font-semibold text-on-accent transition hover:bg-accent-hover active:scale-[0.97]"
               >
-                Submit feedback
+                {testing ? "Test submission" : "Submit feedback"}
               </button>
             </div>
           </form>

@@ -23,13 +23,13 @@ import {
  */
 export async function submitFeedback(formData: FormData) {
   const me = await requireParticipant("feedback");
-  // An admin preview is read-only: no feedback is recorded in the attendee's name.
-  if (await isPreviewing()) redirect("/dashboard/feedback");
+  // A signed admin preview may validate a form, but never writes anything.
+  const testing = await isPreviewing();
 
   const key = String(formData.get("form") ?? "");
   const form = feedbackForm(key);
   if (!form) redirect("/dashboard/feedback");
-  if (!(await feedbackFormOpen(key))) redirect("/dashboard/feedback");
+  if (!testing && !(await feedbackFormOpen(key))) redirect("/dashboard/feedback");
   const questions = (await getFeedbackQuestions(key)).filter((q) => q.enabled);
   const rankedQuestion = questions.find((q) => q.type === "ranked");
   const showSessionRatings = questions.some((q) => q.type === "sessions");
@@ -75,7 +75,7 @@ export async function submitFeedback(formData: FormData) {
       if (Number.isInteger(n) && n >= min && n <= max) ratings[q.key.startsWith("scale-") ? q.key.slice(6) : q.key] = n;
     }
   }
-  if (key === "one-on-ones" && showConversations) {
+  if (key === "overall" && showConversations) {
     for (const conversation of await oneToOneConversations(me.id)) {
       const commentKey = `conv-comment-${conversation.id}`;
       const ratingKey = `conv-${conversation.id}`;
@@ -134,6 +134,8 @@ export async function submitFeedback(formData: FormData) {
       redirect(`${back}?error=1`);
     }
   }
+
+  if (testing) redirect(`${back}?tested=1`);
 
   try {
     await saveFeedback({

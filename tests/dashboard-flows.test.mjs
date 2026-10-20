@@ -61,7 +61,7 @@ function actionHarness({ open = true, preview = false, failSave = false, failSyn
     '@/server/people': { personLookup: async () => new Map([[roster[1], { name: 'Partner' }]]) },
     '@/server/feedback-questions': { getFeedbackQuestions: async () => questions ?? [{ key: 'comment', type: 'text', enabled: true, required: true, label: 'A question' }] },
     '@/server/feedback': { MAX_ONE_TO_ONE_PICKS: 10, REPEATABLE_FORMS: new Set(['anytime']),
-      feedbackForm: key => ['goals','friday','saturday','overall','one-on-ones','anytime'].includes(key) ? { day: key === 'friday' ? '2026-10-23' : '', label: key } : null,
+      feedbackForm: key => ['goals','friday','saturday','overall','anytime'].includes(key) ? { day: key === 'friday' ? '2026-10-23' : '', label: key } : null,
       feedbackFormOpen: async () => open, markFormCompleted: async (...args) => completed.push(args),
       oneToOneCandidates: async () => [{ key: roster[1], name: 'Partner' }], oneToOneConversations: async () => conversations },
   }, { console: { error() {} } });
@@ -72,12 +72,27 @@ async function submit(h, values) {
   for (const [key,value] of Object.entries(values)) form.set(key, value);
   try { await h.submitFeedback(form); assert.fail('Expected redirect'); } catch (e) { if (!e.redirect) throw e; return e.redirect; }
 }
-test('closed forms and admin previews cannot write feedback', async () => {
-  for (const options of [{ open: false }, { preview: true }]) {
+test('closed forms cannot write feedback', async () => {
+  for (const options of [{ open: false }]) {
     const h = actionHarness(options);
     assert.equal(await submit(h, { form: 'goals', comment: 'hello' }), '/dashboard/feedback');
     assert.equal(h.saved.length, 0);
   }
+});
+test('admin feedback tests validate closed forms without saving, syncing preferences, or marking completion', async () => {
+  const questions = [{ key: 'one-on-one-picks', type: 'ranked', enabled: true, required: true, label: 'Requests' }];
+  const h = actionHarness({ open: false, preview: true, questions });
+  assert.equal(await submit(h, { form: 'friday', 'one-on-one-picks': roster[1] }), '/dashboard/feedback/friday?tested=1');
+  assert.equal(h.saved.length, 0);
+  assert.equal(h.synced.length, 0);
+  assert.equal(h.completed.length, 0);
+  assert.equal(await submit(h, { form: 'friday' }), '/dashboard/feedback/friday?error=1');
+  const anytime = actionHarness({ preview: true });
+  assert.equal(await submit(anytime, { form: 'anytime', comment: 'Test comment' }), '/dashboard/feedback?tested=1');
+  assert.equal(anytime.saved.length, 0);
+  const required = actionHarness({ preview: true });
+  assert.equal(await submit(required, { form: 'goals' }), '/dashboard/feedback/goals?error=1');
+  assert.equal(required.saved.length, 0);
 });
 test('required answers are checked on the server', async () => {
   const h = actionHarness();
@@ -108,10 +123,10 @@ test('0–10 ratings preserve zero and reject out-of-range required values', asy
   assert.equal(h.saved[0].ratings.value, 0);
   assert.match(await submit(h, { form: 'overall', 'scale-value': '11' }), /error=1/);
 });
-test('conversation ratings only accept actual published conversations and save partner labels', async () => {
+test('overall conversation ratings only accept actual published conversations and save partner labels', async () => {
   const h = actionHarness({ questions: [{ key: 'conversation-ratings', type: 'conversations', enabled: true }],
     conversations: [{ id: 'own', partner: 'Partner', day: 'Saturday', timeLabel: '9–9:30' }] });
-  await submit(h, { form: 'one-on-ones', 'scale-conv-own': '5', 'scale-conv-forged': '1', 'conv-comment-forged': 'junk' });
+  await submit(h, { form: 'overall', 'scale-conv-own': '5', 'scale-conv-forged': '1', 'conv-comment-forged': 'junk' });
   assert.equal(h.saved[0].ratings['conv-own'], 5);
   assert.equal(h.saved[0].ratings['conv-forged'], undefined);
   assert.equal(h.saved[0].answers['conv-comment-forged'], undefined);
@@ -186,6 +201,31 @@ test('question editor definitions persist and restore order, scale, required and
   assert.equal(restored[1].scale, '0-10');
   assert.equal(restored[1].required, true);
   assert.equal(q.validateQuestions([{...questions[0], type:'ranked'}], 'goals'), null);
+});
+
+test('overall feedback includes 1:1 questions for new and previously customized forms', async () => {
+  const settings = [];
+  const q = load('server/feedback-questions.ts', { './data': {
+    getPortalPageSettings: async () => settings,
+    savePortalPageSetting: async () => {},
+  } });
+  assert.ok(!q.EDITABLE_FORMS.includes('one-on-ones'));
+  const defaults = q.defaultFeedbackQuestions('overall');
+  assert.equal(defaults.filter(q => q.type === 'conversations').length, 1);
+  assert.ok(q.validateQuestions(defaults, 'overall'));
+  settings.push({ audience: 'all', key: 'questions:overall', label: JSON.stringify([
+    { ...defaults[0], label: 'Custom overall question', position: 10 },
+  ]) });
+  const migrated = await q.getFeedbackQuestions('overall');
+  assert.equal(migrated[0].label, 'Custom overall question');
+  assert.equal(migrated.filter(q => q.type === 'conversations').length, 1);
+  assert.ok(migrated.some(q => q.key === 'one-on-ones-overall'));
+  const conversation = migrated.find(q => q.type === 'conversations');
+  conversation.enabled = false;
+  settings[0].label = JSON.stringify(migrated);
+  const restored = await q.getFeedbackQuestions('overall');
+  assert.equal(restored.filter(q => q.type === 'conversations').length, 1);
+  assert.equal(restored.find(q => q.type === 'conversations').enabled, false);
 });
 
 test('admin generation respects availability/exclusions, drafts stay private, and release/hide preserve the draft', async () => {

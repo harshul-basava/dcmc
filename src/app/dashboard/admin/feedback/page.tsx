@@ -1,5 +1,7 @@
 import PortalShell from "@/components/dashboard/PortalShell";
 import PageHeading from "@/components/dashboard/PageHeading";
+import { FEEDBACK_FORMS } from "@/server/feedback";
+import { startPreview } from "../actions";
 import MetricCard from "@/components/dashboard/MetricCard";
 import { requireAdmin } from "@/server/auth";
 import { getFeedback, getParticipants } from "@/server/data";
@@ -66,6 +68,26 @@ export default async function AdminFeedback({
   return (
     <PortalShell role="admin" active="feedback">
       <PageHeading title="Feedback" actions={<a href="/dashboard/admin/feedback/questions" className="inline-flex min-h-10 items-center rounded-card bg-accent px-4 text-xs font-semibold text-on-accent">Edit questions</a>} />
+
+      <section className="mb-8 rounded-card border border-rule bg-card p-5" aria-labelledby="test-feedback">
+        <h2 id="test-feedback" className="font-display text-lg text-foreground">Test feedback</h2>
+        <p className="mt-2 text-sm text-muted">Try any form, including closed forms, as an attendee. Test submissions check required answers without saving feedback or changing pairing requests.</p>
+        <form action={startPreview} className="mt-4 flex flex-wrap items-end gap-4">
+          <label className="grid gap-1 text-xs text-muted">Attendee
+            <select name="id" required className="min-h-11 rounded-card border border-rule bg-surface px-3 text-sm text-foreground" defaultValue="">
+              <option value="" disabled>Choose an attendee</option>
+              {participants.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
+            </select>
+          </label>
+          <label className="grid gap-1 text-xs text-muted">Form
+            <select name="feedback" className="min-h-11 rounded-card border border-rule bg-surface px-3 text-sm text-foreground" defaultValue="overall">
+              {FEEDBACK_FORMS.map((form) => <option key={form.key} value={form.key}>{form.title}</option>)}
+            </select>
+          </label>
+          <button type="submit" disabled={!participants.length} className="min-h-11 rounded-card bg-accent px-5 text-sm font-semibold text-on-accent disabled:opacity-50">Test form</button>
+        </form>
+        {!participants.length ? <p className="mt-3 text-sm text-muted">Add an attendee to test personalized feedback.</p> : null}
+      </section>
 
       <p className="mb-6 text-sm text-muted">Charts below count only session ratings from the overall form.</p>
 

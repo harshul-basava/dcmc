@@ -61,7 +61,7 @@ export async function isPreviewing(): Promise<boolean> {
 }
 
 /** Sends anyone without a session to the login screen, preserving where they were headed. */
-export async function requireSession(returnTo?: string): Promise<Session> {
+export async function requireSession(returnTo?: string): Promise<ViewSession> {
   const session = await getSession();
   if (!session) {
     redirect(returnTo ? `/dashboard/login?returnTo=${encodeURIComponent(returnTo)}` : "/dashboard/login");
@@ -75,7 +75,7 @@ export async function requireParticipant(pageKey: string): Promise<Participant> 
 
   // A page an admin has closed must refuse direct requests too, not merely
   // disappear from the nav.
-  if (!(await portalPageOpen("participant", pageKey))) redirect(await portalHome("participant"));
+  if (!(session.preview && pageKey === "feedback") && !(await portalPageOpen("participant", pageKey))) redirect(await portalHome("participant"));
 
   const person = await getParticipant(session.participantId);
   // The session is validly signed but names nobody — clear it rather than

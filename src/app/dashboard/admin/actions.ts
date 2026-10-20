@@ -316,6 +316,10 @@ export async function startPreview(formData: FormData) {
 
   const store = await cookies();
   store.set(PREVIEW_COOKIE, createPreviewToken(id, secret), sessionCookieOptions(PREVIEW_TTL_SECONDS));
+  const feedback = String(formData.get("feedback") ?? "");
+  if (FEEDBACK_FORMS.some((form) => form.key === feedback)) {
+    redirect(feedback === "anytime" ? "/dashboard/feedback" : `/dashboard/feedback/${feedback}`);
+  }
   redirect(await portalHome("participant"));
 }
 

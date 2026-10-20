@@ -10,8 +10,8 @@ export type FeedbackQuestion = {
   position: number;
 };
 
-type EditableForm = "goals" | "friday" | "saturday" | "overall" | "one-on-ones" | "anytime";
-export const EDITABLE_FORMS: EditableForm[] = ["goals", "friday", "saturday", "overall", "one-on-ones", "anytime"];
+type EditableForm = "goals" | "friday" | "saturday" | "overall" | "anytime";
+export const EDITABLE_FORMS: EditableForm[] = ["goals", "friday", "saturday", "overall", "anytime"];
 
 const question = (key: string, label: string, position: number, type: FeedbackQuestion["type"] = "text", required = false): FeedbackQuestion =>
   ({ key, label, position, type, required, enabled: true,
@@ -39,13 +39,11 @@ const defaults: Record<EditableForm, FeedbackQuestion[]> = {
   overall: [
     question("scale-satisfaction", "Overall, how satisfied were you with the conference?", 1, "rating"),
     question("scale-recommend", "How likely are you to recommend it to someone like you?", 2, "rating"),
-    question("learned", "One valuable thing you learned", 3, "text", true),
+    question("conversation-ratings", "Your 1:1 conversations", 4, "conversations"),
+    question("one-on-ones-overall", "What did you think of the one-on-ones overall?", 5, "text", true),
+    question("one-on-ones-more", "Anyone you wish you had met?", 6),
+    question("learned", "One valuable thing you learned", 7, "text", true),
     question("additional", "Anything else we should know?", 4),
-  ],
-  "one-on-ones": [
-    question("conversation-ratings", "Your conversations", 1, "conversations"),
-    question("one-on-ones-overall", "What did you think of the one-on-ones overall?", 2, "text", true),
-    question("one-on-ones-more", "Anyone you wish you had met?", 3),
   ],
   anytime: [question("comment", "Feedback", 1, "text", true)],
 };
@@ -71,7 +69,7 @@ export function validateQuestions(value: unknown, form?: string): FeedbackQuesti
     if (q.type !== "text" && q.type !== "rating" && q.type !== "ranked" && q.type !== "sessions" && q.type !== "conversations") return null;
     if (form && ((q.type === "ranked" && !["friday", "saturday"].includes(form)) ||
       (q.type === "sessions" && form !== "overall") ||
-      (q.type === "conversations" && form !== "one-on-ones"))) return null;
+      (q.type === "conversations" && form !== "overall"))) return null;
     keys.add(q.key);
     result.push({ key: q.key, label: q.label.trim(), type: q.type,
       scale: q.scale === "0-10" ? "0-10" : "1-5",
@@ -86,7 +84,18 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
   if (stored) {
     try {
       const parsed = validateQuestions(JSON.parse(stored.label), form);
-      if (parsed) return parsed;
+      if (parsed) {
+        // Existing overall forms predate the conversation questions. Add the
+        // missing fields without replacing organizers' edits or visibility.
+        if (form === "overall") {
+          const keys = new Set(parsed.map((q) => q.key));
+          const additions = defaults.overall.filter((q) =>
+            ["conversation-ratings", "one-on-ones-overall", "one-on-ones-more"].includes(q.key) && !keys.has(q.key));
+          const lastPosition = Math.max(0, ...parsed.map((q) => q.position));
+          return [...parsed, ...additions.map((q, index) => ({ ...q, position: lastPosition + index + 1 }))];
+        }
+        return parsed;
+      }
     } catch { /* Preserve defaults if a row was hand-edited incorrectly. */ }
   }
   return defaultFeedbackQuestions(form);
