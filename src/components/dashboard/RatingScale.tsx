@@ -54,11 +54,6 @@ export default function RatingScale({
         ))}
       </div>
 
-      {allowSkip && !required ? <label className="mt-3 flex items-center gap-2 text-xs text-muted">
-        <input type="radio" name={name} value="" defaultChecked={defaultValue === undefined} />
-        Didn’t attend / skip
-      </label> : null}
-
       {/* The end labels explain an unfamiliar scale; on a plain "how good was
           it" star row they only restate the stars. */}
       {leftLabel || rightLabel ? (
@@ -67,6 +62,11 @@ export default function RatingScale({
           <span>{rightLabel}</span>
         </div>
       ) : null}
+      {allowSkip && !required ? <label className="mt-3 flex min-h-10 items-center gap-2 text-xs text-muted">
+        <input type="radio" name={name} value="" defaultChecked={defaultValue === undefined} />
+        Didn’t attend / skip
+      </label> : null}
+
     </fieldset>
   );
 }

@@ -3,8 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import PortalShell from "@/components/dashboard/PortalShell";
 import BackLink from "@/components/dashboard/BackLink";
 import PageHeading from "@/components/dashboard/PageHeading";
-import RatingScale from "@/components/dashboard/RatingScale";
-import TextQuestion from "@/components/dashboard/TextQuestion";
+import OverallFeedback from "@/components/dashboard/OverallFeedback";
 import FeedbackFields from "@/components/dashboard/FeedbackFields";
 import OneToOneRequests from "@/components/dashboard/OneToOneRequests";
 import { isPreviewing, requireParticipant } from "@/server/auth";
@@ -49,7 +48,7 @@ export default async function FeedbackFormPage({ params, searchParams }: {
 
   return (
     <PortalShell role="participant" active="feedback">
-      <div className="mx-auto w-full max-w-2xl">
+      <div className={`mx-auto w-full ${key === "overall" ? "max-w-3xl" : "max-w-2xl"}`}>
         <BackLink href="/dashboard/feedback">All feedback forms</BackLink>
         <PageHeading title={form.title} lead={form.description} />
         {testing ? <p className="mb-6 rounded-card border border-rule bg-card p-4 text-sm text-muted">Feedback test: closed forms are available. Submitting checks your answers without saving a response or changing pairing requests. <a href="/dashboard/admin/feedback" className="text-accent underline">Back to admin feedback</a></p> : null}
@@ -58,27 +57,12 @@ export default async function FeedbackFormPage({ params, searchParams }: {
         {error ? <p role="alert" className="mb-6 rounded-card border border-accent bg-[color:var(--red-50)] p-4 text-sm text-accent">{error === "save" ? "Your response could not be saved. Please try again." : "Please answer the required questions before submitting."}</p> : null}
         <form action={submitFeedback} className="grid gap-8">
           <input type="hidden" name="form" value={key} />
-          {questions.filter((q) => q.enabled).map((q) => {
+          {key === "overall" ? <OverallFeedback questions={questions} sessions={rated} /> : questions.filter((q) => q.enabled).map((q) => {
             if (q.type === "text" || q.type === "rating") {
               return <FeedbackFields key={q.key} questions={[q]} answers={previousGoals?.answers} ratings={previousGoals?.ratings} />;
             }
             if (q.type === "ranked" && acceptsRequests) return (
               <OneToOneRequests key={q.key} question={q} guests={guestOptions} />
-            );
-            if (q.type === "sessions" && key === "overall" && rated.length) return (
-              <section key={q.key} className="grid gap-6">
-                <h2 className="font-display text-lg tracking-tight text-foreground">{q.label}</h2>
-                <p className="text-sm text-muted">All ratings are optional. Only rate activities you attended and rotating Q&A guests you spoke with. Each 1:1 conversation is listed separately once pairings are released.</p>
-                {rated.map((session) => (
-                  <div key={session.id} className="grid gap-3 rounded-card border border-rule bg-card p-5">
-                    <div><strong className="font-display text-base font-medium text-foreground">{session.title}</strong>
-                      <span className="block text-xs text-muted">{session.timeLabel}</span>
-                      {session.speaker ? <span className="block text-xs text-muted">{session.speaker}</span> : null}</div>
-                    <RatingScale name={`rating-${session.id}`} legend="How valuable was it?" required={false} allowSkip />
-                    <TextQuestion name={`comment-${session.id}`} label="Anything to add?" rows={2} />
-                  </div>
-                ))}
-              </section>
             );
             return null;
           })}

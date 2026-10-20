@@ -332,6 +332,16 @@ test('overall feedback retires duplicate conversation sections and preserves cus
   assert.equal(migrated.filter(q => q.type === 'conversations').length, 0);
   assert.equal(migrated.find(q => q.type === 'sessions').enabled, false);
   assert.ok(migrated.some(q => q.key === 'one-on-ones-overall'));
+  const clarity = migrated.filter(q => q.key.startsWith('scale-clarity-'));
+  assert.equal(clarity.length, 2);
+  assert.ok(clarity.every(q => q.type === 'rating' && q.scale === '0-10' && q.required));
+  clarity[0].label = 'Custom clarity wording';
+  clarity[0].enabled = false;
+  settings[0].label = JSON.stringify(migrated);
+  const restored = await q.getFeedbackQuestions('overall');
+  assert.equal(restored.filter(q => q.key.startsWith('scale-clarity-')).length, 2);
+  assert.equal(restored.find(q => q.key === clarity[0].key).label, 'Custom clarity wording');
+  assert.equal(restored.find(q => q.key === clarity[0].key).enabled, false);
 });
 
 test('admin generation respects availability/exclusions, drafts stay private, and release/hide preserve the draft', async () => {

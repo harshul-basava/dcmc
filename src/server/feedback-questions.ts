@@ -15,7 +15,7 @@ export const EDITABLE_FORMS: EditableForm[] = ["goals", "friday", "saturday", "o
 
 const question = (key: string, label: string, position: number, type: FeedbackQuestion["type"] = "text", required = false): FeedbackQuestion =>
   ({ key, label, position, type, required, enabled: true,
-    scale: key === "scale-satisfaction" || key === "scale-recommend" ? "0-10" : "1-5" });
+    scale: key === "scale-satisfaction" || key === "scale-recommend" || key.startsWith("scale-clarity-") ? "0-10" : "1-5" });
 
 const daily = [
   question("scale-day", "How valuable was the day overall?", 1, "rating", true),
@@ -39,6 +39,8 @@ const defaults: Record<EditableForm, FeedbackQuestion[]> = {
   overall: [
     question("scale-satisfaction", "Overall, how satisfied were you with the conference?", 1, "rating"),
     question("scale-recommend", "How likely are you to recommend it to someone like you?", 2, "rating"),
+    question("scale-clarity-uncertainties", "During this conference, I gained clarity on my main uncertainties, questions, or disagreements about working in AI governance.", 3, "rating", true),
+    question("scale-clarity-next-steps", "This conference helped me gain clarity on next steps I want to take.", 4, "rating", true),
     question("one-on-ones-overall", "What did you think of the one-on-ones overall?", 5, "text", true),
     question("one-on-ones-more", "Anyone you wish you had met?", 6),
     question("learned", "One valuable thing you learned", 7, "text", true),
@@ -101,7 +103,7 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
         if (form === "overall") {
           const keys = new Set(parsed.map((q) => q.key));
           const additions = defaults.overall.filter((q) =>
-            ["one-on-ones-overall", "one-on-ones-more"].includes(q.key) && !keys.has(q.key));
+            ["one-on-ones-overall", "one-on-ones-more", "scale-clarity-uncertainties", "scale-clarity-next-steps"].includes(q.key) && !keys.has(q.key));
           const lastPosition = Math.max(0, ...parsed.map((q) => q.position));
           return [...parsed, ...additions.map((q, index) => ({ ...q, position: lastPosition + index + 1 }))];
         }
