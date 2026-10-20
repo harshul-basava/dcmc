@@ -332,13 +332,15 @@ test('overall feedback retires duplicate conversation sections and preserves cus
   settings.push({ audience: 'all', key: 'questions:overall', label: JSON.stringify([
     { ...defaults[0], label: 'Custom overall question', position: 10 },
     { ...defaults[0], key: 'conversation-ratings', type: 'conversations', position: 11 },
+    { ...defaults[0], key: 'one-on-ones-overall', type: 'text', required: true, position: 11 },
     { ...defaults.find(q => q.type === 'sessions'), enabled: false, position: 12 },
   ]) });
   const migrated = await q.getFeedbackQuestions('overall');
   assert.equal(migrated[0].label, 'Custom overall question');
   assert.equal(migrated.filter(q => q.type === 'conversations').length, 0);
   assert.equal(migrated.find(q => q.type === 'sessions').enabled, false);
-  assert.ok(migrated.some(q => q.key === 'one-on-ones-overall'));
+  assert.ok(!migrated.some(q => q.key === 'one-on-ones-overall'));
+  assert.ok(!defaults.some(q => q.key === 'one-on-ones-overall'));
   const clarity = migrated.filter(q => q.key.startsWith('scale-clarity-'));
   assert.equal(clarity.length, 2);
   assert.ok(clarity.every(q => q.type === 'rating' && q.scale === '0-10' && q.required));

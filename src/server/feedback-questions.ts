@@ -41,7 +41,6 @@ const defaults: Record<EditableForm, FeedbackQuestion[]> = {
     question("scale-recommend", "How likely are you to recommend it to someone like you?", 2, "rating"),
     question("scale-clarity-uncertainties", "During this conference, I gained clarity on my main uncertainties, questions, or disagreements about working in AI governance.", 3, "rating", true),
     question("scale-clarity-next-steps", "This conference helped me gain clarity on next steps I want to take.", 4, "rating", true),
-    question("one-on-ones-overall", "What did you think of the one-on-ones overall?", 5, "text", true),
     question("one-on-ones-more", "Anyone you wish you had met?", 6),
     question("learned", "One valuable thing you learned", 7, "text", true),
     question("additional", "Anything else we should know?", 4),
@@ -91,7 +90,7 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
       // Remove only the obsolete request question before schema validation.
       const current = form === "saturday" && Array.isArray(saved)
         ? saved.filter((q) => q?.type !== "ranked" && q?.key !== "one-on-one-picks") : saved;
-      const parsed = validateQuestions(current, form)?.filter((q) => q.type !== "conversations");
+      const parsed = validateQuestions(current, form)?.filter((q) => q.type !== "conversations" && !(form === "overall" && q.key === "one-on-ones-overall"));
       if (parsed) {
         for (const q of parsed) {
           if (q.key === "one-on-one-picks" && ["List up to 10 people you would like to have 1:1s with tomorrow.", "List up to 10 attendees and guests you would like to have 1:1s with tomorrow, in order of preference."].includes(q.label)) {
@@ -103,7 +102,7 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
         if (form === "overall") {
           const keys = new Set(parsed.map((q) => q.key));
           const additions = defaults.overall.filter((q) =>
-            ["one-on-ones-overall", "one-on-ones-more", "scale-clarity-uncertainties", "scale-clarity-next-steps"].includes(q.key) && !keys.has(q.key));
+            ["one-on-ones-more", "scale-clarity-uncertainties", "scale-clarity-next-steps"].includes(q.key) && !keys.has(q.key));
           const lastPosition = Math.max(0, ...parsed.map((q) => q.position));
           return [...parsed, ...additions.map((q, index) => ({ ...q, position: lastPosition + index + 1 }))];
         }
