@@ -46,7 +46,7 @@ const defaults: Record<EditableForm, FeedbackQuestion[]> = {
     question("best-things", "What were the best things about this conference?", 5, "text", true),
     question("worst-things", "What were the worst things about this conference?", 6, "text", true),
     question("conference-conversations", "Over the whole conference, who are 5+ people you’ve personally had the best conversations with or gotten the most value from? Did anyone detract from your experience? If so, explain briefly.", 7, "text", true),
-    question("scale-clarity-uncertainties", "During this conference, I gained clarity on my main uncertainties, questions, or disagreements about working in AI governance.", 8, "rating", true),
+    question("scale-clarity-uncertainties", "During this conference, I gained clarity on my main uncertainties, questions, or disagreements in AI governance.", 8, "rating", true),
     question("scale-clarity-next-steps", "This conference helped me gain clarity on next steps I want to take.", 9, "rating", true),
     question("scale-satisfaction", "Overall, how satisfied were you with the conference?", 10, "rating"),
     question("scale-recommend", "How likely are you to recommend it to someone like you?", 11, "rating"),
@@ -101,6 +101,9 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
       const parsed = validateQuestions(current, form)?.filter((q) => q.type !== "conversations" && !(form === "overall" && q.key === "one-on-ones-overall"));
       if (parsed) {
         for (const q of parsed) {
+          if (form === "overall" && q.key === "scale-clarity-uncertainties" && q.label === "During this conference, I gained clarity on my main uncertainties, questions, or disagreements about working in AI governance.") {
+            q.label = defaults.overall.find((item) => item.key === q.key)!.label;
+          }
           if ((form === "friday" || form === "saturday") && q.key === "most-value" && q.label === "Who have you gotten the most value from talking to?") {
             q.label = "Who did you get the most value from talking to today?";
           }
