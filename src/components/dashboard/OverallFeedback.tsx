@@ -48,7 +48,7 @@ export default function OverallFeedback({ questions, sessions }: {
       {experience.length ? <Section id="overall-experience" title="Overall experience" description="Start with your impression of the conference as a whole.">
         <div className="grid gap-8"><FeedbackFields questions={experience} /></div>
       </Section> : null}
-      {sessionQuestion && sessions.length ? <Section id="session-ratings" title={sessionQuestion.label} description="Every rating is optional. Rate only the activities you attended and Q&A guests you spoke with. Your published 1:1 conversations appear individually.">
+      {sessionQuestion && sessions.length ? <Section id="session-ratings" title={sessionQuestion.label} description="Every rating is optional. Rate only the activities you attended and Q&A guests you spoke with.">
         {[...days].map(([day, items]) => (
           <div key={day} className="overall-feedback-day">
             <h3 className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">{day}</h3>
