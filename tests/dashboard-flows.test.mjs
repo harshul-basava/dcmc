@@ -233,6 +233,7 @@ test('session rating options consolidate Thursday, exclude logistics, and split 
     make('dinner', 'Dinner', 'meal'), make('untyped-dinner', 'Dinner', 'social'),
     make('prep', 'Happy Hour Prep Session', 'working-session'),
     make('photo', 'Group Photo', 'social'), make('happy-hour', 'Happy Hour', 'social'),
+    make('qa-intro', 'Rotating Q&A Introductions and Norms', 'panel'),
     make('pairs', '1:1s', 'one-to-one'),
     make('qa-fri', 'Rotating Q&As', 'small-group', '2026-10-23', 'Guest A, Guest B'),
     make('qa-sat', 'Rotating Q&As', 'small-group', '2026-10-24', 'Guest C, Guest D'),
@@ -246,6 +247,7 @@ test('session rating options consolidate Thursday, exclude logistics, and split 
   assert.ok(!titles.includes('Dinner'));
   assert.ok(!titles.includes('Happy Hour Prep Session'));
   assert.ok(!titles.includes('Group Photo'));
+  assert.ok(!titles.includes('Rotating Q&A Introductions and Norms'));
   assert.ok(titles.includes('Happy Hour'));
   assert.ok(!titles.some(t => /break|reflection|transition|monument|welcome dinner|board game|^1:1s$/i.test(t)));
   assert.equal(titles.filter(t => t.startsWith('1:1 with ')).length, 2);
