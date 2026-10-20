@@ -1397,7 +1397,7 @@ body.schedule-expanded {
 .overall-feedback-qa .rating-kind-stars .rating-scale span {
   border: 0;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--neutral-400);
   font-size: 2rem;
 }
 .overall-feedback-qa .rating-kind-stars label:has(~ label input:checked) span,
