@@ -204,6 +204,19 @@ test('rotating Q&A session and guest ratings save independently with stable ids 
   assert.equal(guestOnly.saved[0].sessions.find(s => s.sessionId === 'qa-guest-guestb').rating, 3);
 });
 
+test('new overall experience questions validate and store food, venue, and written answers', async () => {
+  const q = load('server/feedback-questions.ts', { './data': {} });
+  const questions = q.defaultFeedbackQuestions('overall').filter(item => q.OVERALL_EXPERIENCE_KEYS.includes(item.key));
+  const h = actionHarness({ questions });
+  assert.match(await submit(h, { form: 'overall' }), /error=1/);
+  assert.equal(h.saved.length, 0);
+  assert.match(await submit(h, { form: 'overall', 'scale-food': '1', 'scale-venue': '5',
+    'best-things': 'Useful sessions', 'worst-things': 'Too little time', 'conference-conversations': 'Attendees and guests' }), /saved=1/);
+  assert.equal(h.saved[0].ratings.food, 1);
+  assert.equal(h.saved[0].ratings.venue, 5);
+  assert.equal(h.saved[0].answers['conference-conversations'], 'Attendees and guests');
+});
+
 test('session rating options consolidate Thursday, exclude logistics, and split rotating Q&A and published 1:1s', () => {
   const make = (id, title, type = 'talk', day = '2026-10-23', speaker = '') => ({ ...talkSession, id, title, type, day, speaker, start: `${day}T10:00`, end: `${day}T11:00` });
   const sessions = [
@@ -362,6 +375,12 @@ test('overall feedback retires duplicate conversation sections and preserves cus
   assert.equal(migrated.find(q => q.type === 'sessions').enabled, false);
   assert.ok(!migrated.some(q => q.key === 'one-on-ones-overall'));
   assert.ok(!defaults.some(q => q.key === 'one-on-ones-overall'));
+  for (const key of q.OVERALL_EXPERIENCE_KEYS) {
+    assert.equal(migrated.filter(item => item.key === key).length, 1);
+    assert.equal(defaults.find(item => item.key === key).required, true);
+  }
+  assert.equal(defaults.find(q => q.key === 'scale-food').scale, '1-5');
+  assert.equal(defaults.find(q => q.key === 'scale-venue').scale, '1-5');
   const clarity = migrated.filter(q => q.key.startsWith('scale-clarity-'));
   assert.equal(clarity.length, 2);
   assert.ok(clarity.every(q => q.type === 'rating' && q.scale === '0-10' && q.required));
@@ -372,6 +391,8 @@ test('overall feedback retires duplicate conversation sections and preserves cus
   assert.equal(restored.filter(q => q.key.startsWith('scale-clarity-')).length, 2);
   assert.equal(restored.find(q => q.key === clarity[0].key).label, 'Custom clarity wording');
   assert.equal(restored.find(q => q.key === clarity[0].key).enabled, false);
+  assert.equal(restored[0].label, 'Custom overall question');
+  for (const key of q.OVERALL_EXPERIENCE_KEYS) assert.equal(restored.filter(item => item.key === key).length, 1);
 });
 
 test('admin generation respects availability/exclusions, drafts stay private, and release/hide preserve the draft', async () => {

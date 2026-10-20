@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { FeedbackQuestion } from "@/server/feedback-questions";
+import { OVERALL_EXPERIENCE_KEYS, type FeedbackQuestion } from "@/server/feedback-questions";
 import type { SessionRatingOption } from "@/server/session-ratings";
 import FeedbackFields from "./FeedbackFields";
 import RatingScale from "./RatingScale";
@@ -23,9 +23,12 @@ export default function OverallFeedback({ questions, sessions }: {
   questions: FeedbackQuestion[]; sessions: SessionRatingOption[];
 }) {
   const visible = questions.filter((q) => q.enabled);
-  const outcomes = visible.filter((q) => q.key.startsWith("scale-clarity-"));
-  const experience = visible.filter((q) => q.type === "rating" && !q.key.startsWith("scale-clarity-"));
-  const reflections = visible.filter((q) => q.type === "text");
+  const isOutcome = (q: FeedbackQuestion) => q.key.startsWith("scale-clarity-") || ["scale-satisfaction", "scale-recommend"].includes(q.key);
+  const outcomes = visible.filter(isOutcome).sort((a, b) => Number(!a.key.startsWith("scale-clarity-")) - Number(!b.key.startsWith("scale-clarity-")));
+  const experience = visible.filter((q) => OVERALL_EXPERIENCE_KEYS.includes(q.key) || (q.type === "rating" && !isOutcome(q)));
+  const amenities = experience.filter((q) => ["scale-food", "scale-venue"].includes(q.key));
+  const otherExperience = experience.filter((q) => !amenities.includes(q));
+  const reflections = visible.filter((q) => q.type === "text" && !OVERALL_EXPERIENCE_KEYS.includes(q.key));
   const sessionQuestion = visible.find((q) => q.type === "sessions");
   const days = new Map<string, SessionRatingOption[]>();
   for (const session of sessions) {
@@ -46,14 +49,17 @@ export default function OverallFeedback({ questions, sessions }: {
         {sections.map((section) => <a key={section.id} href={`#${section.id}`} className="inline-flex min-h-10 items-center underline decoration-rule underline-offset-4 hover:text-accent">{section.title}</a>)}
       </nav>
       {experience.length ? <Section id="overall-experience" title="Overall experience" description="Start with your impression of the conference as a whole.">
-        <div className="grid gap-8"><FeedbackFields questions={experience} /></div>
+        <div className="grid gap-8">
+          {amenities.length ? <div className="overall-feedback-open-stars grid gap-8 sm:grid-cols-2"><FeedbackFields questions={amenities} /></div> : null}
+          <FeedbackFields questions={otherExperience} />
+        </div>
       </Section> : null}
       {sessionQuestion && sessions.length ? <Section id="session-ratings" title={sessionQuestion.label} description="Every rating is optional. Rate only the activities you attended and Q&A guests you spoke with.">
         {[...days].map(([day, items]) => (
           <div key={day} className="overall-feedback-day">
             <h3 className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">{day}</h3>
             {items.map((session) => (
-              <article key={session.id} className={`overall-feedback-session ${session.guests ? "overall-feedback-qa" : ""}`} aria-labelledby={`session-${session.id}`}>
+              <article key={session.id} className={`overall-feedback-session ${session.guests ? "overall-feedback-open-stars" : ""}`} aria-labelledby={`session-${session.id}`}>
                 <header className="mb-4 flex gap-3">
                   <span aria-hidden="true" className="mt-1 w-6 shrink-0 text-xs tabular-nums text-muted">{String(++number).padStart(2, "0")}</span>
                   <div>
@@ -85,7 +91,7 @@ export default function OverallFeedback({ questions, sessions }: {
           </div>
         ))}
       </Section> : null}
-      {outcomes.length ? <Section id="conference-outcomes" title="Conference outcomes" description="How much do you agree with each statement?">
+      {outcomes.length ? <Section id="conference-outcomes" title="Conference outcomes" description="Reflect on what you’re taking away, then rate your overall satisfaction and likelihood of recommending DCMC.">
         <div className="grid gap-9"><FeedbackFields questions={outcomes} /></div>
       </Section> : null}
       {reflections.length ? <Section id="reflections" title="Reflections & next steps" description="Share what you’re taking away and what we could improve.">

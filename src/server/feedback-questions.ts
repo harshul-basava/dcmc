@@ -13,6 +13,8 @@ export type FeedbackQuestion = {
 type EditableForm = "goals" | "friday" | "saturday" | "overall" | "anytime";
 export const EDITABLE_FORMS: EditableForm[] = ["goals", "friday", "saturday", "overall", "anytime"];
 
+export const OVERALL_EXPERIENCE_KEYS = ["scale-food", "scale-venue", "best-things", "worst-things", "conference-conversations"];
+
 const question = (key: string, label: string, position: number, type: FeedbackQuestion["type"] = "text", required = false): FeedbackQuestion =>
   ({ key, label, position, type, required, enabled: true,
     scale: key === "scale-satisfaction" || key === "scale-recommend" || key.startsWith("scale-clarity-") ? "0-10" : "1-5" });
@@ -37,6 +39,11 @@ const defaults: Record<EditableForm, FeedbackQuestion[]> = {
   friday: daily.map((q) => ({ ...q })),
   saturday: daily,
   overall: [
+    question("scale-food", "How was the food?", 1, "rating", true),
+    question("scale-venue", "How was the venue?", 2, "rating", true),
+    question("best-things", "What were the best things about this conference?", 3, "text", true),
+    question("worst-things", "What were the worst things about this conference?", 4, "text", true),
+    question("conference-conversations", "Over the whole conference, who are 5+ people you’ve personally had the best conversations with or gotten the most value from? Did anyone detract from your experience? If so, explain briefly.", 5, "text", true),
     question("scale-satisfaction", "Overall, how satisfied were you with the conference?", 1, "rating"),
     question("scale-recommend", "How likely are you to recommend it to someone like you?", 2, "rating"),
     question("scale-clarity-uncertainties", "During this conference, I gained clarity on my main uncertainties, questions, or disagreements about working in AI governance.", 3, "rating", true),
@@ -102,7 +109,7 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
         if (form === "overall") {
           const keys = new Set(parsed.map((q) => q.key));
           const additions = defaults.overall.filter((q) =>
-            ["one-on-ones-more", "scale-clarity-uncertainties", "scale-clarity-next-steps"].includes(q.key) && !keys.has(q.key));
+            ["one-on-ones-more", "scale-clarity-uncertainties", "scale-clarity-next-steps", ...OVERALL_EXPERIENCE_KEYS].includes(q.key) && !keys.has(q.key));
           const lastPosition = Math.max(0, ...parsed.map((q) => q.position));
           return [...parsed, ...additions.map((q, index) => ({ ...q, position: lastPosition + index + 1 }))];
         }
