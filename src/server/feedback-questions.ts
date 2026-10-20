@@ -39,25 +39,26 @@ const defaults: Record<EditableForm, FeedbackQuestion[]> = {
   friday: daily.map((q) => ({ ...q })),
   saturday: daily,
   overall: [
-    question("scale-food", "How was the food?", 1, "rating", true),
-    question("scale-venue", "How was the venue?", 2, "rating", true),
-    question("best-things", "What were the best things about this conference?", 3, "text", true),
-    question("worst-things", "What were the worst things about this conference?", 4, "text", true),
-    question("conference-conversations", "Over the whole conference, who are 5+ people you’ve personally had the best conversations with or gotten the most value from? Did anyone detract from your experience? If so, explain briefly.", 5, "text", true),
-    question("scale-satisfaction", "Overall, how satisfied were you with the conference?", 1, "rating"),
-    question("scale-recommend", "How likely are you to recommend it to someone like you?", 2, "rating"),
-    question("scale-clarity-uncertainties", "During this conference, I gained clarity on my main uncertainties, questions, or disagreements about working in AI governance.", 3, "rating", true),
-    question("scale-clarity-next-steps", "This conference helped me gain clarity on next steps I want to take.", 4, "rating", true),
-    question("one-on-ones-more", "Anyone you wish you had met?", 6),
-    question("learned", "One valuable thing you learned", 7, "text", true),
-    question("additional", "Anything else we should know?", 4),
+    question("overall-thoughts", "Without anchoring you on anything specific, what did you think of the conference overall?", 1, "text", true),
+    question("session-ratings", "Sessions", 2, "sessions"),
+    question("scale-food", "How was the food?", 3, "rating", true),
+    question("scale-venue", "How was the venue?", 4, "rating", true),
+    question("best-things", "What were the best things about this conference?", 5, "text", true),
+    question("worst-things", "What were the worst things about this conference?", 6, "text", true),
+    question("conference-conversations", "Over the whole conference, who are 5+ people you’ve personally had the best conversations with or gotten the most value from? Did anyone detract from your experience? If so, explain briefly.", 7, "text", true),
+    question("scale-clarity-uncertainties", "During this conference, I gained clarity on my main uncertainties, questions, or disagreements about working in AI governance.", 8, "rating", true),
+    question("scale-clarity-next-steps", "This conference helped me gain clarity on next steps I want to take.", 9, "rating", true),
+    question("scale-satisfaction", "Overall, how satisfied were you with the conference?", 10, "rating"),
+    question("scale-recommend", "How likely are you to recommend it to someone like you?", 11, "rating"),
+    question("learned", "One valuable thing you learned", 12, "text", true),
+    question("one-on-ones-more", "Anyone you wish you had met?", 13),
+    question("additional", "Anything else we should know?", 14),
   ],
   anytime: [question("comment", "Feedback", 1, "text", true)],
 };
 
 defaults.friday.splice(3, 0, question("one-on-one-picks", "List up to 10 attendees and guests you would like to have 1:1s with tomorrow (Saturday), in order of preference.", 4, "ranked", true));
 defaults.friday.forEach((q, index) => { q.position = index + 1; });
-defaults.overall.splice(2, 0, question("session-ratings", "Sessions", 3, "sessions"));
 defaults.overall.forEach((q, index) => { q.position = index + 1; });
 
 export function defaultFeedbackQuestions(form: string): FeedbackQuestion[] {
@@ -109,7 +110,7 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
         if (form === "overall") {
           const keys = new Set(parsed.map((q) => q.key));
           const additions = defaults.overall.filter((q) =>
-            ["one-on-ones-more", "scale-clarity-uncertainties", "scale-clarity-next-steps", ...OVERALL_EXPERIENCE_KEYS].includes(q.key) && !keys.has(q.key));
+            ["overall-thoughts", "one-on-ones-more", "scale-clarity-uncertainties", "scale-clarity-next-steps", ...OVERALL_EXPERIENCE_KEYS].includes(q.key) && !keys.has(q.key));
           const lastPosition = Math.max(0, ...parsed.map((q) => q.position));
           return [...parsed, ...additions.map((q, index) => ({ ...q, position: lastPosition + index + 1 }))];
         }

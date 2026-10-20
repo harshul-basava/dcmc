@@ -21,6 +21,6 @@ export default function FeedbackFields({ questions, answers = {}, ratings = {} }
     }
     return <TextQuestion key={q.key} name={q.key} label={q.label} required={q.required}
       description={q.key === "most-value" ? "This can be an attendee or a guest." : q.key === "conference-conversations" ? "This can include attendees and guests." : undefined}
-      defaultValue={answers[q.key]} rows={q.key === "comment" ? 8 : q.key === "conference-conversations" ? 6 : 4} />;
+      defaultValue={answers[q.key]} rows={q.key === "comment" ? 8 : q.key === "overall-thoughts" ? 5 : q.key === "conference-conversations" ? 6 : 4} />;
   });
 }

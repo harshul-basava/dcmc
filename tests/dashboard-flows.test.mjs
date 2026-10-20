@@ -375,6 +375,9 @@ test('overall feedback retires duplicate conversation sections and preserves cus
   assert.equal(migrated.find(q => q.type === 'sessions').enabled, false);
   assert.ok(!migrated.some(q => q.key === 'one-on-ones-overall'));
   assert.ok(!defaults.some(q => q.key === 'one-on-ones-overall'));
+  assert.equal(defaults[0].key, 'overall-thoughts');
+  assert.equal(defaults[0].required, true);
+  assert.equal(migrated.filter(q => q.key === 'overall-thoughts').length, 1);
   for (const key of q.OVERALL_EXPERIENCE_KEYS) {
     assert.equal(migrated.filter(item => item.key === key).length, 1);
     assert.equal(defaults.find(item => item.key === key).required, true);
