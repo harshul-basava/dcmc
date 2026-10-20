@@ -99,7 +99,7 @@ export default function OverallFeedback({ questions, sessions }: {
       {outcomes.length ? <Section id="conference-outcomes" title="Conference outcomes">
         <div className="grid gap-9"><FeedbackFields questions={outcomes} /></div>
       </Section> : null}
-      {reflections.length ? <Section id="looking-ahead" title="Looking ahead" description="Share what you’re taking away and what we could improve.">
+      {reflections.length ? <Section id="looking-ahead" title="Looking ahead">
         <div className="grid gap-8"><FeedbackFields questions={reflections} /></div>
       </Section> : null}
     </div>
