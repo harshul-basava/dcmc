@@ -1,3 +1,4 @@
+import { isTestParticipant } from "./test-attendee";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import {
@@ -75,7 +76,7 @@ export async function requireParticipant(pageKey: string): Promise<Participant> 
 
   // A page an admin has closed must refuse direct requests too, not merely
   // disappear from the nav.
-  if (!(session.preview && pageKey === "feedback") && !(await portalPageOpen("participant", pageKey))) redirect(await portalHome("participant"));
+  if (!isTestParticipant(session.participantId) && !(session.preview && pageKey === "feedback") && !(await portalPageOpen("participant", pageKey))) redirect(await portalHome("participant"));
 
   const person = await getParticipant(session.participantId);
   // The session is validly signed but names nobody — clear it rather than
@@ -107,7 +108,7 @@ export async function requireAdmin(): Promise<void> {
 /** The directory is shared by participants and guests. */
 export async function requireDirectoryViewer(): Promise<Session> {
   const session = await requireSession("/dashboard/directory");
-  if (session.role === "admin") return session;
+  if (session.role === "admin" || (session.role === "participant" && isTestParticipant(session.participantId))) return session;
   const role = session.role;
   if (!(await portalPageOpen(role, role === "participant" ? "directory" : "directory"))) {
     redirect(await portalHome(role));

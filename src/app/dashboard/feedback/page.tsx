@@ -1,3 +1,4 @@
+import { isTestParticipant } from "@/server/test-attendee";
 import PortalShell from "@/components/dashboard/PortalShell";
 import PageHeading from "@/components/dashboard/PageHeading";
 import FeedbackFields from "@/components/dashboard/FeedbackFields";
@@ -14,6 +15,7 @@ export default async function FeedbackIndex({
   const me = await requireParticipant("feedback");
   const { saved, tested, error } = await searchParams;
   const testing = await isPreviewing();
+  const liveTest = isTestParticipant(me.id);
   const done = await completedForms(me.id);
   const anytimeQuestions = await getFeedbackQuestions("anytime");
 
@@ -21,7 +23,7 @@ export default async function FeedbackIndex({
   const linked = await Promise.all(
     FEEDBACK_FORMS.filter((form) => form.key !== "anytime").map(async (form) => ({
       ...form,
-      open: testing || await feedbackFormOpen(form.key),
+      open: testing || liveTest || await feedbackFormOpen(form.key),
     })),
   );
 

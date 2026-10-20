@@ -1,3 +1,4 @@
+import { isTestParticipant } from "@/server/test-attendee";
 import PortalShell from "@/components/dashboard/PortalShell";
 import PageHeading from "@/components/dashboard/PageHeading";
 import HandbookBack from "@/components/dashboard/HandbookBack";
@@ -8,9 +9,9 @@ import { ComingSoon } from "@/components/ui";
 import { resourceGroups } from "@/content/dashboard";
 
 export default async function ResourcesPage() {
-  await requireParticipant("handbook");
+  const me = await requireParticipant("handbook");
   // Closing the section must refuse a direct request, not just hide the link.
-  if (!(await handbookResourcesOpen())) redirect("/dashboard/handbook");
+  if (!isTestParticipant(me.id) && !(await handbookResourcesOpen())) redirect("/dashboard/handbook");
 
   return (
     <PortalShell role="participant" active="handbook" framed={false}>

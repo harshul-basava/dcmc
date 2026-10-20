@@ -1,7 +1,9 @@
+import { TEST_PARTICIPANT_ID, isTestParticipant, testAttendeePassword } from "@/server/test-attendee";
+import { FEEDBACK_TABLE } from "@/server/airtable";
 import PortalShell from "@/components/dashboard/PortalShell";
 import PageHeading from "@/components/dashboard/PageHeading";
 import { FEEDBACK_FORMS } from "@/server/feedback";
-import { startPreview } from "../actions";
+import { startLiveTest, startPreview } from "../actions";
 import MetricCard from "@/components/dashboard/MetricCard";
 import { requireAdmin } from "@/server/auth";
 import { getFeedback, getParticipants } from "@/server/data";
@@ -32,7 +34,10 @@ export default async function AdminFeedback({
   await requireAdmin();
   const { saved } = await searchParams;
 
-  const [responses, participants] = await Promise.all([getFeedback(), getParticipants()]);
+  const [allResponses, participants] = await Promise.all([getFeedback({ includeTests: true }), getParticipants()]);
+  const testResponses = allResponses.filter((response) => response.isTest || isTestParticipant(response.participantId));
+  const responses = allResponses.filter((response) => !response.isTest && !isTestParticipant(response.participantId));
+  const testPassword = testAttendeePassword();
 
   // The running log, newest first, kept out of the one-per-person list below.
   const anytime = responses
@@ -68,6 +73,25 @@ export default async function AdminFeedback({
   return (
     <PortalShell role="admin" active="feedback">
       <PageHeading title="Feedback" actions={<a href="/dashboard/admin/feedback/questions" className="inline-flex min-h-10 items-center rounded-card bg-accent px-4 text-xs font-semibold text-on-accent">Edit questions</a>} />
+
+      <section className="mb-8 rounded-card border border-rule bg-card p-5" aria-labelledby="live-test-attendee">
+        <h2 id="live-test-attendee" className="font-display text-lg text-foreground">Live test attendee</h2>
+        <p className="mt-2 text-sm text-muted">Use this account to submit real test feedback to Airtable. All attendee pages and forms are open. The account and its responses are excluded from attendee counts, directories, login statistics, and pairing requests.</p>
+        {testPassword ? <>
+          <p className="mt-4 text-sm text-foreground">Password: <code className="select-all rounded bg-surface px-2 py-1">{testPassword}</code></p>
+          <p className="mt-2 text-xs text-muted">Use the normal dashboard sign-in page in a private window to test signing in with this password, or switch accounts below.</p>
+          <form action={startLiveTest} className="mt-4"><button type="submit" className="min-h-11 rounded-card bg-accent px-5 text-sm font-semibold text-on-accent">Use live test attendee</button></form>
+        </> : <p role="alert" className="mt-4 text-sm text-accent">Configure the dashboard session secret to enable the live test account.</p>}
+        <p className="mt-4 text-xs text-muted">Test identity: {TEST_PARTICIPANT_ID}</p>
+        <h3 className="mt-6 font-display text-base text-foreground">Saved test submissions</h3>
+        {!testResponses.length ? <p className="mt-2 text-sm text-muted">No saved test submissions yet.</p> : <div className="mt-3 grid gap-3">
+          {testResponses.map((response) => <details key={response.id} className="rounded-card border border-rule p-4">
+            <summary className="cursor-pointer text-sm text-foreground">TEST · {response.form} · {formatWhen(response.submittedAt)}</summary>
+            <a href={`https://airtable.com/${process.env.AIRTABLE_BASE_ID || "appZ3PpQjBx0UzJ3u"}/${FEEDBACK_TABLE}/${response.id}`} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm text-accent underline">View record in Airtable</a>
+            <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words text-xs text-muted">{JSON.stringify({ answers: response.answers, ratings: response.ratings, sessions: response.sessions }, null, 2)}</pre>
+          </details>)}
+        </div>}
+      </section>
 
       <section className="mb-8 rounded-card border border-rule bg-card p-5" aria-labelledby="test-feedback">
         <h2 id="test-feedback" className="font-display text-lg text-foreground">Test feedback</h2>

@@ -138,6 +138,8 @@ export type PortalPageSetting = {
 };
 
 export type FeedbackResponse = {
+  /** Live test submissions are stored but excluded from attendee reporting. */
+  isTest?: boolean;
   id: string;
   form: string;
   participantId: string;

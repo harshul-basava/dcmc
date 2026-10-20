@@ -1,5 +1,6 @@
 "use server";
 
+import { isTestParticipant } from "@/server/test-attendee";
 import { redirect } from "next/navigation";
 import { isPreviewing, requireParticipant } from "@/server/auth";
 import { replacePreferences, saveFeedback } from "@/server/data";
@@ -25,11 +26,12 @@ export async function submitFeedback(formData: FormData) {
   const me = await requireParticipant("feedback");
   // A signed admin preview may validate a form, but never writes anything.
   const testing = await isPreviewing();
+  const liveTest = isTestParticipant(me.id);
 
   const key = String(formData.get("form") ?? "");
   const form = feedbackForm(key);
   if (!form) redirect("/dashboard/feedback");
-  if (!testing && !(await feedbackFormOpen(key))) redirect("/dashboard/feedback");
+  if (!testing && !liveTest && !(await feedbackFormOpen(key))) redirect("/dashboard/feedback");
   const questions = (await getFeedbackQuestions(key)).filter((q) => q.enabled);
   const rankedQuestion = questions.find((q) => q.type === "ranked");
   const showSessionRatings = questions.some((q) => q.type === "sessions");
@@ -118,6 +120,7 @@ export async function submitFeedback(formData: FormData) {
 
   try {
     await saveFeedback({
+      isTest: liveTest,
       form: key,
       participantId: anonymous ? "" : me.id,
       participantName: anonymous ? "" : me.name,
@@ -133,7 +136,7 @@ export async function submitFeedback(formData: FormData) {
     redirect(`${back}?error=save`);
   }
 
-  if (acceptsRequests) {
+  if (acceptsRequests && !liveTest) {
     const day = new Date(`${form.day}T12:00:00Z`);
     day.setUTCDate(day.getUTCDate() + 1);
     try {

@@ -161,6 +161,21 @@ Attendee profile completeness rules are unchanged.
 draft; participants see a block only once it is released, and `Hide` withdraws
 it again without discarding the draft.
 
+### Live feedback testing
+
+Admin → Feedback shows a dedicated live test attendee password and a button to
+switch into that account. To test the password itself, use the normal sign-in
+page in a private window. The virtual account is never added to the roster,
+directories, pairing pool, or login counts, and can open every attendee page and
+feedback form regardless of release settings. Its profile is fixed.
+
+Unlike the read-only attendee preview, this account writes through the normal
+feedback save path into Portal Feedback. Test records carry a `TEST` reference
+and `__isTest` metadata, appear in the separate admin test log, and are excluded
+from feedback statistics and pairing preferences. `getFeedback()` omits them by
+default; `getFeedback({ includeTests: true })` includes them for inspection. The
+server derives the test password from the session secret; it is not committed.
+
 ### Data
 
 Without Airtable credentials the dashboard uses in-memory fixtures. With

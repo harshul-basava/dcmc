@@ -1,3 +1,4 @@
+import { isTestParticipant } from "@/server/test-attendee";
 import PortalShell from "@/components/dashboard/PortalShell";
 import PageHeading from "@/components/dashboard/PageHeading";
 import Directory from "@/components/dashboard/Directory";
@@ -20,6 +21,10 @@ export default async function ProfilePage({
 }) {
   const me = await requireParticipant("profile");
   const { saved, error } = await searchParams;
+  if (isTestParticipant(me.id)) return <PortalShell role="participant" active="profile">
+    <PageHeading title="Your profile" />
+    <p className="text-sm text-muted">TEST Attendee is a dedicated test identity. It is excluded from directories, counts, login statistics, and pairings.</p>
+  </PortalShell>;
 
   const [firstName = "", ...rest] = me.name.split(" ");
   const lastName = rest.join(" ");

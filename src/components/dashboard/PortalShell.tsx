@@ -1,3 +1,4 @@
+import { isTestParticipant } from "@/server/test-attendee";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { signOut } from "@/app/dashboard/actions";
@@ -31,10 +32,12 @@ export default async function PortalShell({
   framed?: boolean;
   children: ReactNode;
 }) {
+  const session = role === "participant" ? await getSession() : null;
+  const liveTest = session?.role === "participant" && isTestParticipant(session.participantId);
   const items: NavItem[] =
     role === "admin"
       ? ADMIN_PAGES
-      : (await portalPagesFor(role)).map(({ key, path, label }) => ({ key, path, label }));
+      : (await portalPagesFor(role, liveTest)).map(({ key, path, label }) => ({ key, path, label }));
 
   const home = role === "admin" ? "/dashboard/admin" : (items[0]?.path ?? "/dashboard");
 
@@ -44,7 +47,6 @@ export default async function PortalShell({
 
   // An admin viewing the attendee dashboard as someone: say so on every page,
   // with the way back. Everything below the strip is the attendee's own view.
-  const session = role === "participant" ? await getSession() : null;
   const previewing =
     session?.preview && session.role === "participant"
       ? await getParticipant(session.participantId)
@@ -53,6 +55,7 @@ export default async function PortalShell({
   return (
     <div className={`min-h-screen ${isFramed ? "portal-backdrop" : "bg-sand"}`}>
       <header data-tone="ink" className="sticky top-0 z-50 border-b border-rule">
+        {liveTest ? <div className="bg-accent py-2 text-xs text-on-accent"><Container>Live test attendee · All attendee pages and forms are open. Feedback saves to Airtable as test data and is excluded from attendee reporting.</Container></div> : null}
         {previewing ? (
           <div className="bg-accent text-on-accent">
             <Container>

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { TEST_PARTICIPANT_ID } from "@/server/test-attendee";
 import { requireAdmin } from "@/server/auth";
 import {
   deleteSession,
@@ -25,6 +26,8 @@ import type { PersonKey } from "@/server/data/types";
 import { HANDBOOK_RESOURCES_KEY, PORTAL_PAGES, portalHome } from "@/server/portal-pages";
 import {
   PREVIEW_COOKIE,
+  SESSION_COOKIE,
+  createSessionToken,
   PREVIEW_TTL_SECONDS,
   createPreviewToken,
   sessionCookieOptions,
@@ -328,4 +331,15 @@ export async function exitPreview() {
   const store = await cookies();
   store.set(PREVIEW_COOKIE, "", sessionCookieOptions(0));
   redirect("/dashboard/admin/people");
+}
+
+/** Switch into the real, writable test identity. This is not an attendee preview. */
+export async function startLiveTest() {
+  await requireAdmin();
+  const secret = sessionSecret();
+  if (!secret) redirect("/dashboard/admin/feedback");
+  const store = await cookies();
+  store.set(SESSION_COOKIE, createSessionToken({ role: "participant", participantId: TEST_PARTICIPANT_ID }, secret), sessionCookieOptions());
+  store.set(PREVIEW_COOKIE, "", sessionCookieOptions(0));
+  redirect("/dashboard/feedback");
 }

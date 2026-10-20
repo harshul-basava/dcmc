@@ -1,3 +1,4 @@
+import { isTestParticipant } from "@/server/test-attendee";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import PortalShell from "@/components/dashboard/PortalShell";
@@ -21,11 +22,12 @@ export default async function FeedbackFormPage({ params, searchParams }: {
   const { form: key } = await params;
   const { saved, tested, error } = await searchParams;
   const testing = await isPreviewing();
+  const liveTest = isTestParticipant(me.id);
   if (key === "one-on-ones") redirect("/dashboard/feedback/overall");
   const form = feedbackForm(key);
   if (!form) notFound();
   if (key === "anytime") redirect("/dashboard/feedback");
-  if (!testing && !(await feedbackFormOpen(key))) redirect("/dashboard/feedback");
+  if (!testing && !liveTest && !(await feedbackFormOpen(key))) redirect("/dashboard/feedback");
 
   if (saved) return (
     <PortalShell role="participant" active="feedback">
@@ -39,7 +41,7 @@ export default async function FeedbackFormPage({ params, searchParams }: {
 
   const questions = await getFeedbackQuestions(key);
   const previousGoals = key === "goals"
-    ? (await getFeedback()).find((response) => response.form === "goals" && response.participantId === me.id)
+    ? (await getFeedback({ includeTests: liveTest })).find((response) => response.form === "goals" && response.participantId === me.id)
     : undefined;
   const rated = key === "overall" && questions.some((q) => q.enabled && q.type === "sessions")
     ? await sessionRatingOptions(me.id) : [];

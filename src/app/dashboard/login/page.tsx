@@ -1,3 +1,4 @@
+import { isTestParticipant } from "@/server/test-attendee";
 import LoginForm from "@/components/dashboard/LoginForm";
 import { conference } from "@/content/site";
 import { getSession } from "@/server/auth";
@@ -11,6 +12,7 @@ export default async function LoginPage({
 }) {
   // Already signed in? Don't make them type a password to get back in.
   const session = await getSession();
+  if (session?.role === "participant" && isTestParticipant(session.participantId)) redirect("/dashboard/feedback");
   if (session?.role === "admin") redirect("/dashboard/admin");
   if (session?.role === "participant") redirect(await portalHome("participant"));
   if (session?.role === "guest") redirect(await portalHome("guest"));

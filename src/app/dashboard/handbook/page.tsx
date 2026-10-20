@@ -1,3 +1,4 @@
+import { isTestParticipant } from "@/server/test-attendee";
 import Image from "next/image";
 import Link from "next/link";
 import PortalShell from "@/components/dashboard/PortalShell";
@@ -40,7 +41,7 @@ function render(segments: Segment[]) {
 
 export default async function HandbookPage() {
   const me = await requireParticipant("handbook");
-  const resourcesOpen = await handbookResourcesOpen();
+  const resourcesOpen = isTestParticipant(me.id) || await handbookResourcesOpen();
   // A different order on every load, so no one is permanently first.
   const team = shuffledOrganizers();
 

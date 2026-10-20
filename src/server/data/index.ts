@@ -5,6 +5,7 @@
  * development. Fixture writes are non-durable and reset on server restart.
  */
 
+import { isTestParticipant, TEST_PARTICIPANT, testAttendeePassword } from "../test-attendee";
 import { safeEqual } from "../session";
 import {
   FEEDBACK_FIELD,
@@ -127,6 +128,7 @@ export async function getGuests(): Promise<Guest[]> {
 }
 
 export async function getParticipant(id: string): Promise<Participant | null> {
+  if (isTestParticipant(id)) return { ...TEST_PARTICIPANT };
   if (!airtableConfigured()) return fixtures.participants.find((p) => p.id === id) ?? null;
   return (await getParticipants()).find((p) => p.id === id) ?? null;
 }
@@ -309,6 +311,8 @@ export async function findPersonByPassword(password: string): Promise<PasswordMa
   if (key.length < MIN_SHORT_PASSWORD_LENGTH) return null;
 
   const matches: PasswordMatch[] = [];
+  const testPassword = testAttendeePassword();
+  if (testPassword && safeEqual(key, shortPasswordKey(testPassword))) matches.push({ role: "participant", id: TEST_PARTICIPANT.id });
 
   for (const person of await getParticipants()) {
     if (person.shortPassword && safeEqual(key, shortPasswordKey(person.shortPassword))) {
@@ -329,6 +333,7 @@ export async function findPersonByPassword(password: string): Promise<PasswordMa
  * fail-open: a counter that cannot be written must never block a login.
  */
 export async function recordLogin(match: PasswordMatch): Promise<void> {
+  if (match.role === "participant" && isTestParticipant(match.id)) return;
   if (airtableConfigured()) {
     if (match.role === "participant") await incrementSignIns(match.id);
     else await incrementGuestSignIns(match.id);
@@ -532,7 +537,7 @@ function toFeedback(record: AirtableRecord): FeedbackResponse {
     }
   };
   const storedAnswers = parse(f[FEEDBACK_FIELD.answersJson], {} as Record<string, unknown>);
-  const { __questionLabels, __preferenceTargets, ...answers } = storedAnswers;
+  const { __questionLabels, __preferenceTargets, __isTest, ...answers } = storedAnswers;
   const requests = text(f[FEEDBACK_FIELD.requests]);
   if (requests) answers["one-on-one-picks"] = requests;
   const questionLabels = __questionLabels && typeof __questionLabels === "object" && !Array.isArray(__questionLabels)
@@ -540,6 +545,7 @@ function toFeedback(record: AirtableRecord): FeedbackResponse {
 
   return {
     id: record.id,
+    isTest: __isTest === true || isTestParticipant(text(f[FEEDBACK_FIELD.attendeeId])),
     form: text(f[FEEDBACK_FIELD.form]),
     participantId: text(f[FEEDBACK_FIELD.attendeeId]),
     participantName: text(f[FEEDBACK_FIELD.attendee]),
@@ -553,12 +559,10 @@ function toFeedback(record: AirtableRecord): FeedbackResponse {
   };
 }
 
-export async function getFeedback(): Promise<FeedbackResponse[]> {
-  if (!airtableConfigured()) return fixtures.feedbackResponses;
-  const records = await fetchFeedback();
-  return records
-    .map(toFeedback)
-    .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+export async function getFeedback({ includeTests = false }: { includeTests?: boolean } = {}): Promise<FeedbackResponse[]> {
+  const responses = !airtableConfigured() ? fixtures.feedbackResponses : (await fetchFeedback())
+    .map(toFeedback).sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+  return includeTests ? responses : responses.filter((response) => !response.isTest && !isTestParticipant(response.participantId));
 }
 
 /**
@@ -602,7 +606,7 @@ export async function saveFeedback(response: Omit<FeedbackResponse, "id">): Prom
   const { "one-on-one-picks": picks = "", ...written } = response.answers;
 
   const fields: Record<string, unknown> = {
-    [FEEDBACK_FIELD.reference]: `${response.form} · ${response.participantName || "Anonymous"}`,
+    [FEEDBACK_FIELD.reference]: `${response.isTest ? "TEST · " : ""}${response.form} · ${response.participantName || "Anonymous"}`,
     [FEEDBACK_FIELD.form]: response.form,
     [FEEDBACK_FIELD.attendee]: response.participantName,
     [FEEDBACK_FIELD.attendeeId]: response.participantId,
@@ -610,7 +614,7 @@ export async function saveFeedback(response: Omit<FeedbackResponse, "id">): Prom
     [FEEDBACK_FIELD.dayRating]: response.ratings.day ?? null,
     [FEEDBACK_FIELD.requests]: picks,
     [FEEDBACK_FIELD.answers]: readableResponse(response, written),
-    [FEEDBACK_FIELD.answersJson]: JSON.stringify({ ...written, __questionLabels: response.questionLabels ?? {}, __preferenceTargets: response.preferenceTargets ?? [] }),
+    [FEEDBACK_FIELD.answersJson]: JSON.stringify({ ...written, __isTest: response.isTest === true || isTestParticipant(response.participantId), __questionLabels: response.questionLabels ?? {}, __preferenceTargets: response.preferenceTargets ?? [] }),
     [FEEDBACK_FIELD.ratings]: JSON.stringify(response.ratings),
     [FEEDBACK_FIELD.sessionRatings]: response.sessions.length
       ? JSON.stringify(response.sessions)

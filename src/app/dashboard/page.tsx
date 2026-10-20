@@ -1,3 +1,4 @@
+import { isTestParticipant } from "@/server/test-attendee";
 import { redirect } from "next/navigation";
 import { getSession } from "@/server/auth";
 import { portalHome } from "@/server/portal-pages";
@@ -6,6 +7,7 @@ import { portalHome } from "@/server/portal-pages";
 export default async function DashboardIndex() {
   const session = await getSession();
   if (!session) redirect("/dashboard/login");
+  if (session.role === "participant" && isTestParticipant(session.participantId)) redirect("/dashboard/feedback");
   if (session.role === "admin") redirect("/dashboard/admin");
   redirect(await portalHome(session.role));
 }

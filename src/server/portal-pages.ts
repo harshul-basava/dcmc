@@ -65,7 +65,8 @@ export async function portalPageState(): Promise<Map<string, boolean>> {
   return state;
 }
 
-export async function portalPagesFor(role: Exclude<Role, "admin">): Promise<PortalPage[]> {
+export async function portalPagesFor(role: Exclude<Role, "admin">, includeClosed = false): Promise<PortalPage[]> {
+  if (includeClosed) return PORTAL_PAGES.filter((page) => page.role === role);
   const state = await portalPageState();
   return PORTAL_PAGES.filter((page) => page.role === role && state.get(`${page.role}:${page.key}`));
 }

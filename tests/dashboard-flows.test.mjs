@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
+import * as crypto from 'node:crypto';
 
 function load(file, imports = {}, globals = {}) {
   const exports = {};
@@ -15,6 +16,7 @@ function load(file, imports = {}, globals = {}) {
   });
   return exports;
 }
+const testAttendee = load('server/test-attendee.ts', { 'node:crypto': crypto }, { process: { env: { DASHBOARD_SESSION_SECRET: 'live-test-secret'.repeat(4) } } });
 const types = load('server/data/types.ts');
 const pairings = load('server/pairings.ts', { './data/types': types });
 const roster = ['participant:recAAAAAAAAAAAAAA', 'participant:recBBBBBBBBBBBBBB', 'participant:recCCCCCCCCCCCCCC', 'guest:recDDDDDDDDDDDDDD'];
@@ -60,11 +62,12 @@ const scheduleHelpers = load('server/schedule.ts');
 const sessionRatings = load('server/session-ratings.ts', { './data': {}, './feedback': {}, './schedule': scheduleHelpers });
 const talkSession = { id: 'talk', type: 'talk', title: 'A talk', speaker: '', day: '2026-10-23', start: '2026-10-23T10:00', end: '2026-10-23T11:00' };
 
-function actionHarness({ open = true, preview = false, failSave = false, failSync = false, questions, conversations = [], scheduledSessions = [talkSession] } = {}) {
+function actionHarness({ open = true, preview = false, failSave = false, failSync = false, questions, conversations = [], scheduledSessions = [talkSession], participantId = 'recAAAAAAAAAAAAAA' } = {}) {
   const saved = [], synced = [], completed = [];
   const { submitFeedback } = load('app/dashboard/feedback/actions.ts', {
     'next/navigation': { redirect: (url) => { throw Object.assign(Error(url), { redirect: url }); } },
-    '@/server/auth': { requireParticipant: async () => ({ id: 'recAAAAAAAAAAAAAA', name: 'Test Attendee' }), isPreviewing: async () => preview },
+    '@/server/test-attendee': testAttendee,
+    '@/server/auth': { requireParticipant: async () => ({ id: participantId, name: 'Test Attendee' }), isPreviewing: async () => preview },
     '@/server/data': { getSessions: async () => [{ id: 'talk', type: 'talk', title: 'A talk' }],
       saveFeedback: async r => { if (failSave) throw Error('offline'); saved.push(r); },
       replacePreferences: async (...args) => { if (failSync) throw Error('offline'); synced.push(args); } },
@@ -83,6 +86,48 @@ async function submit(h, values) {
   for (const [key,value] of Object.entries(values)) form.set(key, value);
   try { await h.submitFeedback(form); assert.fail('Expected redirect'); } catch (e) { if (!e.redirect) throw e; return e.redirect; }
 }
+test('virtual live test identity signs in without entering the roster or incrementing login counters', async () => {
+  const fixtures = { participants: [{ id: roster[0].split(':')[1], name: 'Real attendee', shortPassword: 'real-password', accessCount: 7 }], guests: [], feedbackResponses: [], preferences: [] };
+  const data = load('server/data/index.ts', {
+    '../airtable': { airtableConfigured: () => false }, '../session': { safeEqual: (a,b) => a === b },
+    '../test-attendee': testAttendee, './types': types, './fixtures': fixtures,
+  });
+  const password = testAttendee.testAttendeePassword();
+  assert.ok(password.length >= 24);
+  assert.equal(testAttendee.testAttendeePassword('short'), null);
+  assert.ok(/^rec[A-Za-z0-9]{14}$/.test(testAttendee.TEST_PARTICIPANT_ID));
+  assert.equal((await data.getParticipants()).length, 1);
+  const match = await data.findPersonByPassword(password);
+  assert.equal(match.id, testAttendee.TEST_PARTICIPANT_ID);
+  assert.equal(match.role, 'participant');
+  assert.equal((await data.getParticipant(match.id)).name, 'TEST Attendee');
+  await data.recordLogin(match);
+  assert.equal(fixtures.participants[0].accessCount, 7);
+  assert.equal((await data.getParticipants()).length, 1);
+  assert.equal(await data.findPersonByPassword('not-the-test-password'), null);
+});
+
+test('signed test participant can open every closed attendee page but cannot access admin', async () => {
+  const secret = 'signed-live-test-secret'.repeat(3);
+  const session = load('server/session.ts', { 'node:crypto': crypto }, { Buffer, process: { env: { DASHBOARD_SESSION_SECRET: secret } } });
+  let token = session.createSessionToken({ role: 'participant', participantId: testAttendee.TEST_PARTICIPANT_ID }, secret);
+  const auth = load('server/auth.ts', {
+    'next/headers': { cookies: async () => ({ get: name => name === session.SESSION_COOKIE ? { value: token } : undefined }) },
+    'next/navigation': { redirect: url => { throw Error(`redirect:${url}`); }, notFound: () => { throw Error('not-found'); } },
+    './session': session, './test-attendee': testAttendee,
+    './data': { getParticipant: async id => ({ ...testAttendee.TEST_PARTICIPANT, id }) },
+    './portal-pages': { portalPageOpen: async () => false, portalHome: async () => '/dashboard/closed' },
+  }, { Buffer, process: { env: { DASHBOARD_SESSION_SECRET: secret } } });
+  for (const page of ['schedule', 'profile', 'directory', 'guests', 'feedback', 'readings', 'handbook']) {
+    assert.equal((await auth.requireParticipant(page)).id, testAttendee.TEST_PARTICIPANT_ID);
+  }
+  assert.equal((await auth.requireDirectoryViewer()).participantId, testAttendee.TEST_PARTICIPANT_ID);
+  assert.equal(await auth.isPreviewing(), false);
+  await assert.rejects(auth.requireAdmin(), /not-found/);
+  token = session.createSessionToken({ role: 'participant', participantId: roster[0].split(':')[1] }, secret);
+  await assert.rejects(auth.requireParticipant('feedback'), /redirect:\/dashboard\/closed/);
+});
+
 test('closed forms cannot write feedback', async () => {
   for (const options of [{ open: false }]) {
     const h = actionHarness(options);
@@ -105,6 +150,20 @@ test('admin feedback tests validate closed forms without saving, syncing prefere
   assert.equal(await submit(required, { form: 'goals' }), '/dashboard/feedback/goals?error=1');
   assert.equal(required.saved.length, 0);
 });
+test('live test attendee submits closed feedback through storage, stays marked when anonymous is checked, and never changes pairings', async () => {
+  const h = actionHarness({ open: false, participantId: testAttendee.TEST_PARTICIPANT_ID });
+  assert.equal(await submit(h, { form: 'anytime', comment: 'Live storage check', anonymous: 'on' }), '/dashboard/feedback?saved=1');
+  assert.equal(h.saved[0].isTest, true);
+  assert.equal(h.saved[0].participantId, '');
+  assert.equal(h.saved[0].participantName, '');
+  const friday = actionHarness({ open: false, participantId: testAttendee.TEST_PARTICIPANT_ID,
+    questions: [{ key: 'one-on-one-picks', type: 'ranked', enabled: true, required: true }] });
+  assert.match(await submit(friday, { form: 'friday', 'one-on-one-picks': 'Partner' }), /saved=1/);
+  assert.equal(friday.saved.length, 1);
+  assert.equal(friday.saved[0].preferenceTargets[0], roster[1]);
+  assert.equal(friday.synced.length, 0);
+});
+
 test('required answers are checked on the server', async () => {
   const h = actionHarness();
   assert.match(await submit(h, { form: 'goals', comment: '   ' }), /error=1/);
@@ -284,7 +343,7 @@ function airtableHarness() {
     } else result = { records };
     return { ok: true, json: async () => result };
   } });
-  const data = load('server/data/index.ts', { '../airtable': airtable, '../session': {}, './types': types, './fixtures': {} });
+  const data = load('server/data/index.ts', { '../airtable': airtable, '../test-attendee': testAttendee, '../session': {}, './types': types, './fixtures': {} });
   return { airtable, data, records, settingsPages: () => settingsPage };
 }
 test('all six feedback forms round-trip answers, ratings, labels, targets through Airtable fields', async () => {
@@ -309,6 +368,21 @@ test('all six feedback forms round-trip answers, ratings, labels, targets throug
   assert.equal(h.records.length, 6, 'goal updates replace existing response');
   assert.equal((await h.data.getFeedback()).find(r => r.form === 'goals').answers.question, 'Updated goal');
 });
+test('Airtable round trip marks live test feedback and excludes it from normal reads', async () => {
+  const h = airtableHarness();
+  await h.data.saveFeedback({ form: 'overall', isTest: true, participantId: testAttendee.TEST_PARTICIPANT_ID,
+    participantName: 'TEST Attendee', date: '', answers: { 'overall-thoughts': 'Live test' }, ratings: { food: 4 },
+    sessions: [{ sessionId: 'talk', title: 'Talk', rating: 5, comment: '' }], preferenceTargets: [roster[1]], submittedAt: '2026-10-20T22:00:00Z' });
+  assert.equal((await h.data.getFeedback()).length, 0);
+  const saved = (await h.data.getFeedback({ includeTests: true }))[0];
+  assert.equal(saved.isTest, true);
+  assert.equal(saved.answers['overall-thoughts'], 'Live test');
+  assert.equal(saved.ratings.food, 4);
+  assert.equal(saved.sessions[0].rating, 5);
+  assert.ok(!('__isTest' in saved.answers));
+  assert.ok(Object.values(h.records[0].fields).some(value => typeof value === 'string' && value.startsWith('TEST ·')));
+});
+
 test('settings pagination reads form toggles past the first 100 rows', async () => {
   const h = airtableHarness();
   assert.equal((await h.airtable.fetchSettings()).length, 2);
@@ -407,7 +481,7 @@ test('admin generation respects availability/exclusions, drafts stay private, an
   const replacements = [];
   const actions = load('app/dashboard/admin/actions.ts', {
     'next/cache': { revalidatePath() {} }, 'next/navigation': { redirect: url => { throw Object.assign(Error(url), { redirect: url }); } },
-    'next/headers': {}, '@/server/auth': { requireAdmin: async () => {} },
+    'next/headers': {}, '@/server/test-attendee': testAttendee, '@/server/auth': { requireAdmin: async () => {} },
     '@/server/data': { getSessions: async () => schedule, getParticipants: async () => roster.slice(0,3).map(key => ({ id:key.split(':')[1] })),
       getGuests: async () => [{ id:roster[3].split(':')[1], availability:'date,start,end\n2026-10-24,10:30,11:00' }],
       getAssignments: async () => assignments, getPreferences: async () => [],

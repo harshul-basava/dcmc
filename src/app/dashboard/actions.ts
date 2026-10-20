@@ -1,5 +1,6 @@
 "use server";
 
+import { isTestParticipant } from "@/server/test-attendee";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
@@ -72,7 +73,7 @@ export async function signIn(_state: { error: string } | null, formData: FormDat
     await recordLogin(match);
   } catch {}
 
-  redirect(returnTo ?? (await portalHome(match.role)));
+  redirect(returnTo ?? (match.role === "participant" && isTestParticipant(match.id) ? "/dashboard/feedback" : await portalHome(match.role)));
 }
 
 export async function signOut() {
