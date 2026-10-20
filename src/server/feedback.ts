@@ -37,7 +37,7 @@ export const FEEDBACK_FORMS = [
     label: "Saturday",
     title: "Saturday Feedback",
     day: "2026-10-24",
-    description: "Daily reflection and Sunday 1:1 requests",
+    description: "Daily reflection",
   },
   {
     key: "overall",
@@ -223,9 +223,8 @@ export type OneToOneCandidate = {
   isGuest: boolean;
 };
 
-/** Guest options supplied by organizers for each daily feedback form. */
+/** Guest options by the day the conversations take place. */
 export const ONE_TO_ONE_GUESTS = {
-  friday: ["Gaurav Sett", "Ben Hayum", "Yashvardan Sharma", "Arushi Gupta", "Richard Bruns", "Stephen Casper", "Tristan Williams", "Geneva Kirk-Drayson"],
   saturday: ["Ethan Jiang", "Govind Pimpale", "Tristan Williams", "Max Gehred", "Jakub Kraus", "Alexander Koch", "Kuhan Jeyapragasan"],
 } as const;
 
@@ -240,9 +239,9 @@ export type OneToOneGuestOption = {
 };
 
 export async function oneToOneGuestOptions(form: string): Promise<OneToOneGuestOption[]> {
-  if (form !== "friday" && form !== "saturday") return [];
+  if (form !== "friday") return [];
   const guests = await getGuests();
-  return ONE_TO_ONE_GUESTS[form].map((name) => {
+  return ONE_TO_ONE_GUESTS.saturday.map((name) => {
     const guest = guests.find((person) => normalizePreferenceName(person.name) === normalizePreferenceName(name));
     return {
       name,
@@ -264,6 +263,7 @@ export async function oneToOneGuestOptions(form: string): Promise<OneToOneGuestO
 
 /** Resolve written requests against all attendees and that form's guests. */
 export async function oneToOneCandidates(excludeParticipantId: string, form: string): Promise<OneToOneCandidate[]> {
+  if (form !== "friday") return [];
   const [participants, options] = await Promise.all([getParticipants(), oneToOneGuestOptions(form)]);
   return [
     ...participants.filter((person) => person.id !== excludeParticipantId).map((person) => ({

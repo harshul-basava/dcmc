@@ -73,8 +73,8 @@ export async function submitFeedback(formData: FormData) {
   }
   // Preserve the written answer exactly, even when a name cannot be matched.
   // Matching names is only a convenience for the pairing generator.
-  const daily = key === "friday" || key === "saturday";
-  const candidates = daily && rankedQuestion ? await oneToOneCandidates(me.id, key) : [];
+  const acceptsRequests = key === "friday";
+  const candidates = acceptsRequests && rankedQuestion ? await oneToOneCandidates(me.id, key) : [];
   const selectable = new Set(candidates.map((person) => person.key));
   const byName = new Map<string, PersonKey | null>();
   for (const person of candidates) {
@@ -83,7 +83,7 @@ export async function submitFeedback(formData: FormData) {
   }
   let selectedTargets: PersonKey[] = [];
 
-  if (daily && rankedQuestion) {
+  if (acceptsRequests && rankedQuestion) {
     const written = String(formData.get("one-on-one-picks") ?? "").slice(0, 8000).trim();
     answers["one-on-one-picks"] = written;
     selectedTargets = written
@@ -104,7 +104,7 @@ export async function submitFeedback(formData: FormData) {
   for (const q of questions) {
     if (!q.required) continue;
     if (q.type === "ranked") {
-      if (daily && !answers["one-on-one-picks"]?.trim()) redirect(`${back}?error=1`);
+      if (acceptsRequests && !answers["one-on-one-picks"]?.trim()) redirect(`${back}?error=1`);
       continue;
     }
     if (q.type === "sessions" || q.type === "conversations") continue;
@@ -133,7 +133,7 @@ export async function submitFeedback(formData: FormData) {
     redirect(`${back}?error=save`);
   }
 
-  if (daily) {
+  if (acceptsRequests) {
     const day = new Date(`${form.day}T12:00:00Z`);
     day.setUTCDate(day.getUTCDate() + 1);
     try {

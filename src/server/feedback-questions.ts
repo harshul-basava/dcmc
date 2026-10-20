@@ -34,7 +34,7 @@ const defaults: Record<EditableForm, FeedbackQuestion[]> = {
     question("goal-actions", "What can you do to make this happen?", 4, "text", true),
     question("goal-obstacles", "What would prevent this outcome?", 5, "text", true),
   ],
-  friday: daily,
+  friday: daily.map((q) => ({ ...q })),
   saturday: daily,
   overall: [
     question("scale-satisfaction", "Overall, how satisfied were you with the conference?", 1, "rating"),
@@ -47,8 +47,8 @@ const defaults: Record<EditableForm, FeedbackQuestion[]> = {
   anytime: [question("comment", "Feedback", 1, "text", true)],
 };
 
-daily.splice(3, 0, question("one-on-one-picks", "List up to 10 attendees and guests you would like to have 1:1s with tomorrow, in order of preference.", 4, "ranked", true));
-daily.forEach((q, index) => { q.position = index + 1; });
+defaults.friday.splice(3, 0, question("one-on-one-picks", "List up to 10 attendees and guests you would like to have 1:1s with tomorrow (Saturday), in order of preference.", 4, "ranked", true));
+defaults.friday.forEach((q, index) => { q.position = index + 1; });
 defaults.overall.splice(2, 0, question("session-ratings", "Sessions", 3, "sessions"));
 defaults.overall.forEach((q, index) => { q.position = index + 1; });
 
@@ -66,7 +66,7 @@ export function validateQuestions(value: unknown, form?: string): FeedbackQuesti
     if (typeof q.key !== "string" || !/^[a-z][a-z0-9-]{0,63}$/.test(q.key) || keys.has(q.key)) return null;
     if (typeof q.label !== "string" || !q.label.trim() || q.label.length > 500) return null;
     if (q.type !== "text" && q.type !== "rating" && q.type !== "ranked" && q.type !== "sessions" && q.type !== "conversations") return null;
-    if (form && ((q.type === "ranked" && !["friday", "saturday"].includes(form)) ||
+    if (form && ((q.type === "ranked" && form !== "friday") ||
       (q.type === "sessions" && form !== "overall") ||
       (q.type === "conversations" && form !== "overall"))) return null;
     keys.add(q.key);
@@ -84,11 +84,16 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
     try {
       // Conversations now belong to session ratings, so retire the old
       // separate section while retaining existing responses and other edits.
-      const parsed = validateQuestions(JSON.parse(stored.label), form)?.filter((q) => q.type !== "conversations");
+      const saved: unknown = JSON.parse(stored.label);
+      // Saturday previously requested Sunday pairings, but Sunday has none.
+      // Remove only the obsolete request question before schema validation.
+      const current = form === "saturday" && Array.isArray(saved)
+        ? saved.filter((q) => q?.type !== "ranked" && q?.key !== "one-on-one-picks") : saved;
+      const parsed = validateQuestions(current, form)?.filter((q) => q.type !== "conversations");
       if (parsed) {
         for (const q of parsed) {
-          if (q.key === "one-on-one-picks" && q.label === "List up to 10 people you would like to have 1:1s with tomorrow.") {
-            q.label = daily.find((item) => item.key === q.key)!.label;
+          if (q.key === "one-on-one-picks" && ["List up to 10 people you would like to have 1:1s with tomorrow.", "List up to 10 attendees and guests you would like to have 1:1s with tomorrow, in order of preference."].includes(q.label)) {
+            q.label = defaults.friday.find((item) => item.key === q.key)!.label;
           }
         }
         // Existing overall forms predate the conversation questions. Add the

@@ -44,8 +44,8 @@ export default async function FeedbackFormPage({ params, searchParams }: {
     : undefined;
   const rated = key === "overall" && questions.some((q) => q.enabled && q.type === "sessions")
     ? await sessionRatingOptions(me.id) : [];
-  const daily = key === "friday" || key === "saturday";
-  const guestOptions = daily ? await oneToOneGuestOptions(key) : [];
+  const acceptsRequests = key === "friday";
+  const guestOptions = acceptsRequests ? await oneToOneGuestOptions(key) : [];
 
   return (
     <PortalShell role="participant" active="feedback">
@@ -62,7 +62,7 @@ export default async function FeedbackFormPage({ params, searchParams }: {
             if (q.type === "text" || q.type === "rating") {
               return <FeedbackFields key={q.key} questions={[q]} answers={previousGoals?.answers} ratings={previousGoals?.ratings} />;
             }
-            if (q.type === "ranked" && daily) return (
+            if (q.type === "ranked" && acceptsRequests) return (
               <OneToOneRequests key={q.key} question={q} guests={guestOptions} />
             );
             if (q.type === "sessions" && key === "overall" && rated.length) return (

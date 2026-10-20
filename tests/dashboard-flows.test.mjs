@@ -134,7 +134,7 @@ test('written 1:1 requests preserve unmatched names and resolve numbered and bul
   assert.equal(unmatched.saved[0].answers['one-on-one-picks'], 'Someone missing from the roster');
 });
 test('daily guest options use organizer lists and directory bios without requiring headshots', async () => {
-  const guests = [...new Set([...feedback.ONE_TO_ONE_GUESTS.friday, ...feedback.ONE_TO_ONE_GUESTS.saturday])]
+  const guests = feedback.ONE_TO_ONE_GUESTS.saturday
     .filter(name => name !== 'Yashvardan Sharma').map((name, i) => ({
       id: `guest${i}`, name: name === 'Geneva Kirk-Drayson' ? 'Geneva Kirk Drayson ' : name,
       bio: `Bio for ${name}`, title: '', organization: '', hidden: name === 'Kuhan Jeyapragasan',
@@ -143,9 +143,9 @@ test('daily guest options use organizer lists and directory bios without requiri
   const f = feedbackHarness({ getGuests: async () => guests, getParticipants: async () => [
     { id: 'self', name: 'Self', bio: '' }, { id: 'other', name: 'Other Attendee', bio: '' },
   ] });
-  for (const day of ['friday', 'saturday']) {
+  for (const day of ['friday']) {
     const options = await f.oneToOneGuestOptions(day);
-    assert.equal(options.map(g => g.name).join('|'), feedback.ONE_TO_ONE_GUESTS[day].join('|'));
+    assert.equal(options.map(g => g.name).join('|'), feedback.ONE_TO_ONE_GUESTS.saturday.join('|'));
     for (const option of options) {
       if (option.name === 'Yashvardan Sharma') { assert.equal(option.person, undefined); continue; }
       assert.equal(option.person.bio, `Bio for ${option.name}`);
@@ -153,10 +153,12 @@ test('daily guest options use organizer lists and directory bios without requiri
       assert.equal(option.person.shortPassword, undefined);
     }
   }
-  const candidates = await f.oneToOneCandidates('self', 'saturday');
+  const candidates = await f.oneToOneCandidates('self', 'friday');
   assert.ok(candidates.some(p => p.name === 'Other Attendee'));
   assert.ok(candidates.some(p => p.name === 'Kuhan Jeyapragasan'));
   assert.ok(!candidates.some(p => p.name === 'Self' || p.name === 'Ben Hayum'));
+  assert.equal((await f.oneToOneGuestOptions('saturday')).length, 0);
+  assert.equal((await f.oneToOneCandidates('self', 'saturday')).length, 0);
 });
 test('primary storage failures return an error and never mark feedback complete', async () => {
   const h = actionHarness({ failSave: true });
@@ -286,6 +288,30 @@ test('question editor definitions persist and restore order, scale, required and
   assert.equal(restored[1].scale, '0-10');
   assert.equal(restored[1].required, true);
   assert.equal(q.validateQuestions([{...questions[0], type:'ranked'}], 'goals'), null);
+});
+
+test('only Friday requests Saturday 1:1s, including when stored Saturday questions still have the old field', async () => {
+  const settings = [];
+  const q = load('server/feedback-questions.ts', { './data': {
+    getPortalPageSettings: async () => settings, savePortalPageSetting: async () => {},
+  } });
+  const friday = q.defaultFeedbackQuestions('friday');
+  const saturday = q.defaultFeedbackQuestions('saturday');
+  assert.equal(friday.filter(q => q.type === 'ranked').length, 1);
+  assert.match(friday.find(q => q.type === 'ranked').label, /Saturday/);
+  assert.equal(saturday.filter(q => q.type === 'ranked').length, 0);
+  assert.equal(q.validateQuestions(friday, 'saturday'), null);
+  settings.push({ audience: 'all', key: 'questions:saturday', label: JSON.stringify([
+    { ...saturday[0], label: 'Custom Saturday question' }, friday.find(q => q.type === 'ranked'),
+  ]) });
+  const restored = await q.getFeedbackQuestions('saturday');
+  assert.equal(restored[0].label, 'Custom Saturday question');
+  assert.equal(restored.length, 1);
+  const h = actionHarness({ questions: [{ key: 'comment', type: 'text', enabled: true, required: true }] });
+  await submit(h, { form: 'saturday', comment: 'Saturday reflection', 'one-on-one-picks': 'Partner' });
+  assert.equal(h.synced.length, 0);
+  assert.equal(h.saved[0].preferenceTargets.length, 0);
+  assert.equal(h.saved[0].answers['one-on-one-picks'], undefined);
 });
 
 test('overall feedback retires duplicate conversation sections and preserves customized questions', async () => {
