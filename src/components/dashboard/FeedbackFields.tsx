@@ -19,6 +19,7 @@ export default function FeedbackFields({ questions, answers = {}, ratings = {} }
         rightLabel={agreement ? "Strongly agree" : outOfTen ? "Extremely" : ""} />;
     }
     return <TextQuestion key={q.key} name={q.key} label={q.label} required={q.required}
+      description={q.key === "most-value" ? "This can be an attendee or a guest." : undefined}
       defaultValue={answers[q.key]} rows={q.key === "comment" ? 8 : 4} />;
   });
 }

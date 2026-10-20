@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 export default function TextQuestion({
   name,
   label,
+  description,
   required = false,
   rows = 4,
   placeholder,
@@ -12,6 +13,7 @@ export default function TextQuestion({
 }: {
   name: string;
   label: string;
+  description?: string;
   required?: boolean;
   rows?: number;
   placeholder?: string;
@@ -33,9 +35,11 @@ export default function TextQuestion({
         </label>
         {aside}
       </span>
+      {description ? <p id={`${name}-description`} className="text-sm text-muted">{description}</p> : null}
       <textarea
         id={name}
         name={name}
+        aria-describedby={description ? `${name}-description` : undefined}
         rows={rows}
         required={required}
         placeholder={placeholder}
