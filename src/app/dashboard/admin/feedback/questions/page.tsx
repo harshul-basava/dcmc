@@ -44,7 +44,7 @@ export default async function FeedbackQuestionsPage({ searchParams }: {
                 <select className={field} name={`type-${q.key}`} defaultValue={q.type}>
                   <option value="text">Written</option><option value="rating">Rating</option>
                 </select>
-              ) : <span className="flex min-h-10 items-center text-sm text-foreground">{q.type === "ranked" ? "1:1 ranking" : q.type === "sessions" ? "Session ratings" : "Conversation ratings"}</span>}
+              ) : <span className="flex min-h-10 items-center text-sm text-foreground">{q.type === "ranked" ? "Written list" : q.type === "sessions" ? "Session ratings" : "Conversation ratings"}</span>}
             </label>
             <label className="grid gap-1 text-xs text-muted">Scale
               <select className={field} name={`scale-${q.key}`} defaultValue={q.scale}>

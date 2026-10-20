@@ -6,11 +6,11 @@ import PageHeading from "@/components/dashboard/PageHeading";
 import RatingScale from "@/components/dashboard/RatingScale";
 import TextQuestion from "@/components/dashboard/TextQuestion";
 import FeedbackFields from "@/components/dashboard/FeedbackFields";
-import RankedNames from "@/components/dashboard/RankedNames";
+import OneToOneRequests from "@/components/dashboard/OneToOneRequests";
 import { isPreviewing, requireParticipant } from "@/server/auth";
 import { getFeedback, getSessions } from "@/server/data";
 import { getFeedbackQuestions } from "@/server/feedback-questions";
-import { MAX_ONE_TO_ONE_PICKS, feedbackForm, feedbackFormOpen, oneToOneCandidates, oneToOneConversations } from "@/server/feedback";
+import { feedbackForm, feedbackFormOpen, oneToOneGuestOptions, oneToOneConversations } from "@/server/feedback";
 import { submitFeedback } from "../actions";
 
 export default async function FeedbackFormPage({ params, searchParams }: {
@@ -44,7 +44,7 @@ export default async function FeedbackFormPage({ params, searchParams }: {
   const rated = key === "overall" ? sessions.filter((s) => ["talk", "panel", "workshop"].includes(s.type)) : [];
   const conversations = key === "overall" ? await oneToOneConversations(me.id) : [];
   const daily = key === "friday" || key === "saturday";
-  const candidates = daily ? await oneToOneCandidates(me.id) : [];
+  const guestOptions = daily ? await oneToOneGuestOptions(key) : [];
 
   return (
     <PortalShell role="participant" active="feedback">
@@ -62,15 +62,7 @@ export default async function FeedbackFormPage({ params, searchParams }: {
               return <FeedbackFields key={q.key} questions={[q]} answers={previousGoals?.answers} ratings={previousGoals?.ratings} />;
             }
             if (q.type === "ranked" && daily) return (
-              <div key={q.key} className="grid gap-2">
-                <span className="text-sm text-foreground">{q.label}</span>
-                {candidates.length ? (
-                  <>
-                    <p className="text-xs text-muted">Select a name to see their bio, and drag to change the order.</p>
-                    <RankedNames name="one-on-one-picks" candidates={candidates} max={MAX_ONE_TO_ONE_PICKS} />
-                  </>
-                ) : <p className="rounded-card border border-dashed border-rule px-5 py-6 text-sm text-muted">Names will appear here as profiles are completed.</p>}
-              </div>
+              <OneToOneRequests key={q.key} question={q} guests={guestOptions} />
             );
             if (q.type === "conversations" && key === "overall") return (
               <section key={q.key} className="grid gap-6">

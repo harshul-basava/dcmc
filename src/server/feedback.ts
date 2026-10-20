@@ -9,7 +9,7 @@ import {
   getSessions,
 } from "./data";
 import type { PersonKey } from "./data/types";
-import { personLookup, profileComplete } from "./people";
+import { personLookup } from "./people";
 import { formatRange, minutesOf, SLOT_MINUTES } from "./schedule";
 
 /**
@@ -217,55 +217,61 @@ export type OneToOneCandidate = {
   isGuest: boolean;
 };
 
-/**
- * Everyone a participant may request a 1:1 with: the rest of the roster, plus
- * every speaker and guest.
- *
- * NOTE: every guest is offered on every day. That is a simplification, not a
- * fact — the RSVP table records which days each guest is attending (and several
- * answered "Unsure"), and some will only be present for part of the
- * conference. Before the pairing round runs for real this should filter to the
- * guests actually available for that day's 1:1 session, or participants will
- * rank people who were never going to be in the room.
- *
- * Only people who appear in a directory are offered: the same
- * headshot-and-bio rule the directories filter on. Someone ranking names
- * should be able to go and read about whoever they picked.
- *
- * That means the list is empty until people complete their profiles, and the
- * question has nothing to offer until they do — see the form, which stops
- * requiring an answer it cannot let anyone give.
- */
-export async function oneToOneCandidates(excludeParticipantId: string): Promise<OneToOneCandidate[]> {
-  const [participants, guests] = await Promise.all([getParticipants(), getGuests()]);
+/** Guest options supplied by organizers for each daily feedback form. */
+export const ONE_TO_ONE_GUESTS = {
+  friday: ["Gaurav Sett", "Ben Hayum", "Yashvardan Sharma", "Arushi Gupta", "Richard Bruns", "Stephen Casper", "Tristan Williams", "Geneva Kirk-Drayson"],
+  saturday: ["Ethan Jiang", "Govind Pimpale", "Tristan Williams", "Max Gehred", "Jakub Kraus", "Alexander Koch", "Kuhan Jeyapragasan"],
+} as const;
 
-  const people: OneToOneCandidate[] = [
-    ...participants
-      .filter((person) => person.id !== excludeParticipantId)
-      .filter(profileComplete)
-      .map((person) => ({
-        key: `participant:${person.id}` as PersonKey,
-        name: person.name,
-        title: person.title,
-        organization: person.organization,
-        bio: person.bio,
-        photo: person.photo,
-        linkedin: person.linkedin,
-        isGuest: false,
-      })),
-    ...guests.filter(profileComplete).map((person) => ({
-      key: `guest:${person.id}` as PersonKey,
+/** Ignore punctuation differences, including Geneva's directory spelling. */
+export function normalizePreferenceName(name: string): string {
+  return name.toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+}
+
+export type OneToOneGuestOption = {
+  name: string;
+  person?: OneToOneCandidate;
+};
+
+export async function oneToOneGuestOptions(form: string): Promise<OneToOneGuestOption[]> {
+  if (form !== "friday" && form !== "saturday") return [];
+  const guests = await getGuests();
+  return ONE_TO_ONE_GUESTS[form].map((name) => {
+    const guest = guests.find((person) => normalizePreferenceName(person.name) === normalizePreferenceName(name));
+    return {
+      name,
+      // These organizer-approved lists also include guests hidden from the
+      // general directory. Only public profile fields reach the form.
+      person: guest ? {
+        key: `guest:${guest.id}` as PersonKey,
+        name,
+        title: guest.title,
+        organization: guest.organization,
+        bio: guest.bio,
+        photo: guest.photo,
+        linkedin: guest.linkedin,
+        isGuest: true,
+      } : undefined,
+    };
+  });
+}
+
+/** Resolve written requests against all attendees and that form's guests. */
+export async function oneToOneCandidates(excludeParticipantId: string, form: string): Promise<OneToOneCandidate[]> {
+  const [participants, options] = await Promise.all([getParticipants(), oneToOneGuestOptions(form)]);
+  return [
+    ...participants.filter((person) => person.id !== excludeParticipantId).map((person) => ({
+      key: `participant:${person.id}` as PersonKey,
       name: person.name,
       title: person.title,
       organization: person.organization,
       bio: person.bio,
       photo: person.photo,
       linkedin: person.linkedin,
-      isGuest: true,
+      isGuest: false,
     })),
+    ...options.flatMap((option) => option.person ? [option.person] : []),
   ];
-
-  return people.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /** How many people a participant may rank on a daily form. */

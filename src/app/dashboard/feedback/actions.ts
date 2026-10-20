@@ -3,7 +3,6 @@
 import { redirect } from "next/navigation";
 import { isPreviewing, requireParticipant } from "@/server/auth";
 import { getSessions, replacePreferences, saveFeedback } from "@/server/data";
-import { personLookup } from "@/server/people";
 import { getFeedbackQuestions } from "@/server/feedback-questions";
 import type { PersonKey } from "@/server/data/types";
 import {
@@ -14,6 +13,7 @@ import {
   markFormCompleted,
   oneToOneCandidates,
   oneToOneConversations,
+  normalizePreferenceName,
 } from "@/server/feedback";
 
 /**
@@ -88,33 +88,29 @@ export async function submitFeedback(formData: FormData) {
     }
   }
 
-  // The picker sends person keys. Its no-JavaScript textarea accepts names;
-  // resolve those against the same eligible directory roster.
+  // Preserve the written answer exactly, even when a name cannot be matched.
+  // Matching names is only a convenience for the pairing generator.
   const daily = key === "friday" || key === "saturday";
-  const candidates = daily ? await oneToOneCandidates(me.id) : [];
+  const candidates = daily && rankedQuestion ? await oneToOneCandidates(me.id, key) : [];
   const selectable = new Set(candidates.map((person) => person.key));
   const byName = new Map<string, PersonKey | null>();
   for (const person of candidates) {
-    const name = person.name.toLocaleLowerCase().trim();
+    const name = normalizePreferenceName(person.name);
     byName.set(name, byName.has(name) ? null : person.key);
   }
   let selectedTargets: PersonKey[] = [];
 
   if (daily && rankedQuestion) {
-    const people = await personLookup();
-    selectedTargets = String(formData.get("one-on-one-picks") ?? "")
+    const written = String(formData.get("one-on-one-picks") ?? "").slice(0, 8000).trim();
+    answers["one-on-one-picks"] = written;
+    selectedTargets = written
       .split("\n")
-      .map((line) => line.trim())
+      .map((line) => line.trim().replace(/^(?:\d+[.)]\s*|[-*•]\s*)/, ""))
       .filter(Boolean)
-      .map((entry) => selectable.has(entry as PersonKey) ? entry : byName.get(entry.toLocaleLowerCase()) ?? "")
+      .map((entry) => selectable.has(entry as PersonKey) ? entry : byName.get(normalizePreferenceName(entry)) ?? "")
       .filter(Boolean)
       .filter((entry, index, all) => all.indexOf(entry) === index)
       .slice(0, MAX_ONE_TO_ONE_PICKS) as PersonKey[];
-    const picks = selectedTargets
-      // The picker sends person keys; resolve them to names so the stored
-      // answer is readable.
-      .map((entry, index) => `${index + 1}. ${people.get(entry)?.name ?? entry}`);
-    answers["one-on-one-picks"] = picks.join("\n");
   }
 
   // Each form's own required fields, re-checked here rather than trusted from
@@ -125,7 +121,7 @@ export async function submitFeedback(formData: FormData) {
   for (const q of questions) {
     if (!q.required) continue;
     if (q.type === "ranked") {
-      if (daily && candidates.length && !selectedTargets.length) redirect(`${back}?error=1`);
+      if (daily && !answers["one-on-one-picks"]?.trim()) redirect(`${back}?error=1`);
       continue;
     }
     if (q.type === "sessions" || q.type === "conversations") continue;

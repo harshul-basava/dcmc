@@ -50,6 +50,13 @@ test('1:1 generator respects each half roster and prioritizes mutual requests', 
   assert.equal(rows.find(r => r.personKey === roster[2] && r.group.startsWith('S1')).group, first.group);
 });
 
+function feedbackHarness(data = {}) {
+  return load('server/feedback.ts', {
+    'node:crypto': {}, 'next/headers': {}, './data': data, './people': {}, './schedule': {},
+  });
+}
+const feedback = feedbackHarness();
+
 function actionHarness({ open = true, preview = false, failSave = false, failSync = false, questions, conversations = [] } = {}) {
   const saved = [], synced = [], completed = [];
   const { submitFeedback } = load('app/dashboard/feedback/actions.ts', {
@@ -60,7 +67,7 @@ function actionHarness({ open = true, preview = false, failSave = false, failSyn
       replacePreferences: async (...args) => { if (failSync) throw Error('offline'); synced.push(args); } },
     '@/server/people': { personLookup: async () => new Map([[roster[1], { name: 'Partner' }]]) },
     '@/server/feedback-questions': { getFeedbackQuestions: async () => questions ?? [{ key: 'comment', type: 'text', enabled: true, required: true, label: 'A question' }] },
-    '@/server/feedback': { MAX_ONE_TO_ONE_PICKS: 10, REPEATABLE_FORMS: new Set(['anytime']),
+    '@/server/feedback': { normalizePreferenceName: feedback.normalizePreferenceName, MAX_ONE_TO_ONE_PICKS: 10, REPEATABLE_FORMS: new Set(['anytime']),
       feedbackForm: key => ['goals','friday','saturday','overall','anytime'].includes(key) ? { day: key === 'friday' ? '2026-10-23' : '', label: key } : null,
       feedbackFormOpen: async () => open, markFormCompleted: async (...args) => completed.push(args),
       oneToOneCandidates: async () => [{ key: roster[1], name: 'Partner' }], oneToOneConversations: async () => conversations },
@@ -111,6 +118,41 @@ test('feedback remains successful if secondary preference sync fails', async () 
   assert.match(await submit(h, { form: 'friday', 'one-on-one-picks': `${roster[1]}\n${roster[1]}\ninvalid` }), /saved=1/);
   assert.equal(h.saved[0].preferenceTargets.join(','), roster[1]);
   assert.equal(h.completed.length, 1);
+});
+test('written 1:1 requests preserve unmatched names and resolve numbered and bulleted names', async () => {
+  const h = actionHarness({ questions: [{ key: 'one-on-one-picks', type: 'ranked', enabled: true, required: true, label: 'Requests' }] });
+  const written = '1. Partner\n2. Yashvardan Sharma\n• Partner';
+  assert.match(await submit(h, { form: 'friday', 'one-on-one-picks': written }), /saved=1/);
+  assert.equal(h.saved[0].answers['one-on-one-picks'], written);
+  assert.equal(h.saved[0].preferenceTargets.join(','), roster[1]);
+  const unmatched = actionHarness({ questions: [{ key: 'one-on-one-picks', type: 'ranked', enabled: true, required: true, label: 'Requests' }] });
+  assert.match(await submit(unmatched, { form: 'friday', 'one-on-one-picks': 'Someone missing from the roster' }), /saved=1/);
+  assert.equal(unmatched.saved[0].answers['one-on-one-picks'], 'Someone missing from the roster');
+});
+test('daily guest options use organizer lists and directory bios without requiring headshots', async () => {
+  const guests = [...new Set([...feedback.ONE_TO_ONE_GUESTS.friday, ...feedback.ONE_TO_ONE_GUESTS.saturday])]
+    .filter(name => name !== 'Yashvardan Sharma').map((name, i) => ({
+      id: `guest${i}`, name: name === 'Geneva Kirk-Drayson' ? 'Geneva Kirk Drayson ' : name,
+      bio: `Bio for ${name}`, title: '', organization: '', hidden: name === 'Kuhan Jeyapragasan',
+      email: 'private@example.com', shortPassword: 'private phrase',
+    }));
+  const f = feedbackHarness({ getGuests: async () => guests, getParticipants: async () => [
+    { id: 'self', name: 'Self', bio: '' }, { id: 'other', name: 'Other Attendee', bio: '' },
+  ] });
+  for (const day of ['friday', 'saturday']) {
+    const options = await f.oneToOneGuestOptions(day);
+    assert.equal(options.map(g => g.name).join('|'), feedback.ONE_TO_ONE_GUESTS[day].join('|'));
+    for (const option of options) {
+      if (option.name === 'Yashvardan Sharma') { assert.equal(option.person, undefined); continue; }
+      assert.equal(option.person.bio, `Bio for ${option.name}`);
+      assert.equal(option.person.email, undefined);
+      assert.equal(option.person.shortPassword, undefined);
+    }
+  }
+  const candidates = await f.oneToOneCandidates('self', 'saturday');
+  assert.ok(candidates.some(p => p.name === 'Other Attendee'));
+  assert.ok(candidates.some(p => p.name === 'Kuhan Jeyapragasan'));
+  assert.ok(!candidates.some(p => p.name === 'Self' || p.name === 'Ben Hayum'));
 });
 test('primary storage failures return an error and never mark feedback complete', async () => {
   const h = actionHarness({ failSave: true });

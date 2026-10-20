@@ -48,7 +48,7 @@ const defaults: Record<EditableForm, FeedbackQuestion[]> = {
   anytime: [question("comment", "Feedback", 1, "text", true)],
 };
 
-daily.splice(3, 0, question("one-on-one-picks", "List up to 10 people you would like to have 1:1s with tomorrow.", 4, "ranked", true));
+daily.splice(3, 0, question("one-on-one-picks", "List up to 10 attendees and guests you would like to have 1:1s with tomorrow, in order of preference.", 4, "ranked", true));
 daily.forEach((q, index) => { q.position = index + 1; });
 defaults.overall.splice(2, 0, question("session-ratings", "Sessions", 3, "sessions"));
 defaults.overall.forEach((q, index) => { q.position = index + 1; });
@@ -85,6 +85,11 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
     try {
       const parsed = validateQuestions(JSON.parse(stored.label), form);
       if (parsed) {
+        for (const q of parsed) {
+          if (q.key === "one-on-one-picks" && q.label === "List up to 10 people you would like to have 1:1s with tomorrow.") {
+            q.label = daily.find((item) => item.key === q.key)!.label;
+          }
+        }
         // Existing overall forms predate the conversation questions. Add the
         // missing fields without replacing organizers' edits or visibility.
         if (form === "overall") {
