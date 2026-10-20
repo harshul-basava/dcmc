@@ -96,7 +96,7 @@ export default function OverallFeedback({ questions, sessions }: {
           <FeedbackFields questions={otherExperience} />
         </div>
       </Section> : null}
-      {outcomes.length ? <Section id="conference-outcomes" title="Conference outcomes" description="Reflect on what you’re taking away, then rate your overall satisfaction and likelihood of recommending DCMC.">
+      {outcomes.length ? <Section id="conference-outcomes" title="Conference outcomes">
         <div className="grid gap-9"><FeedbackFields questions={outcomes} /></div>
       </Section> : null}
       {reflections.length ? <Section id="looking-ahead" title="Looking ahead" description="Share what you’re taking away and what we could improve.">
