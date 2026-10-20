@@ -44,7 +44,7 @@ export const FEEDBACK_FORMS = [
     label: "Overall",
     title: "Overall Feedback",
     day: "",
-    description: "The conference as a whole, including your 1:1 conversations",
+    description: "The conference as a whole",
   },
   {
     key: "anytime",
