@@ -9,6 +9,7 @@ export type SessionRatingOption = {
   speaker: string;
   timeLabel: string;
   sortKey: string;
+  guests?: { id: string; name: string }[];
 };
 
 function weekday(day: string): string {
@@ -38,13 +39,14 @@ export function buildSessionRatingOptions(
       const facilitators = session.speaker.split(/[,;\n]+/).map((name) => name.trim()).filter(Boolean);
       if (weekday(session.day) === "Saturday") facilitators.push(privateGuestName);
       const seen = new Set<string>();
+      const guests: NonNullable<SessionRatingOption["guests"]> = [];
       for (const name of facilitators) {
         const key = name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
         if (seen.has(key)) continue;
         seen.add(key);
-        options.push({ id: `${session.id}-guest-${key}`, title: `Rotating Q&A with ${name}`,
-          speaker: "", timeLabel, sortKey: session.start });
+        guests.push({ id: `${session.id}-guest-${key}`, name });
       }
+      options.push({ id: session.id, title: session.title, speaker: "", timeLabel, sortKey: session.start, guests });
       continue;
     }
     options.push({ id: session.id, title: session.title, speaker: session.speaker, timeLabel, sortKey: session.start });
@@ -58,6 +60,14 @@ export function buildSessionRatingOptions(
   options.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
   options.push({ id: "informal-socializing", title: "Informal socializing", speaker: "", timeLabel: "Throughout the conference", sortKey: "" });
   return options;
+}
+
+/** Keep guest response ids stable while displaying them inside their session. */
+export function flattenSessionRatingOptions(options: SessionRatingOption[]): SessionRatingOption[] {
+  return options.flatMap((option) => [option, ...(option.guests ?? []).map((guest) => ({
+    id: guest.id, title: `Rotating Q&A with ${guest.name}`, speaker: "",
+    timeLabel: option.timeLabel, sortKey: option.sortKey,
+  }))]);
 }
 
 export async function sessionRatingOptions(participantId: string): Promise<SessionRatingOption[]> {

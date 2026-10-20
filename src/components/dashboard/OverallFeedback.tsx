@@ -53,7 +53,7 @@ export default function OverallFeedback({ questions, sessions }: {
           <div key={day} className="overall-feedback-day">
             <h3 className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">{day}</h3>
             {items.map((session) => (
-              <article key={session.id} className="overall-feedback-session" aria-labelledby={`session-${session.id}`}>
+              <article key={session.id} className={`overall-feedback-session ${session.guests ? "overall-feedback-qa" : ""}`} aria-labelledby={`session-${session.id}`}>
                 <header className="mb-4 flex gap-3">
                   <span aria-hidden="true" className="mt-1 w-6 shrink-0 text-xs tabular-nums text-muted">{String(++number).padStart(2, "0")}</span>
                   <div>
@@ -63,7 +63,18 @@ export default function OverallFeedback({ questions, sessions }: {
                   </div>
                 </header>
                 <div className="sm:pl-9">
-                  <RatingScale name={`rating-${session.id}`} legend="How valuable was it?" required={false} allowSkip />
+                  <RatingScale name={`rating-${session.id}`} legend={session.guests ? "How valuable was this session?" : "How valuable was it?"} required={false} allowSkip showOptional={Boolean(session.guests)} />
+                  {session.guests?.length ? (
+                    <section className="overall-feedback-guests" aria-label={`Rate each guest in ${session.title}`}>
+                      <div>
+                        <h5 className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">Rate each guest</h5>
+                        <p className="mt-2 text-xs text-muted">Only rate guests you spoke with.</p>
+                      </div>
+                      {session.guests.map((guest) => (
+                        <RatingScale key={guest.id} name={`rating-${guest.id}`} legend={guest.name} required={false} allowSkip showOptional />
+                      ))}
+                    </section>
+                  ) : null}
                   <details className="mt-3">
                     <summary className="inline-flex min-h-10 cursor-pointer items-center text-xs text-muted underline decoration-rule underline-offset-4 hover:text-accent">Add a comment <span className="ml-1 text-muted">(optional)</span></summary>
                     <div className="pt-2"><TextQuestion name={`comment-${session.id}`} label={`Comments on ${session.title}`} rows={2} /></div>

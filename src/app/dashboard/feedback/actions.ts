@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { isPreviewing, requireParticipant } from "@/server/auth";
 import { replacePreferences, saveFeedback } from "@/server/data";
 import { getFeedbackQuestions } from "@/server/feedback-questions";
-import { sessionRatingOptions } from "@/server/session-ratings";
+import { flattenSessionRatingOptions, sessionRatingOptions } from "@/server/session-ratings";
 import type { PersonKey } from "@/server/data/types";
 import {
   MAX_ONE_TO_ONE_PICKS,
@@ -38,7 +38,7 @@ export async function submitFeedback(formData: FormData) {
   // session, facilitator, and conversation ids are never accepted.
   const rated = key === "overall" && showSessionRatings ? await sessionRatingOptions(me.id) : [];
 
-  const sessionFeedback = rated.map((session) => {
+  const sessionFeedback = flattenSessionRatingOptions(rated).map((session) => {
     const raw = formData.get(`rating-${session.id}`);
     const parsed = raw === null || raw === "" ? null : Number(raw);
     const rating = parsed !== null && Number.isInteger(parsed) && parsed >= 1 && parsed <= 5 ? parsed : null;

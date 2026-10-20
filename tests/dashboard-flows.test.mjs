@@ -60,7 +60,7 @@ const scheduleHelpers = load('server/schedule.ts');
 const sessionRatings = load('server/session-ratings.ts', { './data': {}, './feedback': {}, './schedule': scheduleHelpers });
 const talkSession = { id: 'talk', type: 'talk', title: 'A talk', speaker: '', day: '2026-10-23', start: '2026-10-23T10:00', end: '2026-10-23T11:00' };
 
-function actionHarness({ open = true, preview = false, failSave = false, failSync = false, questions, conversations = [] } = {}) {
+function actionHarness({ open = true, preview = false, failSave = false, failSync = false, questions, conversations = [], scheduledSessions = [talkSession] } = {}) {
   const saved = [], synced = [], completed = [];
   const { submitFeedback } = load('app/dashboard/feedback/actions.ts', {
     'next/navigation': { redirect: (url) => { throw Object.assign(Error(url), { redirect: url }); } },
@@ -68,7 +68,7 @@ function actionHarness({ open = true, preview = false, failSave = false, failSyn
     '@/server/data': { getSessions: async () => [{ id: 'talk', type: 'talk', title: 'A talk' }],
       saveFeedback: async r => { if (failSave) throw Error('offline'); saved.push(r); },
       replacePreferences: async (...args) => { if (failSync) throw Error('offline'); synced.push(args); } },
-    '@/server/session-ratings': { sessionRatingOptions: async () => sessionRatings.buildSessionRatingOptions([talkSession], conversations, 'Kuhan Jeyapragasan') },
+    '@/server/session-ratings': { flattenSessionRatingOptions: sessionRatings.flattenSessionRatingOptions, sessionRatingOptions: async () => sessionRatings.buildSessionRatingOptions(scheduledSessions, conversations, 'Kuhan Jeyapragasan') },
     '@/server/people': { personLookup: async () => new Map([[roster[1], { name: 'Partner' }]]) },
     '@/server/feedback-questions': { getFeedbackQuestions: async () => questions ?? [{ key: 'comment', type: 'text', enabled: true, required: true, label: 'A question' }] },
     '@/server/feedback': { normalizePreferenceName: feedback.normalizePreferenceName, MAX_ONE_TO_ONE_PICKS: 10, REPEATABLE_FORMS: new Set(['anytime']),
@@ -188,6 +188,22 @@ test('overall session ratings accept only actual options and allow every rating 
   assert.equal(hidden.saved[0].sessions.length, 0);
 });
 
+test('rotating Q&A session and guest ratings save independently with stable ids and optional omissions', async () => {
+  const scheduledSessions = [{ ...talkSession, id: 'qa', title: 'Rotating Q&As', type: 'small-group', speaker: 'Guest A, Guest B' }];
+  const questions = [{ key: 'session-ratings', type: 'sessions', enabled: true }];
+  const h = actionHarness({ questions, scheduledSessions });
+  await submit(h, { form: 'overall', 'rating-qa': '4', 'rating-qa-guest-guesta': '5', 'rating-qa-guest-forged': '2' });
+  const rows = h.saved[0].sessions;
+  assert.equal(rows.find(s => s.sessionId === 'qa').rating, 4);
+  assert.equal(rows.find(s => s.sessionId === 'qa-guest-guesta').rating, 5);
+  assert.equal(rows.find(s => s.sessionId === 'qa-guest-guestb').rating, null);
+  assert.ok(!rows.some(s => s.sessionId === 'qa-guest-forged'));
+  const guestOnly = actionHarness({ questions, scheduledSessions });
+  await submit(guestOnly, { form: 'overall', 'rating-qa-guest-guestb': '3' });
+  assert.equal(guestOnly.saved[0].sessions.find(s => s.sessionId === 'qa').rating, null);
+  assert.equal(guestOnly.saved[0].sessions.find(s => s.sessionId === 'qa-guest-guestb').rating, 3);
+});
+
 test('session rating options consolidate Thursday, exclude logistics, and split rotating Q&A and published 1:1s', () => {
   const make = (id, title, type = 'talk', day = '2026-10-23', speaker = '') => ({ ...talkSession, id, title, type, day, speaker, start: `${day}T10:00`, end: `${day}T11:00` });
   const sessions = [
@@ -220,9 +236,14 @@ test('session rating options consolidate Thursday, exclude logistics, and split 
   assert.ok(titles.includes('Happy Hour'));
   assert.ok(!titles.some(t => /break|reflection|transition|monument|welcome dinner|board game|^1:1s$/i.test(t)));
   assert.equal(titles.filter(t => t.startsWith('1:1 with ')).length, 2);
-  assert.equal(titles.filter(t => t.startsWith('Rotating Q&A with ')).length, 5);
-  assert.ok(options.some(s => s.title === 'Rotating Q&A with Kuhan Jeyapragasan' && s.timeLabel.startsWith('Saturday')));
-  assert.ok(!options.some(s => s.id === 'qa-fri' || s.id === 'qa-sat'));
+  assert.equal(options.filter(s => s.guests).length, 2);
+  assert.equal(options.find(s => s.id === 'qa-fri').guests.length, 2);
+  assert.equal(options.find(s => s.id === 'qa-sat').guests.length, 3);
+  const flat = sessionRatings.flattenSessionRatingOptions(options);
+  assert.equal(flat.filter(s => s.title.startsWith('Rotating Q&A with ')).length, 5);
+  assert.ok(flat.some(s => s.title === 'Rotating Q&A with Kuhan Jeyapragasan' && s.timeLabel.startsWith('Saturday')));
+  assert.ok(options.some(s => s.id === 'qa-fri'));
+  assert.ok(options.some(s => s.id === 'qa-sat'));
   assert.equal(new Set(options.map(s => s.id)).size, options.length);
   assert.equal(sessions.find(s => s.id === 'qa-sat').speaker, 'Guest C, Guest D', 'private addition never mutates the schedule');
 });
