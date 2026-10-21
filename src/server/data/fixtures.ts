@@ -242,3 +242,6 @@ export const feedbackResponses: FeedbackResponse[] = participants.slice(0, 6).ma
   ratings: { day: ((i * 2) % 5) + 1, satisfaction: 7 + (i % 4), recommend: 8 + (i % 3) },
   submittedAt: `2026-10-2${i < 4 ? 3 : 5}T21:0${i}:00`,
 }));
+
+/** Empty pair positions in locally saved drafts. */
+export const pairingDraftSlots: Record<string, [number, number]> = {};

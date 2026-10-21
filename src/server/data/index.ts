@@ -242,6 +242,19 @@ export async function getAssignments(): Promise<Assignment[]> {
   });
 }
 
+/** Retain empty pair positions, including a draft with no people placed yet. */
+export async function getPairingDraftSlots(sessionId: string): Promise<[number, number] | null> {
+  if (!airtableConfigured()) return fixtures.pairingDraftSlots?.[sessionId] ?? null;
+  if (!ASSIGNMENTS_TABLE) return null;
+  const markers = (await listTableRecords(ASSIGNMENTS_TABLE)).filter(({ fields }) =>
+    fields.Group === ASSIGNMENT_COMMIT && fields.State === "draft" && (fields.Session as string[] | undefined)?.[0] === sessionId,
+  ).sort((a, b) => text(b.fields.Assignment).localeCompare(text(a.fields.Assignment)));
+  const match = /^pairing-slots:(\d+),(\d+)$/.exec(text(markers[0]?.fields.Location));
+  if (!match) return null;
+  const slots: [number, number] = [Number(match[1]), Number(match[2])];
+  return slots.every((n) => n <= 1000) ? slots : null;
+}
+
 /**
  * Only published rows, and never the exclusion sentinels — this is what a
  * participant or guest is allowed to see about their own schedule.
@@ -511,6 +524,7 @@ export async function replaceAssignments(
   sessionIds: string[],
   rows: Omit<Assignment, "id" | "state">[],
   state: Assignment["state"],
+  draftSlots?: [number, number],
 ): Promise<void> {
   if (airtableConfigured()) {
     if (!ASSIGNMENTS_TABLE) throw new Error("Set AIRTABLE_ASSIGNMENTS_TABLE before saving pairings");
@@ -534,6 +548,7 @@ export async function replaceAssignments(
     try {
       await createTableRecords(ASSIGNMENTS_TABLE, sessionIds.map((sessionId) => ({
         Assignment: revision, Session: [sessionId], Group: ASSIGNMENT_COMMIT, Kind: "1:1", State: state,
+        ...(state === "draft" && draftSlots ? { Location: `pairing-slots:${draftSlots.join(",")}` } : {}),
       })));
     } catch (error) {
       // Staged rows have no commit marker and remain invisible even if cleanup fails.
@@ -543,6 +558,12 @@ export async function replaceAssignments(
     try { await deleteTableRecords(ASSIGNMENTS_TABLE, retired.map((r) => r.id)); }
     catch { console.error("Pairing revision committed; old revision cleanup failed"); }
     return;
+  }
+  if (state === "draft" && fixtures.pairingDraftSlots) {
+    for (const id of sessionIds) {
+      if (draftSlots) fixtures.pairingDraftSlots[id] = draftSlots;
+      else delete fixtures.pairingDraftSlots[id];
+    }
   }
   const ids = new Set(sessionIds);
   const added = rows.map((row, i) => ({

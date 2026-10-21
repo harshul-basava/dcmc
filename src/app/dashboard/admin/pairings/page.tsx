@@ -3,7 +3,7 @@ import PageHeading from "@/components/dashboard/PageHeading";
 import WipNotice from "@/components/dashboard/WipNotice";
 import PairingPlanner from "@/components/dashboard/PairingPlanner";
 import { requireAdmin } from "@/server/auth";
-import { getAssignments, getGuests, getParticipants, getPreferences, getSessions } from "@/server/data";
+import { getAssignments, getPairingDraftSlots, getGuests, getParticipants, getPreferences, getSessions } from "@/server/data";
 import { PAIRING_EXCLUDED } from "@/server/data/types";
 import { initials } from "@/server/people";
 import { formatRange, longDayLabel } from "@/server/schedule";
@@ -27,7 +27,8 @@ export default async function AdminPairings({ searchParams }: {
     return rows.some((a) => a.state === "draft") ? rows.filter((a) => a.state === "draft") : rows.filter((a) => a.state === "published");
   };
   const roster = session ? pairingRoster(session, participants, guests, assignments) : null;
-  const working = session ? workingFor(session.id) : [];
+  const draftSlots = session ? await getPairingDraftSlots(session.id) : null;
+  const working = session ? (draftSlots ? rowsFor(session.id).filter((a) => a.state === "draft") : workingFor(session.id)) : [];
   const initial = roster?.halves.map((eligible, half) => {
     const groups = new Map<string, PairingGroup>();
     for (const row of working.filter((a) => (a.group.startsWith("S2") ? 1 : 0) === half)) {
@@ -36,6 +37,10 @@ export default async function AdminPairings({ searchParams }: {
       // the server refuses to save them against current availability.
       groups.get(row.group)!.members.push(row.personKey);
     }
+    if (draftSlots) return { eligible, groups: Array.from({ length: draftSlots[half] }, (_, i) => {
+      const id = `S${half + 1} · 1:1 ${String(i + 1).padStart(2, "0")}`;
+      return groups.get(id) ?? { id, members: [], location: "NET" };
+    }) };
     const minimum = Math.ceil(eligible.length / 2);
     for (let i = groups.size; i < minimum; i++) groups.set(`empty-${i}`, { id: `empty-${i}`, members: [], location: session?.location ?? "" });
     return { eligible, groups: [...groups.values()] };
@@ -64,7 +69,7 @@ export default async function AdminPairings({ searchParams }: {
     })}</nav>
     {session && roster && initial ? <section className="pairing-session">
       <div className="pairing-session-heading"><div><h2>{session.title}</h2><p>{longDayLabel(session.day)} · {formatRange(roster.times[0][0], roster.times[1][1])}</p></div><span>{rowsFor(session.id).some((a) => a.state === "published") ? "Live version on schedules" : "Private · not released"}</span></div>
-      <PairingPlanner key={`${session.id}-${JSON.stringify(working)}-${JSON.stringify(roster.halves)}`} sessionId={session.id} people={people} initial={initial} preferences={preferences} history={history} times={roster.times.map(([start, end]) => formatRange(start, end))} storageReady={storageReady} hasDraft={rowsFor(session.id).some((a) => a.state === "draft")} hasPublished={rowsFor(session.id).some((a) => a.state === "published")} />
+      <PairingPlanner key={`${session.id}-${JSON.stringify(working)}-${JSON.stringify(roster.halves)}-${JSON.stringify(draftSlots)}`} sessionId={session.id} people={people} initial={initial} preferences={preferences} history={history} times={roster.times.map(([start, end]) => formatRange(start, end))} storageReady={storageReady} hasDraft={Boolean(draftSlots) || rowsFor(session.id).some((a) => a.state === "draft")} hasPublished={rowsFor(session.id).some((a) => a.state === "published")} />
     </section> : null}
   </PortalShell>;
 }

@@ -160,7 +160,9 @@ Attendee profile completeness rules are unchanged.
 **Pairings** are drafted and released separately. Generating writes a private
 draft; participants see a block only once it is released, and `Hide` withdraws
 it again without discarding the draft. After release, edits remain private until
-**Save draft → Update live pairings**. Attendee and guest programme views refresh
+**Save draft → Update live pairings**. Unfinished drafts, including empty pairs
+and pairs with just one person, can be saved and reopened with their pair
+positions intact. Release requires pairs of two or three people. Attendee and guest programme views refresh
 every minute while visible and when reopened or focused.
 
 Assignment writes stage a full revision and add a commit marker only after all

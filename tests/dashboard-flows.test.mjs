@@ -580,12 +580,15 @@ test('manual save requires admin, uses current guest availability and exclusions
   assert.ok((await savePairingDraft('block', JSON.stringify(invalid))).error, 'excluded attendee');
   assert.ok((await savePairingDraft('missing', JSON.stringify(plan))).error);
   assert.ok((await savePairingDraft('block', 'bad-json')).error);
-  assert.ok((await savePairingDraft('block', JSON.stringify([{ groups: [] }, { groups: [] }]))).error);
-  assert.equal(writes.length, 1);
+  assert.equal((await savePairingDraft('block', JSON.stringify([{ groups: [{members:[roster[0]],location:'NET'}] }, { groups: [] }]))).saved,true);
+  assert.equal(writes[1][1].length,1);
+  assert.equal((await savePairingDraft('block', JSON.stringify([{ groups: [] }, { groups: [] }]))).saved,true);
+  assert.equal(writes.length, 3);
+  assert.deepEqual(Array.from(writes[2][3]),[0,0]);
   fail = true; assert.match((await savePairingDraft('block', JSON.stringify(plan))).error, /edits are still here/);
   authorized = false;
   await assert.rejects(savePairingDraft('block', JSON.stringify(plan)), /Unauthorized/);
-  assert.equal(checks, 8);
+  assert.equal(checks, 9);
 });
 
 function assignmentStorageHarness() {
@@ -773,4 +776,43 @@ test('new guests enabled for a Saturday 1:1 half become Friday request options w
   assert.equal(options.find(o=>o.name==='New Guest').person.key,'guest:new');
   assert.equal(options.find(o=>o.name==='New Guest').person.bio,'New profile');
   assert.ok(!options.some(o=>o.name==='Too brief'||o.name==='Friday only'));
+});
+
+test('unfinished and entirely empty drafts retain their slot layout while the existing release remains unchanged', async () => {
+  const h=assignmentStorageHarness();
+  const released=[assignmentRow(roster[0]),assignmentRow(roster[1])];
+  await h.data.replaceAssignments(['block'],released,'published');
+  const unfinished=[{groups:[{members:[],location:'NET'},{members:[roster[0]],location:'NET'},{members:[],location:'NET'}]},{groups:[{members:[],location:'NET'}]}];
+  assert.equal(planner.planAssignments(unfinished,'block',[roster,roster]),null,'unfinished pairs cannot be released');
+  const rows=planner.planAssignments(unfinished,'block',[roster,roster],{allowIncomplete:true});
+  assert.equal(rows.length,1);
+  assert.equal(rows[0].group,'S1 · 1:1 02');
+  await h.data.replaceAssignments(['block'],rows,'draft',[3,1]);
+  assert.deepEqual(Array.from(await h.data.getPairingDraftSlots('block')),[3,1]);
+  assert.equal((await h.data.getAssignments()).filter(a=>a.state==='draft').length,1);
+  assert.equal((await h.data.getPublishedAssignmentsFor(roster[0])).length,1);
+  await h.data.replaceAssignments(['block'],[],'draft',[4,2]);
+  assert.deepEqual(Array.from(await h.data.getPairingDraftSlots('block')),[4,2]);
+  assert.equal((await h.data.getAssignments()).filter(a=>a.state==='draft').length,0);
+  assert.equal((await h.data.getPublishedAssignmentsFor(roster[0])).length,1);
+  await h.data.replaceAssignments(['block'],released,'draft');
+  assert.equal(await h.data.getPairingDraftSlots('block'),null,'regenerated drafts replace saved empty-slot metadata');
+});
+
+test('final feedback lists each released 1:1 half as a session for that attendee and keeps unfinished drafts private', async () => {
+  const h=assignmentStorageHarness();
+  const session={id:'block',title:'1:1s',type:'one-to-one',personalized:true,day:'2026-10-23',start:'2026-10-23T13:30',end:'2026-10-23T14:30',location:'NET',speaker:'',description:''};
+  const people=new Map(roster.map((key,i)=>[key,{name:['Alice','Bob','Cara','Guest'][i]}]));
+  const f=load('server/feedback.ts',{'node:crypto':crypto,'next/headers':{},'./data':{...h.data,getSessions:async()=>[session]},'./people':{personLookup:async()=>people},'./schedule':scheduleHelpers,'./availability':availability});
+  const options=async id=>sessionRatings.buildSessionRatingOptions([session],await f.oneToOneConversations(id),'Kuhan').filter(o=>o.id.startsWith('conv-'));
+  await h.data.replaceAssignments(['block'],[assignmentRow(roster[0])],'draft',[1,1]);
+  assert.equal((await options(roster[0].split(':')[1])).length,0);
+  await h.data.replaceAssignments(['block'],[assignmentRow(roster[0]),assignmentRow(roster[1]),assignmentRow(roster[0],'S2 · 1:1 01'),assignmentRow(roster[3],'S2 · 1:1 01')],'published');
+  const sessions=await options(roster[0].split(':')[1]);
+  assert.equal(sessions.length,2);
+  assert.equal(sessions[0].title,'1:1 with Bob');
+  assert.equal(sessions[1].title,'1:1 with Guest');
+  assert.equal(sessions[0].timeLabel,'Friday · 1:30pm – 2pm');
+  assert.equal(sessions[1].timeLabel,'Friday · 2pm – 2:30pm');
+  assert.equal((await options(roster[2].split(':')[1])).length,0);
 });

@@ -32,14 +32,14 @@ export function movePerson(round: PairingRound, person: PersonKey, destination: 
 }
 
 /** Validate a posted plan against the current server-owned eligibility lists. */
-export function planAssignments(value: unknown, sessionId: string, eligible: PersonKey[][]): Omit<Assignment, "id" | "state">[] | null {
+export function planAssignments(value: unknown, sessionId: string, eligible: PersonKey[][], { allowIncomplete = false }: { allowIncomplete?: boolean } = {}): Omit<Assignment, "id" | "state">[] | null {
   if (!Array.isArray(value) || value.length !== 2) return null;
   const rows: Omit<Assignment, "id" | "state">[] = [];
   for (const [half, round] of value.entries()) {
     if (!round || !Array.isArray(round.groups) || round.groups.length > 1000) return null;
     const seen = new Set<string>();
     for (const [index, group] of round.groups.entries()) {
-      if (!group || !Array.isArray(group.members) || group.members.length > 3 || group.members.length === 1 || typeof group.location !== "string" || group.location.length > 240) return null;
+      if (!group || !Array.isArray(group.members) || group.members.length > 3 || (!allowIncomplete && group.members.length === 1) || typeof group.location !== "string" || group.location.length > 240) return null;
       for (const personKey of group.members) {
         if (!eligible[half].includes(personKey) || seen.has(personKey)) return null;
         seen.add(personKey);

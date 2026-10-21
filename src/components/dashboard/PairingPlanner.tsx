@@ -132,18 +132,18 @@ export default function PairingPlanner({ sessionId, people, initial, preferences
             {group.members[slot] ? card(group.members[slot], group.id) : <button type="button" aria-disabled={!selected || saving || !storageReady} onClick={() => { if (selected && !saving && storageReady) move(selected, group.id, slot); }}>{slot === 2 ? "+ Optional third person" : `Drop person ${slot + 1} here`}</button>}
           </div>)}</div>
           {requestLabels.length ? <p className="pairing-request">{preferences.some((p) => group.members.includes(p.sourceKey) && group.members.includes(p.targetKey) && preferences.some((r) => r.sourceKey === p.targetKey && r.targetKey === p.sourceKey)) ? "Mutual requests · " : "Requested · "}{requestLabels.join("; ")}</p> : null}
-          {group.members.length === 1 ? <p className="pairing-warning">Needs a partner before saving.</p> : null}
+          {group.members.length === 1 ? <p className="pairing-warning">Needs a partner before release.</p> : null}
           {repeats.length ? <p className="pairing-warning">Repeat pairing: also in {repeats.join("; ")}.</p> : null}
         </section>;
       })}{!round.groups.length ? <p className="pairing-empty">Add a pair to start arranging people, or use Pair everyone.</p> : null}</div>
     </div>
     <details className="pairing-preferences"><summary>Conversation requests ({preferences.length})</summary><div>{people.filter((p) => preferences.some((r) => r.sourceKey === p.key)).map((person) => <div key={person.key}><strong>{person.name}</strong><ol>{preferences.filter((p) => p.sourceKey === person.key).sort((a, b) => a.rank - b.rank).map((p) => <li key={p.id}>#{p.rank} · {byKey.get(p.targetKey)?.name ?? "Unavailable person"}</li>)}</ol></div>)}{!preferences.length ? <p>No requests submitted for this day.</p> : null}</div></details>
-    <div className="pairing-save-bar"><div><strong>{dirty ? "Unsaved changes" : "Saved pairings"}</strong><p>Save both halves as a private draft, then release to schedules.</p></div><button className="pairing-primary" type="button" disabled={!storageReady || saving || !dirty || incomplete || !totalPaired} onClick={save}>{saving ? "Saving…" : "Save draft"}</button></div>
+    <div className="pairing-save-bar"><div><strong>{dirty ? "Unsaved changes" : "Saved pairings"}</strong><p>Save both halves as a private draft, then release to schedules.</p></div><button className="pairing-primary" type="button" disabled={!storageReady || saving || !dirty} onClick={save}>{saving ? "Saving…" : "Save draft"}</button></div>
     {error ? <p role="alert" className="pairing-warning">{error}</p> : null}{message ? <p role="status" className="pairing-request">{message}</p> : null}
-    {incomplete ? <p className="pairing-warning">A person is on their own in a pair. Add a partner or move them to Unpaired before saving.</p> : null}
+    {incomplete ? <p className="pairing-warning">You can save this unfinished draft and return later. Add a partner or move anyone on their own to Unpaired before releasing.</p> : null}
     <div className="pairing-release">
       <form action={generatePairings}><input type="hidden" name="sessionId" value={sessionId} /><button disabled={!storageReady || saving || dirty}>Generate new draft</button></form>
-      <form action={publishPairings}><input type="hidden" name="sessionId" value={sessionId} /><button className="pairing-primary" disabled={!storageReady || saving || dirty || !hasDraft}>{hasPublished ? "Update live pairings" : "Release pairings"}</button></form>
+      <form action={publishPairings}><input type="hidden" name="sessionId" value={sessionId} /><button className="pairing-primary" disabled={!storageReady || saving || dirty || !hasDraft || incomplete || !totalPaired}>{hasPublished ? "Update live pairings" : "Release pairings"}</button></form>
       {hasPublished ? <form action={hidePairings}><input type="hidden" name="sessionId" value={sessionId} /><button disabled={!storageReady || saving || dirty}>Hide from schedules</button></form> : null}
       {dirty ? <button type="button" disabled={saving} onClick={() => { setPlan(initial); setDirty(false); setSelected(null); setError(""); setMessage(""); }}>Discard edits</button> : null}
     </div>
