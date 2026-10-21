@@ -67,7 +67,7 @@ export default function PairingPlanner({ sessionId, people, initial, preferences
       return [...groups.values()];
     });
     candidates.sort((a, b) => b.length - a.length || a.filter((g) => groupPairKeys(g).some((k) => otherPairs.has(k))).length - b.filter((g) => groupPairKeys(g).some((k) => otherPairs.has(k))).length);
-    const groups = candidates[0].map((members, i) => ({ id: `auto-${i}`, members, location: round.groups[i]?.location ?? "" }));
+    const groups = candidates[0].map((members, i) => ({ id: `auto-${i}`, members, location: "NET" }));
     edit((prev) => prev.map((r, i) => i === half ? { ...r, groups } : r) as PairingPlan);
     setSelected(null);
   }
@@ -75,7 +75,7 @@ export default function PairingPlanner({ sessionId, people, initial, preferences
     setError(""); setMessage("");
     startSaving(async () => {
       try {
-        const result = await savePairingDraft(sessionId, JSON.stringify(plan));
+        const result = await savePairingDraft(sessionId, JSON.stringify(plan.map((round) => ({ ...round, groups: round.groups.map((group) => ({ ...group, location: "NET" })) }))));
         if (result.error) { setError(result.error); return; }
         setDirty(false); setMessage("Draft saved. Release it when you’re ready."); router.refresh();
       } catch { setError("The draft could not be saved. Your edits are still here; try again."); }
@@ -89,10 +89,10 @@ export default function PairingPlanner({ sessionId, people, initial, preferences
       draggable={!saving && storageReady} onDragStart={(e) => { e.dataTransfer.setData("text/plain", key); e.dataTransfer.effectAllowed = "move"; setSelected(key); }} onDragEnd={() => setOver(null)}>
       <button type="button" draggable={!saving && storageReady} className="pairing-person-pick" disabled={saving || !storageReady} aria-label={`Select ${person.name} to move`} aria-pressed={selected === key} onClick={() => setSelected(selected === key ? null : key)}>
         <span className="pairing-avatar"><PhotoSlot photo={person.photo} initials={person.initials} /></span>
-        <span><strong>{person.name}</strong><small>{key.startsWith("guest:") ? "Guest" : "Attendee"}{person.organization ? ` · ${person.organization}` : ""}</small></span><span aria-hidden="true" className="pairing-grip">⠿</span>
+        <span title={`${person.name} · ${person.organization}`}><strong>{person.name}</strong><small>{key.startsWith("guest:") ? "Guest" : "Attendee"}{person.organization ? ` · ${person.organization}` : ""}</small></span><span aria-hidden="true" className="pairing-grip">⠿</span>
       </button>
       {!round.eligible.includes(key) ? <p className="pairing-warning">No longer available. Move to Unpaired.</p> : null}
-      <select aria-label={`Move ${person.name}`} value={group} disabled={saving || !storageReady} onChange={(e) => move(key, e.target.value)}>
+      <select title={`Move ${person.name}`} aria-label={`Move ${person.name}`} value={group} disabled={saving || !storageReady} onChange={(e) => move(key, e.target.value)}>
         <option value="">Unpaired</option>{round.groups.map((g, i) => <option key={g.id} value={g.id}>Pair {String(i + 1).padStart(2, "0")}</option>)}
       </select>
     </article>;
@@ -112,7 +112,7 @@ export default function PairingPlanner({ sessionId, people, initial, preferences
       <label className="pairing-search"><span className="sr-only">Find someone in the pairing board</span><input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Find someone…" /></label>
       <button type="button" disabled={saving || !storageReady} onClick={autoPair}>Pair everyone</button>
       <button type="button" disabled={saving || !storageReady} onClick={() => { edit((prev) => prev.map((r, i) => i === half ? { ...r, groups: r.groups.map((g) => ({ ...g, members: [] })) } : r) as PairingPlan); setSelected(null); }}>Reset half</button>
-      <button type="button" disabled={saving || !storageReady} onClick={() => edit((prev) => prev.map((r, i) => i === half ? { ...r, groups: [...r.groups, { id: crypto.randomUUID(), members: [], location: "" }] } : r) as PairingPlan)}>+ Add pair</button>
+      <button type="button" disabled={saving || !storageReady} onClick={() => edit((prev) => prev.map((r, i) => i === half ? { ...r, groups: [...r.groups, { id: crypto.randomUUID(), members: [], location: "NET" }] } : r) as PairingPlan)}>+ Add pair</button>
     </div>
     <p className="pairing-help">Drag people into a pair, or select a person and click an empty slot. Each card also has a Move menu. Search highlights matching people.</p>
     <div className="pairing-tabs" aria-label="Choose 1:1 half">{[0, 1].map((i) => <button key={i} type="button" aria-pressed={half === i} onClick={() => { setHalf(i); setSelected(null); }}><strong>{i === 0 ? "First half" : "Second half"}</strong><span>{times[i]}</span></button>)}</div>
@@ -131,7 +131,6 @@ export default function PairingPlanner({ sessionId, people, initial, preferences
           <div className="pairing-slots">{[0, 1, 2].map((slot) => <div key={slot} className={`pairing-slot ${over === `${group.id}-${slot}` ? "is-over" : ""}`} onDragOver={(e) => { e.preventDefault(); setOver(`${group.id}-${slot}`); }} onDragLeave={() => setOver(null)} onDrop={(e) => drop(e, group.id, slot)}>
             {group.members[slot] ? card(group.members[slot], group.id) : <button type="button" aria-disabled={!selected || saving || !storageReady} onClick={() => { if (selected && !saving && storageReady) move(selected, group.id, slot); }}>{slot === 2 ? "+ Optional third person" : `Drop person ${slot + 1} here`}</button>}
           </div>)}</div>
-          <label className="pairing-location"><span>Location</span><input value={group.location} maxLength={240} placeholder="Meeting point" disabled={saving || !storageReady} onChange={(e) => edit((prev) => prev.map((r, i) => i === half ? { ...r, groups: r.groups.map((g) => g.id === group.id ? { ...g, location: e.target.value } : g) } : r) as PairingPlan)} /></label>
           {requestLabels.length ? <p className="pairing-request">{preferences.some((p) => group.members.includes(p.sourceKey) && group.members.includes(p.targetKey) && preferences.some((r) => r.sourceKey === p.targetKey && r.targetKey === p.sourceKey)) ? "Mutual requests · " : "Requested · "}{requestLabels.join("; ")}</p> : null}
           {group.members.length === 1 ? <p className="pairing-warning">Needs a partner before saving.</p> : null}
           {repeats.length ? <p className="pairing-warning">Repeat pairing: also in {repeats.join("; ")}.</p> : null}
