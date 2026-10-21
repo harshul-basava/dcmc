@@ -5,6 +5,7 @@
  * development. Fixture writes are non-durable and reset on server restart.
  */
 
+import { randomUUID } from "node:crypto";
 import { isTestParticipant, TEST_PARTICIPANT, testAttendeePassword } from "../test-attendee";
 import { safeEqual } from "../session";
 import {
@@ -199,10 +200,31 @@ export async function getSession(id: string): Promise<Session | null> {
   return (await getSessions()).find((s) => s.id === id) ?? null;
 }
 
+const ASSIGNMENT_REVISION = "pairing-revision:";
+const ASSIGNMENT_COMMIT = "__PAIRING_COMMIT__";
+
+/** Only complete revisions are visible, so readers never mix old and new pairs. */
+function currentAssignmentRecords(records: AirtableRecord[]): AirtableRecord[] {
+  const latest = new Map<string, string>();
+  for (const { fields } of records) {
+    if (fields.Group !== ASSIGNMENT_COMMIT) continue;
+    const key = `${(fields.Session as string[] | undefined)?.[0]}:${fields.State}`;
+    const revision = text(fields.Assignment);
+    if (revision.startsWith(ASSIGNMENT_REVISION) && revision > (latest.get(key) ?? "")) latest.set(key, revision);
+  }
+  return records.filter(({ fields }) => {
+    if (fields.Group === ASSIGNMENT_COMMIT) return false;
+    if (fields.Group === PAIRING_EXCLUDED) return true;
+    const revision = text(fields.Assignment);
+    const committed = latest.get(`${(fields.Session as string[] | undefined)?.[0]}:${fields.State}`);
+    return committed ? revision === committed : !revision.startsWith(ASSIGNMENT_REVISION);
+  });
+}
+
 export async function getAssignments(): Promise<Assignment[]> {
   if (!airtableConfigured()) return fixtures.assignments;
   if (!ASSIGNMENTS_TABLE) return [];
-  return (await listTableRecords(ASSIGNMENTS_TABLE)).flatMap((record) => {
+  return currentAssignmentRecords(await listTableRecords(ASSIGNMENTS_TABLE)).flatMap((record) => {
     const fields = record.fields;
     const sessionId = (fields.Session as string[] | undefined)?.[0];
     const attendeeId = (fields.Attendee as string[] | undefined)?.[0];
@@ -481,10 +503,9 @@ export async function deleteSession(id: string): Promise<void> {
   if (index >= 0) fixtures.sessions.splice(index, 1);
 }
 
-/**
- * Replaces every row for these sessions in one state with a new set. Rows are
- * added before the old ones are dropped, so a failure part-way cannot leave a
- * session with no assignments at all.
+/** Stage a complete revision, commit it, then retire the previous revision.
+ * A failed batch stays invisible; failed cleanup cannot duplicate live partners.
+ * The commit marker also represents an intentionally empty published block.
  */
 export async function replaceAssignments(
   sessionIds: string[],
@@ -493,18 +514,34 @@ export async function replaceAssignments(
 ): Promise<void> {
   if (airtableConfigured()) {
     if (!ASSIGNMENTS_TABLE) throw new Error("Set AIRTABLE_ASSIGNMENTS_TABLE before saving pairings");
-    const existing = (await getAssignments()).filter((a) =>
-      sessionIds.includes(a.sessionId) && a.state === state && a.group !== PAIRING_EXCLUDED,
-    );
-    await createTableRecords(ASSIGNMENTS_TABLE, rows.map((row) => {
+    const before = await listTableRecords(ASSIGNMENTS_TABLE);
+    const committed = new Set(before.filter((r) => r.fields.Group === ASSIGNMENT_COMMIT).map((r) => text(r.fields.Assignment)));
+    const retired = before.filter(({ fields }) => {
+      const session = (fields.Session as string[] | undefined)?.[0] ?? "";
+      const revision = text(fields.Assignment);
+      return sessionIds.includes(session) && fields.State === state && fields.Group !== PAIRING_EXCLUDED &&
+        (!revision.startsWith(ASSIGNMENT_REVISION) || committed.has(revision));
+    });
+    // Advance beyond every revision we read, including writes within the same millisecond.
+    const version = Math.max(Date.now(), ...[...committed].map((name) => Number(name.slice(ASSIGNMENT_REVISION.length).split("-")[0]) + 1));
+    const revision = `${ASSIGNMENT_REVISION}${version}-${randomUUID()}`;
+    const created = await createTableRecords(ASSIGNMENTS_TABLE, rows.map((row) => {
       const [role, id] = row.personKey.split(":");
-      return { Assignment: `${row.sessionId} · ${row.group} · ${id}`,
-        Session: [row.sessionId],
+      return { Assignment: revision, Session: [row.sessionId],
         ...(role === "participant" ? { Attendee: [id] } : { "Speaker / Guest": [id] }),
-        Group: row.group,
-        Kind: row.kind, State: state, Location: row.location };
+        Group: row.group, Kind: row.kind, State: state, Location: row.location };
     }));
-    await deleteTableRecords(ASSIGNMENTS_TABLE, existing.map((a) => a.id));
+    try {
+      await createTableRecords(ASSIGNMENTS_TABLE, sessionIds.map((sessionId) => ({
+        Assignment: revision, Session: [sessionId], Group: ASSIGNMENT_COMMIT, Kind: "1:1", State: state,
+      })));
+    } catch (error) {
+      // Staged rows have no commit marker and remain invisible even if cleanup fails.
+      try { await deleteTableRecords(ASSIGNMENTS_TABLE, created); } catch { console.error("Pairing staging cleanup failed"); }
+      throw error;
+    }
+    try { await deleteTableRecords(ASSIGNMENTS_TABLE, retired.map((r) => r.id)); }
+    catch { console.error("Pairing revision committed; old revision cleanup failed"); }
     return;
   }
   const ids = new Set(sessionIds);

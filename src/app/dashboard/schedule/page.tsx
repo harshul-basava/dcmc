@@ -1,3 +1,4 @@
+import AutoRefresh from "@/app/schedule/AutoRefresh";
 import PortalShell from "@/components/dashboard/PortalShell";
 import PageHeading from "@/components/dashboard/PageHeading";
 import ScheduleLegend from "@/components/dashboard/ScheduleLegend";
@@ -26,6 +27,7 @@ export default async function SchedulePage() {
   return (
     <PortalShell role="participant" active="schedule">
       <div id="schedule">
+        <AutoRefresh />
         <PageHeading title={`Welcome, ${me.name.split(" ")[0]}`} />
         <SchedulePanel days={days} legend={<ScheduleLegend />} />
       </div>

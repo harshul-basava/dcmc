@@ -159,7 +159,22 @@ Attendee profile completeness rules are unchanged.
 
 **Pairings** are drafted and released separately. Generating writes a private
 draft; participants see a block only once it is released, and `Hide` withdraws
-it again without discarding the draft.
+it again without discarding the draft. After release, edits remain private until
+**Save draft → Update live pairings**. Attendee and guest programme views refresh
+every minute while visible and when reopened or focused.
+
+Assignment writes stage a full revision and add a commit marker only after all
+batches succeed. Reads use the latest committed revision; legacy rows still work
+until that session is first revised. Failed staging leaves the prior version
+visible, and failed cleanup cannot mix retired partners into current schedules.
+
+Overall feedback uses conversation identities based on the session, half, and
+people, so re-releasing or renumbering pairs does not change them. Each rendered
+form carries a signed snapshot of its options bound to that attendee: if live
+pairings change while the form is open, its submitted ratings retain the
+conversation names originally shown. Previously saved responses are not rewritten.
+New guests with availability covering a Saturday 1:1 half are also included in
+Friday’s conversation-request options.
 
 ### Live feedback testing
 

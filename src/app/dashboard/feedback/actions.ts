@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { isPreviewing, requireParticipant } from "@/server/auth";
 import { replacePreferences, saveFeedback } from "@/server/data";
 import { getFeedbackQuestions } from "@/server/feedback-questions";
+import { readFeedbackOptions } from "@/server/feedback-options";
 import { flattenSessionRatingOptions, sessionRatingOptions } from "@/server/session-ratings";
 import type { PersonKey } from "@/server/data/types";
 import {
@@ -38,7 +39,10 @@ export async function submitFeedback(formData: FormData) {
 
   // Rebuild the same participant-specific options used by the page. Forged
   // session, facilitator, and conversation ids are never accepted.
-  const rated = key === "overall" && showSessionRatings ? await sessionRatingOptions(me.id) : [];
+  const snapshot = formData.get("session-options");
+  const shown = snapshot === null ? null : readFeedbackOptions(snapshot, me.id);
+  if (key === "overall" && snapshot !== null && !shown) redirect("/dashboard/feedback/overall?error=options");
+  const rated = key === "overall" && showSessionRatings ? (shown ?? await sessionRatingOptions(me.id)) : [];
 
   const sessionFeedback = flattenSessionRatingOptions(rated).map((session) => {
     const raw = formData.get(`rating-${session.id}`);

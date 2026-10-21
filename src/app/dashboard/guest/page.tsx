@@ -1,3 +1,4 @@
+import AutoRefresh from "@/app/schedule/AutoRefresh";
 import PortalShell from "@/components/dashboard/PortalShell";
 import PageHeading from "@/components/dashboard/PageHeading";
 import ScheduleLegend from "@/components/dashboard/ScheduleLegend";
@@ -90,7 +91,10 @@ export default async function GuestPortal({
         ) : null}
 
         {view === "program" ? (
-          <SchedulePanel days={days} legend={<ScheduleLegend />} />
+          <>
+            <AutoRefresh />
+            <SchedulePanel days={days} legend={<ScheduleLegend />} />
+          </>
         ) : null}
 
         {view === "availability" ? (

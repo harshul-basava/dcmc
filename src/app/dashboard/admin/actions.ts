@@ -19,6 +19,8 @@ import {
   setSessionTimes,
   setAccessCount,
 } from "@/server/data";
+import { planAssignments } from "@/lib/pairing-planner";
+import { pairingRoster } from "@/server/pairing-roster";
 import { parseAvailability } from "@/server/availability";
 import { minutesOf, SLOT_MINUTES } from "@/server/schedule";
 import { PAIRING_EXCLUDED, isSessionType } from "@/server/data/types";
@@ -274,9 +276,8 @@ export async function publishPairings(formData: FormData) {
   await requireAdmin();
 
   const sessionId = String(formData.get("sessionId") ?? "");
-  if (!(await getSessions()).some((s) => s.id === sessionId && s.type === "one-to-one")) {
-    redirect("/dashboard/admin/pairings?error=session");
-  }
+  const session = (await getSessions()).find((s) => s.id === sessionId && s.type === "one-to-one");
+  if (!session) redirect("/dashboard/admin/pairings?error=session");
   const assignments = await getAssignments();
   const draft = assignments
     .filter((a) => a.sessionId === sessionId && a.state === "draft" && a.group !== PAIRING_EXCLUDED)
@@ -289,6 +290,20 @@ export async function publishPairings(formData: FormData) {
     }));
 
   if (!draft.length) redirect("/dashboard/admin/pairings?error=1");
+  // Availability and exclusions may have changed since the draft was saved.
+  const [participants, guests] = await Promise.all([getParticipants(), getGuests()]);
+  const halves = ["S1", "S2"].map((half) => {
+    const groups = new Map<string, { members: PersonKey[]; location: string }>();
+    for (const row of draft.filter((a) => a.group.startsWith(`${half} ·`))) {
+      if (!groups.has(row.group)) groups.set(row.group, { members: [], location: row.location });
+      groups.get(row.group)!.members.push(row.personKey);
+    }
+    return { groups: [...groups.values()] };
+  });
+  const valid = planAssignments(halves, sessionId, pairingRoster(session, participants, guests, assignments).halves);
+  if (!valid || valid.length !== draft.length || draft.some((a) => a.kind !== "1:1")) {
+    redirect(`/dashboard/admin/pairings?session=${encodeURIComponent(sessionId)}&error=roster`);
+  }
 
   await replaceAssignments([sessionId], draft, "published");
   revalidatePath("/dashboard", "layout");

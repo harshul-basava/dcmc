@@ -1,14 +1,14 @@
 import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import {
-  getGroupMembers,
+  getAssignments,
   getGuests,
   getParticipants,
   getPortalPageSettings,
-  getPublishedAssignmentsFor,
   getSessions,
 } from "./data";
 import type { PersonKey } from "./data/types";
+import { parseAvailability } from "./availability";
 import { personLookup } from "./people";
 import { formatRange, minutesOf, SLOT_MINUTES } from "./schedule";
 
@@ -101,19 +101,21 @@ export type Conversation = {
 export async function oneToOneConversations(participantId: string): Promise<Conversation[]> {
   const key: PersonKey = `participant:${participantId}`;
   const [assignments, sessions, people] = await Promise.all([
-    getPublishedAssignmentsFor(key),
+    getAssignments(),
     getSessions(),
     personLookup(),
   ]);
 
   const conversations: Conversation[] = [];
 
-  for (const assignment of assignments) {
-    if (assignment.kind !== "1:1") continue;
+  const published = assignments.filter((a) => a.state === "published");
+  for (const assignment of published) {
+    if (assignment.kind !== "1:1" || assignment.personKey !== key) continue;
     const session = sessions.find((s) => s.id === assignment.sessionId);
     if (!session) continue;
 
-    const partner = (await getGroupMembers(assignment.sessionId, assignment.group))
+    const members = published.filter((a) => a.sessionId === assignment.sessionId && a.group === assignment.group);
+    const partner = members
       .filter((member) => member.personKey !== key)
       .map((member) => people.get(member.personKey)?.name)
       .filter(Boolean)
@@ -125,7 +127,8 @@ export async function oneToOneConversations(participantId: string): Promise<Conv
     const mid = start + Math.round((end - start) / 2 / SLOT_MINUTES) * SLOT_MINUTES;
     const second = assignment.group.startsWith("S2");
     conversations.push({
-      id: assignment.id,
+      // Identity follows the actual conversation, not a recreated Airtable row or pair number.
+      id: `${session.id}-${second ? "S2" : "S1"}-${createHash("sha256").update([...new Set(members.map((m) => m.personKey))].sort().join("|")).digest("hex").slice(0, 24)}`,
       partner,
       sessionTitle: session.title,
       sessionId: session.id,
@@ -240,8 +243,23 @@ export type OneToOneGuestOption = {
 
 export async function oneToOneGuestOptions(form: string): Promise<OneToOneGuestOption[]> {
   if (form !== "friday") return [];
-  const guests = await getGuests();
-  return ONE_TO_ONE_GUESTS.saturday.map((name) => {
+  const [guests, sessions] = await Promise.all([getGuests(), getSessions()]);
+  const nextDay = new Date(`${feedbackForm(form)!.day}T12:00:00Z`);
+  nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+  const day = nextDay.toISOString().slice(0, 10);
+  const blocks = sessions.filter((s) => s.type === "one-to-one" && s.day === day);
+  const names: string[] = [...ONE_TO_ONE_GUESTS.saturday];
+  // New guests enabled for either conversation also become request options.
+  for (const guest of guests) {
+    const windows = parseAvailability(guest.availability ?? "");
+    const eligible = blocks.some((session) => {
+      const start = minutesOf(session.start), end = minutesOf(session.end);
+      const mid = start + Math.round((end - start) / 2 / SLOT_MINUTES) * SLOT_MINUTES;
+      return windows.some((w) => w.date === day && ((w.start <= start && w.end >= mid) || (w.start <= mid && w.end >= end)));
+    });
+    if (eligible && !names.some((name) => normalizePreferenceName(name) === normalizePreferenceName(guest.name))) names.push(guest.name);
+  }
+  return names.map((name) => {
     const guest = guests.find((person) => normalizePreferenceName(person.name) === normalizePreferenceName(name));
     return {
       name,

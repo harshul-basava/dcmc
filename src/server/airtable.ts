@@ -180,7 +180,7 @@ export async function listTableRecords(table: string): Promise<AirtableRecord[]>
   return records;
 }
 
-export async function createTableRecords(table: string, rows: Record<string, unknown>[]): Promise<void> {
+export async function createTableRecords(table: string, rows: Record<string, unknown>[]): Promise<string[]> {
   const created: string[] = [];
   try {
     for (let i = 0; i < rows.length; i += 10) {
@@ -195,6 +195,7 @@ export async function createTableRecords(table: string, rows: Record<string, unk
     if (created.length) await deleteTableRecords(table, created);
     throw error;
   }
+  return created;
 }
 
 export async function deleteTableRecords(table: string, ids: string[]): Promise<void> {

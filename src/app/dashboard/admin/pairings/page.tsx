@@ -53,7 +53,7 @@ export default async function AdminPairings({ searchParams }: {
   return <PortalShell role="admin" active="pairings">
     <PageHeading title="Pairings" lead="Arrange 1:1 conversations visually. Review both halves, save a private draft, then release it to attendee schedules. Guests appear during their submitted availability." />
     {!storageReady ? <WipNotice>Pairing storage needs to be connected before drafts can be saved or released.</WipNotice> : null}
-    {flags.error ? <p role="alert" className="pairing-warning mb-6">{flags.error === "roster" ? "No pairs could be made. Check the roster and guest availability." : flags.error === "session" ? "Choose a 1:1 session from the schedule." : "Generate or save a draft before releasing pairings."}</p> : null}
+    {flags.error ? <p role="alert" className="pairing-warning mb-6">{flags.error === "roster" ? "Check the roster and guest availability. Each pair needs two or three available people; the live pairings have not changed." : flags.error === "session" ? "Choose a 1:1 session from the schedule." : "Generate or save a draft before releasing pairings."}</p> : null}
     {flags.published ? <p role="status" className="pairing-request mb-6">Released. That block is now on participant schedules.</p> : null}
     {flags.hidden ? <p role="status" className="mb-6 text-sm text-muted">Hidden from participant schedules. The draft is untouched.</p> : null}
     {flags.generated ? <p role="status" className="mb-6 text-sm text-muted">Draft saved. Review the pairs before releasing.</p> : null}

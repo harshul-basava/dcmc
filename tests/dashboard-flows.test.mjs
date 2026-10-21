@@ -11,7 +11,7 @@ function load(file, imports = {}, globals = {}) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
   });
   runInNewContext(outputText, {
-    exports, require: (name) => { if (!(name in imports)) throw Error(`Unexpected import ${name}`); return imports[name]; },
+    exports, Buffer, require: (name) => { if (name === "node:crypto" && !(name in imports)) return crypto; if (!(name in imports)) throw Error(`Unexpected import ${name}`); return imports[name]; },
     process, FormData, URLSearchParams, AbortController, setTimeout, clearTimeout, console, ...globals,
   });
   return exports;
@@ -54,10 +54,11 @@ test('1:1 generator respects each half roster and prioritizes mutual requests', 
 
 function feedbackHarness(data = {}) {
   return load('server/feedback.ts', {
-    'node:crypto': {}, 'next/headers': {}, './data': data, './people': {}, './schedule': {},
+    'node:crypto': {}, 'next/headers': {}, './data': { getSessions:async()=>[], ...data }, './people': {}, './schedule': load('server/schedule.ts'), './availability':load('server/availability.ts',{'./schedule':load('server/schedule.ts')}),
   });
 }
 const feedback = feedbackHarness();
+const feedbackOptions = load("server/feedback-options.ts", { "./session": { sessionSecret: () => "feedback-options-test-secret" } });
 const scheduleHelpers = load('server/schedule.ts');
 const sessionRatings = load('server/session-ratings.ts', { './data': {}, './feedback': {}, './schedule': scheduleHelpers });
 const talkSession = { id: 'talk', type: 'talk', title: 'A talk', speaker: '', day: '2026-10-23', start: '2026-10-23T10:00', end: '2026-10-23T11:00' };
@@ -71,6 +72,7 @@ function actionHarness({ open = true, preview = false, failSave = false, failSyn
     '@/server/data': { getSessions: async () => [{ id: 'talk', type: 'talk', title: 'A talk' }],
       saveFeedback: async r => { if (failSave) throw Error('offline'); saved.push(r); },
       replacePreferences: async (...args) => { if (failSync) throw Error('offline'); synced.push(args); } },
+    '@/server/feedback-options': feedbackOptions,
     '@/server/session-ratings': { flattenSessionRatingOptions: sessionRatings.flattenSessionRatingOptions, sessionRatingOptions: async () => sessionRatings.buildSessionRatingOptions(scheduledSessions, conversations, 'Kuhan Jeyapragasan') },
     '@/server/people': { personLookup: async () => new Map([[roster[1], { name: 'Partner' }]]) },
     '@/server/feedback-questions': { getFeedbackQuestions: async () => questions ?? [{ key: 'comment', type: 'text', enabled: true, required: true, label: 'A question' }] },
@@ -492,7 +494,7 @@ test('admin generation respects availability/exclusions, drafts stay private, an
       } },
     '@/server/availability': { parseAvailability: () => [{ date:'2026-10-24', start:630, end:660 }] },
     '@/server/schedule': { SLOT_MINUTES:15, minutesOf: value => Number(value.slice(11,13))*60 + Number(value.slice(14,16)) },
-    '@/server/data/types': types, '@/server/portal-pages': {}, '@/server/session': {}, '@/server/feedback': {}, '@/server/pairings':pairings,
+    '@/server/data/types': types, '@/server/portal-pages': {}, '@/server/session': {}, '@/server/feedback': {}, '@/server/pairings':pairings, '@/lib/pairing-planner':planner, '@/server/pairing-roster':pairingRosterHelpers,
   });
   async function call(action, sessionId = 'block') {
     const form = new FormData(); form.set('sessionId',sessionId);
@@ -584,4 +586,191 @@ test('manual save requires admin, uses current guest availability and exclusions
   authorized = false;
   await assert.rejects(savePairingDraft('block', JSON.stringify(plan)), /Unauthorized/);
   assert.equal(checks, 8);
+});
+
+function assignmentStorageHarness() {
+  const records = [];
+  let sequence = 0, creates = 0, failCreate = 0, failDelete = false, onWrite;
+  const airtable = load('server/airtable.ts', {}, {
+    process: { env: { AIRTABLE_API_TOKEN: 'test-token', AIRTABLE_CACHE_TTL_SECONDS: '0' } },
+    fetch: async (url, init) => {
+      const u = new URL(url);
+      if (init.method === 'POST') {
+        creates++;
+        if (creates === failCreate) return { ok: false, status: 503 };
+        const added = JSON.parse(init.body).records.map(r => ({ ...r, id: `row-${++sequence}` }));
+        records.push(...added);
+        if (onWrite) await onWrite();
+        return { ok: true, json: async () => ({ records: added }) };
+      }
+      if (init.method === 'DELETE') {
+        if (failDelete) return { ok: false, status: 503 };
+        const ids = u.searchParams.getAll('records[]');
+        for (let i = records.length - 1; i >= 0; i--) if (ids.includes(records[i].id)) records.splice(i, 1);
+        return { ok: true, json: async () => ({ records: ids.map(id => ({ id, deleted: true })) }) };
+      }
+      return { ok: true, json: async () => ({ records: records.map(r => ({ ...r, fields: { ...r.fields } })) }) };
+    },
+  });
+  const data = load('server/data/index.ts', { '../airtable': airtable, '../test-attendee': testAttendee, '../session': {}, './types': types, './fixtures': {} }, { console: { error() {} } });
+  return { records, data, failCreateAfter: batches => { failCreate = creates + batches; }, failDeletes: value => { failDelete = value; }, observe: callback => { onWrite = callback; } };
+}
+const assignmentRow = (personKey, group = 'S1 · 1:1 01', location = 'Lobby') => ({ sessionId: 'block', personKey, group, location, kind: '1:1' });
+
+test('Airtable revisions expose old or complete new pairings during batched saves, including guest rows and empty hides', async () => {
+  const h = assignmentStorageHarness();
+  h.records.push(...roster.slice(0,2).map((key,i) => ({ id: `legacy-${i}`, fields: {
+    Assignment: `Old assignment ${i}`, Session: ['block'], Attendee: [key.split(':')[1]], Group: 'S1 · 1:1 01', Kind: '1:1', State: 'published', Location: 'Old room',
+  } })));
+  const replacement = Array.from({ length: 24 }, (_,i) => assignmentRow(`participant:person${i}`, `S1 · 1:1 ${Math.floor(i/2)+1}`, 'New room'));
+  replacement.push(assignmentRow(roster[3], 'S2 · 1:1 01'), assignmentRow(roster[0], 'S2 · 1:1 01'));
+  const observed = [];
+  h.observe(async () => observed.push((await h.data.getAssignments()).filter(a => a.state === 'published')));
+  await h.data.replaceAssignments(['block'], replacement, 'published');
+  assert.ok(observed.slice(0,-1).every(rows => rows.length === 2 && rows.every(r => r.location === 'Old room')), 'partially written revisions never appear');
+  assert.equal(observed.at(-1).length, 26);
+  assert.equal((await h.data.getPublishedAssignmentsFor(roster[3])).length, 1);
+  assert.equal((await h.data.getGroupMembers('block', 'S2 · 1:1 01')).length, 2);
+  await h.data.replaceAssignments(['block'], replacement.slice(0,2), 'draft');
+  await h.data.replaceAssignments(['block'], [], 'published');
+  assert.equal((await h.data.getPublishedAssignmentsFor(roster[3])).length, 0);
+  assert.equal((await h.data.getAssignments()).filter(a => a.state === 'draft').length, 2);
+  assert.ok(!(await h.data.getAssignments()).some(a => a.group === '__PAIRING_COMMIT__'));
+});
+
+test('failed batches and failed commits preserve the previous release; failed cleanup cannot duplicate partners', async () => {
+  const h = assignmentStorageHarness();
+  const previous = roster.slice(0,2).map(key => assignmentRow(key));
+  await h.data.replaceAssignments(['block'], previous, 'published');
+  h.failCreateAfter(2);
+  const big = Array.from({length:24}, (_,i) => assignmentRow(`participant:p${i}`, `S1 · 1:1 ${Math.floor(i/2)+1}`));
+  await assert.rejects(h.data.replaceAssignments(['block'], big, 'published'), /503/);
+  assert.equal((await h.data.getAssignments()).length, 2);
+  h.failCreateAfter(2); // Staging succeeds; commit fails.
+  await assert.rejects(h.data.replaceAssignments(['block'], [assignmentRow(roster[0]), assignmentRow(roster[3])], 'published'), /503/);
+  assert.deepEqual(Array.from((await h.data.getAssignments()).map(r=>r.personKey)).sort(), previous.map(r=>r.personKey).sort());
+  h.failDeletes(true);
+  await h.data.replaceAssignments(['block'], [assignmentRow(roster[0]), assignmentRow(roster[3])], 'published');
+  const latest = await h.data.getAssignments();
+  assert.equal(latest.length, 2, 'retired rows remain invisible when Airtable cleanup fails');
+  assert.ok(latest.some(r => r.personKey === roster[3]));
+  await h.data.replaceAssignments(['block'], [], 'published');
+  assert.equal((await h.data.getAssignments()).length, 0, 'empty committed release does not fall back to older pairings');
+});
+
+test('conversation identities survive rerelease, renumbering and location changes but distinguish different partners', async () => {
+  const h = assignmentStorageHarness();
+  const session = { id:'block', title:'1:1s', type:'one-to-one', personalized:true, day:'2026-10-23', start:'2026-10-23T13:30', end:'2026-10-23T14:30', location:'NET', speaker:'', description:'' };
+  const people = new Map(roster.map((key,i) => [key, {name:['Alice','Bob','Cara','Guest'][i]}]));
+  const conversations = load('server/feedback.ts', {
+    'node:crypto':crypto, 'next/headers':{}, './data': { ...h.data, getSessions:async()=>[session] },
+    './people': { personLookup:async()=>people }, './schedule':scheduleHelpers, './availability':availability,
+  });
+  const show = async key => scheduleHelpers.buildSchedule({ sessions:[session], assignments:await h.data.getAssignments(), people, viewerKey:key }).flatMap(d=>d.blocks);
+  await h.data.replaceAssignments(['block'], [assignmentRow(roster[0]), assignmentRow(roster[3])], 'draft');
+  assert.equal((await conversations.oneToOneConversations(roster[0].split(':')[1])).length, 0);
+  await h.data.replaceAssignments(['block'], [assignmentRow(roster[0]), assignmentRow(roster[3])], 'published');
+  const first = (await conversations.oneToOneConversations(roster[0].split(':')[1]))[0];
+  assert.equal(first.partner, 'Guest');
+  assert.ok((await show(roster[3])).some(b=>b.title === '1:1 with Alice'));
+  await h.data.replaceAssignments(['block'], [assignmentRow(roster[0], 'S1 · 1:1 03','Garden'), assignmentRow(roster[3], 'S1 · 1:1 03','Garden')], 'published');
+  const second = (await conversations.oneToOneConversations(roster[0].split(':')[1]))[0];
+  assert.equal(first.id, second.id);
+  assert.ok((await show(roster[0])).some(b=>b.detail.location === 'Garden'));
+  await h.data.replaceAssignments(['block'], [assignmentRow(roster[0]), assignmentRow(roster[1]), assignmentRow(roster[2])], 'published');
+  const third = (await conversations.oneToOneConversations(roster[0].split(':')[1]))[0];
+  assert.notEqual(third.id, first.id);
+  assert.equal(third.partner, 'Bob and Cara');
+  assert.ok(!(await show(roster[3])).some(b=>b.mine));
+  await h.data.replaceAssignments(['block'], [], 'published');
+  assert.equal((await conversations.oneToOneConversations(roster[0].split(':')[1])).length, 0);
+});
+
+test('feedback opened before a pairing change keeps the actual conversation and rating and refuses forged snapshots', async () => {
+  const options = [{ id:'conv-original-conversation', title:'1:1 with Guest', speaker:'', timeLabel:'Friday · 1:30pm – 2pm', sortKey:'2026-10-23T13:30' }];
+  const token = feedbackOptions.signFeedbackOptions('recAAAAAAAAAAAAAA', options);
+  assert.equal(feedbackOptions.readFeedbackOptions(token, 'someone-else'), null);
+  assert.equal(feedbackOptions.readFeedbackOptions(token + 'tampered', 'recAAAAAAAAAAAAAA'), null);
+  const h = actionHarness({ questions:[{ key:'sessions', type:'sessions', enabled:true, required:false, label:'Sessions' }], conversations:[{
+    id:'replacement', partner:'New Guest', day:'Friday', date:'2026-10-23', start:'2026-10-23T13:30', timeLabel:'1:30pm – 2pm',
+  }] });
+  assert.match(await submit(h, {form:'overall','session-options':token,'rating-conv-original-conversation':'5','comment-conv-original-conversation':'Great conversation'}), /saved=1/);
+  assert.equal(h.saved[0].sessions.length, 1);
+  assert.equal(h.saved[0].sessions[0].title, '1:1 with Guest');
+  assert.equal(h.saved[0].sessions[0].rating, 5);
+  assert.equal(h.saved[0].sessions[0].comment, 'Great conversation');
+  assert.match(await submit(h, {form:'overall','session-options':token+'tampered'}), /error=options/);
+  assert.equal(h.saved.length, 1);
+});
+
+test('admin lifecycle saves, releases, adds people, swaps partners and hides without rewriting feedback or leaking drafts', async () => {
+  const session = { id:'block', title:'1:1s', type:'one-to-one', personalized:true, day:'2026-10-23', start:'2026-10-23T13:30', end:'2026-10-23T14:30', location:'NET', speaker:'', description:'' };
+  const fixtures = { sessions:[session], assignments:[], participants:roster.slice(0,3).map((key,i)=>({id:key.split(':')[1],name:['Alice','Bob','Cara'][i]})),
+    guests:[{id:roster[3].split(':')[1],name:'Guest',availability:'date,start,end\n2026-10-23,14:00,14:30'}], feedbackResponses:[], portalPageSettings:[] };
+  const data = load('server/data/index.ts', { '../airtable':{airtableConfigured:()=>false}, '../test-attendee':testAttendee, '../session':{}, './types':types, './fixtures':fixtures });
+  const redirect = url => { throw Object.assign(Error(url), { redirect:url }); };
+  const admin = load('app/dashboard/admin/actions.ts', {
+    'next/cache':{revalidatePath(){}}, 'next/navigation':{redirect}, 'next/headers':{}, '@/server/test-attendee':testAttendee,
+    '@/server/auth':{requireAdmin:async()=>{}}, '@/server/data':data, '@/server/availability':availability, '@/server/schedule':scheduleHelpers,
+    '@/server/data/types':types, '@/server/portal-pages':{}, '@/server/session':{}, '@/server/feedback':{}, '@/server/pairings':pairings,
+    '@/lib/pairing-planner':planner, '@/server/pairing-roster':pairingRosterHelpers,
+  });
+  const draftAction = load('app/dashboard/admin/pairings/actions.ts', {
+    'next/cache':{revalidatePath(){}}, '@/server/auth':{requireAdmin:async()=>{}}, '@/server/data':data,
+    '@/server/pairing-roster':pairingRosterHelpers, '@/lib/pairing-planner':planner,
+  });
+  const peopleHelpers = load('server/people.ts', {'./data':data});
+  const f = load('server/feedback.ts', { 'node:crypto':crypto, 'next/headers':{}, './data':data, './people':peopleHelpers, './schedule':scheduleHelpers, './availability':availability });
+  const ownId = roster[0].split(':')[1];
+  const conversations = () => f.oneToOneConversations(ownId);
+  const currentTitle = async () => scheduleHelpers.buildSchedule({ sessions:[session], assignments:await data.getAssignments(), people:await peopleHelpers.personLookup(), viewerKey:roster[0] }).flatMap(d=>d.blocks).find(b=>b.key==='block-S1').title;
+  const plan = (a,b) => [{groups:a.map(members=>({members,location:'Lobby'}))},{groups:b.map(members=>({members,location:'Garden'}))}];
+  async function call(action) { const form=new FormData(); form.set('sessionId','block'); try { await action(form); assert.fail('Expected redirect'); } catch(e) { if(!e.redirect) throw e; return e.redirect; } }
+  const original = plan([[roster[0],roster[1]]], [[roster[0],roster[3]]]);
+  assert.equal((await draftAction.savePairingDraft('block',JSON.stringify(original))).saved,true);
+  assert.equal((await conversations()).length,0);
+  assert.match(await call(admin.publishPairings),/published=/);
+  assert.equal(await currentTitle(),'1:1 with Bob');
+  const shown = sessionRatings.buildSessionRatingOptions([session],await conversations(),'Kuhan');
+  const signed = feedbackOptions.signFeedbackOptions(ownId,shown);
+  const ratedConversation = shown.find(o=>o.title==='1:1 with Bob');
+  await data.saveFeedback({form:'overall',participantId:ownId,participantName:'Alice',date:'',sessions:[{sessionId:ratedConversation.id,title:ratedConversation.title,rating:5,comment:'Original feedback'}],answers:{},ratings:{},submittedAt:'2026-10-23T18:00:00Z'});
+  const guestKey='guest:recEEEEEEEEEEEEEE', attendeeKey='participant:recFFFFFFFFFFFFFF';
+  fixtures.guests.push({id:guestKey.split(':')[1],name:'New Guest',availability:'date,start,end\n2026-10-23,13:30,14:30'});
+  fixtures.participants.push({id:attendeeKey.split(':')[1],name:'New Attendee'});
+  const edited = plan([[roster[0],guestKey],[roster[1],roster[2],attendeeKey]], [[roster[0],attendeeKey],[roster[1],roster[3]]]);
+  assert.equal((await draftAction.savePairingDraft('block',JSON.stringify(edited))).saved,true);
+  assert.equal(await currentTitle(),'1:1 with Bob','saving edits after release leaves existing live schedules intact');
+  fixtures.guests.at(-1).availability='';
+  assert.match(await call(admin.publishPairings),/error=roster/,'release rechecks changed availability');
+  assert.equal(await currentTitle(),'1:1 with Bob');
+  fixtures.guests.at(-1).availability='date,start,end\n2026-10-23,13:30,14:30';
+  assert.match(await call(admin.publishPairings),/published=/);
+  assert.equal(await currentTitle(),'1:1 with New Guest');
+  assert.ok((await conversations()).some(c=>c.partner==='New Attendee'));
+  assert.ok((await data.getPublishedAssignmentsFor(attendeeKey)).length===2);
+  const fresh = sessionRatings.buildSessionRatingOptions([session],await conversations(),'Kuhan');
+  assert.ok(fresh.some(o=>o.title==='1:1 with New Guest'));
+  assert.ok(!fresh.some(o=>o.title==='1:1 with Bob'));
+  assert.ok(feedbackOptions.readFeedbackOptions(signed,ownId).some(o=>o.title==='1:1 with Bob'),'an already-open form retains its own verified conversation labels');
+  assert.equal((await data.getFeedback())[0].sessions[0].title,'1:1 with Bob');
+  assert.equal((await data.getFeedback())[0].sessions[0].rating,5);
+  assert.match(await call(admin.hidePairings),/hidden=/);
+  assert.equal((await conversations()).length,0);
+  assert.ok(!(await data.getAssignments()).some(a=>a.state==='published'));
+  assert.ok((await data.getAssignments()).some(a=>a.state==='draft'));
+  assert.match(await call(admin.publishPairings),/published=/);
+  assert.equal(await currentTitle(),'1:1 with New Guest');
+});
+
+test('new guests enabled for a Saturday 1:1 half become Friday request options with their real directory profiles', async () => {
+  const f = feedbackHarness({ getGuests:async()=>[
+    {id:'new',name:'New Guest',availability:'date,start,end\n2026-10-24,12:00,12:30',bio:'New profile',organization:'New organization'},
+    {id:'partial',name:'Too brief',availability:'date,start,end\n2026-10-24,12:15,12:30'},
+    {id:'wrong-day',name:'Friday only',availability:'date,start,end\n2026-10-23,11:30,12:30'},
+  ], getSessions:async()=>[{type:'one-to-one',day:'2026-10-24',start:'2026-10-24T11:30',end:'2026-10-24T12:30'}] });
+  const options=await f.oneToOneGuestOptions('friday');
+  assert.equal(options.find(o=>o.name==='New Guest').person.key,'guest:new');
+  assert.equal(options.find(o=>o.name==='New Guest').person.bio,'New profile');
+  assert.ok(!options.some(o=>o.name==='Too brief'||o.name==='Friday only'));
 });

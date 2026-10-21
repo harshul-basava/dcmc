@@ -11,6 +11,7 @@ import { isPreviewing, requireParticipant } from "@/server/auth";
 import { getFeedback } from "@/server/data";
 import { getFeedbackQuestions } from "@/server/feedback-questions";
 import { feedbackForm, feedbackFormOpen, oneToOneGuestOptions } from "@/server/feedback";
+import { signFeedbackOptions } from "@/server/feedback-options";
 import { sessionRatingOptions } from "@/server/session-ratings";
 import { submitFeedback } from "../actions";
 
@@ -56,9 +57,10 @@ export default async function FeedbackFormPage({ params, searchParams }: {
         {testing ? <p className="mb-6 rounded-card border border-rule bg-card p-4 text-sm text-muted">Feedback test: closed forms are available. Submitting checks your answers without saving a response or changing pairing requests. <a href="/dashboard/admin/feedback" className="text-accent underline">Back to admin feedback</a></p> : null}
         {testing && tested ? <p role="status" className="mb-6 text-sm text-[color:var(--color-success)]">Test passed. Your answers were valid. Nothing was saved.</p> : null}
         {key === "goals" ? <p className="mb-6 text-sm text-muted">You can return to review and update your goals. Your responses are also visible to conference organizers.</p> : null}
-        {error ? <p role="alert" className="mb-6 rounded-card border border-accent bg-[color:var(--red-50)] p-4 text-sm text-accent">{error === "save" ? "Your response could not be saved. Please try again." : "Please answer the required questions before submitting."}</p> : null}
+        {error ? <p role="alert" className="mb-6 rounded-card border border-accent bg-[color:var(--red-50)] p-4 text-sm text-accent">{error === "save" ? "Your response could not be saved. Please try again." : error === "options" ? "The session list could not be verified. Please use this refreshed form." : "Please answer the required questions before submitting."}</p> : null}
         <form action={submitFeedback} className="grid gap-8">
           <input type="hidden" name="form" value={key} />
+          {key === "overall" ? <input type="hidden" name="session-options" value={signFeedbackOptions(me.id, rated)} /> : null}
           {key === "overall" ? <OverallFeedback questions={questions} sessions={rated} /> : questions.filter((q) => q.enabled).map((q) => {
             if (q.type === "text" || q.type === "rating") {
               return <FeedbackFields key={q.key} questions={[q]} answers={previousGoals?.answers} ratings={previousGoals?.ratings} />;
