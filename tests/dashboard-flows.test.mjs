@@ -510,3 +510,78 @@ test('admin generation respects availability/exclusions, drafts stay private, an
   assert.ok(assignments.some(a => a.state === 'draft' && a.group !== types.PAIRING_EXCLUDED));
   assert.match(await call(actions.generatePairings,'sgd'), /error=session/);
 });
+
+const planner = load('lib/pairing-planner.ts');
+const availability = load('server/availability.ts', { './schedule': scheduleHelpers });
+const pairingRosterHelpers = load('server/pairing-roster.ts', { './pairings': pairings, './availability': availability, './schedule': scheduleHelpers });
+
+test('visual moves displace occupied slots, preserve the roster, and do not erase a neighbor on a self-drop', () => {
+  const round = { eligible: roster, groups: [
+    { id: 'a', members: [roster[0], roster[1]], location: 'Lobby' },
+    { id: 'b', members: [roster[2], roster[3]], location: 'Garden' },
+  ] };
+  assert.equal(planner.movePerson(round, roster[0], 'a', 0), round);
+  const moved = planner.movePerson(round, roster[0], 'b', 1);
+  assert.deepEqual(Array.from(moved.groups[1].members), [roster[2], roster[0]]);
+  assert.deepEqual(Array.from(moved.groups[0].members), [roster[1]]);
+  assert.equal(moved.groups[1].location, 'Garden');
+  assert.equal(new Set(moved.groups.flatMap(g => g.members)).size, 3);
+  assert.equal(round.groups[0].members.length, 2, 'input remains unchanged');
+  assert.equal(planner.movePerson(round, 'guest:unknown', 'a'), round);
+  const unavailable = { ...round, eligible: roster.slice(1) };
+  assert.ok(!planner.movePerson(unavailable, roster[0], '').groups.some(g => g.members.includes(roster[0])));
+});
+
+test('manual draft validates eligibility per half, capacity, duplicate assignments, and canonical labels', () => {
+  const groups = [
+    { groups: [{ members: [roster[0], roster[1]], location: 'Lobby' }] },
+    { groups: [{ members: [roster[0], roster[2], roster[3]], location: 'Garden' }] },
+  ];
+  const eligible = [roster.slice(0, 3), roster];
+  const rows = planner.planAssignments(groups, 'block', eligible);
+  assert.equal(rows.length, 5);
+  assert.equal(rows[0].group, 'S1 · 1:1 01');
+  assert.equal(rows[4].group, 'S2 · 1:1 01');
+  assert.equal(rows[4].location, 'Garden');
+  const bad = value => assert.equal(planner.planAssignments(value, 'block', eligible), null);
+  bad(null); bad([{}]);
+  bad([{ groups: [{ members: [roster[0], roster[3]], location: '' }] }, groups[1]]);
+  bad([{ groups: [{ members: [roster[0]], location: '' }] }, groups[1]]);
+  bad([{ groups: [{ members: roster, location: '' }] }, groups[1]]);
+  bad([{ groups: [{ members: [roster[0], roster[0]], location: '' }] }, groups[1]]);
+  bad([{ groups: [groups[0].groups[0], groups[0].groups[0]] }, groups[1]]);
+});
+
+test('manual save requires admin, uses current guest availability and exclusions, saves only draft, and retains edits on failure', async () => {
+  const block = { id: 'block', type: 'one-to-one', day: '2026-10-24', start: '2026-10-24T10:00', end: '2026-10-24T11:00' };
+  const assignments = [{ sessionId: 'block', personKey: roster[2], group: types.PAIRING_EXCLUDED }];
+  let authorized = true, checks = 0, fail = false;
+  const writes = [];
+  const { savePairingDraft } = load('app/dashboard/admin/pairings/actions.ts', {
+    'next/cache': { revalidatePath() {} }, '@/server/auth': { requireAdmin: async () => { checks++; if (!authorized) throw Error('Unauthorized'); } },
+    '@/server/data': {
+      getSessions: async () => [block], getParticipants: async () => roster.slice(0,3).map(key => ({ id: key.split(':')[1] })),
+      getGuests: async () => [{ id: roster[3].split(':')[1], availability: 'date,start,end\n2026-10-24,10:30,11:00' }],
+      getAssignments: async () => assignments,
+      replaceAssignments: async (...args) => { if (fail) throw Error('offline'); writes.push(args); },
+    }, '@/server/pairing-roster': pairingRosterHelpers, '@/lib/pairing-planner': planner,
+  });
+  const plan = [
+    { groups: [{ members: [roster[0], roster[1]], location: 'Lobby' }] },
+    { groups: [{ members: [roster[0], roster[3]], location: 'Garden' }] },
+  ];
+  assert.equal((await savePairingDraft('block', JSON.stringify(plan))).saved, true);
+  assert.equal(writes.length, 1); assert.equal(writes[0][2], 'draft');
+  const invalid = structuredClone(plan); invalid[0].groups[0].members[1] = roster[3];
+  assert.ok((await savePairingDraft('block', JSON.stringify(invalid))).error, 'guest unavailable in first half');
+  invalid[0].groups[0].members[1] = roster[2];
+  assert.ok((await savePairingDraft('block', JSON.stringify(invalid))).error, 'excluded attendee');
+  assert.ok((await savePairingDraft('missing', JSON.stringify(plan))).error);
+  assert.ok((await savePairingDraft('block', 'bad-json')).error);
+  assert.ok((await savePairingDraft('block', JSON.stringify([{ groups: [] }, { groups: [] }]))).error);
+  assert.equal(writes.length, 1);
+  fail = true; assert.match((await savePairingDraft('block', JSON.stringify(plan))).error, /edits are still here/);
+  authorized = false;
+  await assert.rejects(savePairingDraft('block', JSON.stringify(plan)), /Unauthorized/);
+  assert.equal(checks, 8);
+});
