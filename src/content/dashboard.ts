@@ -218,6 +218,11 @@ export const handbookLinks = [
     href: "/dashboard/handbook/resources",
   },
   {
+    title: "Lightning talks signup",
+    body: "Sign up here for a casual 5 minute lightning talk Saturday evening",
+    href: "https://docs.google.com/spreadsheets/d/11mYOKkdIzFJcdhp7gToMm7CXIZViLz1YpbukvsGzTlo/edit?gid=0#gid=0",
+  },
+  {
     title: "Code of conduct",
     body: "Expectations and important policies.",
     href: "/dashboard/handbook/code-of-conduct",
