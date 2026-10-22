@@ -37,6 +37,54 @@ export function findPairingRepeats(plan: PairingPlan, history: PairingHistory[],
   ));
 }
 
+export type GuestTimeWarning = {
+  participantKey: PersonKey;
+  half: number;
+  groupId: string;
+  guestCount: number;
+  otherMeetings: { guestKey: PersonKey; label: string }[];
+};
+
+/** Equity concerns are advisory: compare distinct guests across the editable
+ * halves and other blocks' working drafts (or their released pairings). */
+export function findGuestTimeWarnings(plan: PairingPlan, history: PairingHistory[], times: string[]): GuestTimeWarning[] {
+  type Meeting = { participantKey: PersonKey; guestKey: PersonKey; label: string; half?: number; groupId?: string };
+  const meetings: Meeting[] = [];
+  const guestEdge = (members: string[]) => {
+    if (members.length !== 2) return null;
+    const participantKey = members.find((key) => key.startsWith("participant:")) as PersonKey | undefined;
+    const guestKey = members.find((key) => key.startsWith("guest:")) as PersonKey | undefined;
+    return participantKey && guestKey ? { participantKey, guestKey } : null;
+  };
+  for (const { key, label } of history) {
+    const edge = guestEdge(key.split("|"));
+    if (edge) meetings.push({ ...edge, label });
+  }
+  for (const [half, round] of plan.entries()) {
+    for (const group of round.groups) {
+      for (const key of groupPairKeys(group.members)) {
+        const edge = guestEdge(key.split("|"));
+        if (edge) meetings.push({ ...edge, label: `${times[half]} (${half === 0 ? "first" : "second"} half of this block)`, half, groupId: group.id });
+      }
+    }
+  }
+  return plan.flatMap((round, half) => round.groups.flatMap((group) => {
+    const currentGuests = group.members.filter((key) => key.startsWith("guest:"));
+    if (!currentGuests.length) return [];
+    return [...new Set(group.members.filter((key) => key.startsWith("participant:")))].flatMap((participantKey) => {
+      const own = meetings.filter((m) => m.participantKey === participantKey);
+      const guestCount = new Set(own.map((m) => m.guestKey)).size;
+      if (guestCount < 2) return [];
+      const otherMeetings = new Map<string, { guestKey: PersonKey; label: string }>();
+      for (const meeting of own) {
+        if (currentGuests.includes(meeting.guestKey)) continue;
+        otherMeetings.set(`${meeting.guestKey}|${meeting.label}`, { guestKey: meeting.guestKey, label: meeting.label });
+      }
+      return [{ participantKey, half, groupId: group.id, guestCount, otherMeetings: [...otherMeetings.values()] }];
+    });
+  }));
+}
+
 /** Moving into an occupied slot returns its previous occupant to the roster. */
 export function movePerson(round: PairingRound, person: PersonKey, destination: string, slot?: number): PairingRound {
   const source = round.groups.find((g) => g.members.includes(person));

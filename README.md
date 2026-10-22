@@ -170,6 +170,10 @@ batches succeed. Reads use the latest committed revision; legacy rows still work
 until that session is first revised. Failed staging leaves the prior version
 visible, and failed cleanup cannot mix retired partners into current schedules.
 
+The pairing editor flags an attendee assigned to multiple distinct guests across
+both halves and the other days’ working pairings. These guest-time equity warnings
+show the other guest and slot and are advisory; saving and releasing stay available.
+
 Overall feedback uses conversation identities based on the session, half, and
 people, so re-releasing or renumbering pairs does not change them. Each rendered
 form carries a signed snapshot of its options bound to that attendee: if live
