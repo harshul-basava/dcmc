@@ -6,7 +6,7 @@ import { generatePairings, hidePairings, publishPairings } from "@/app/dashboard
 import { savePairingDraft } from "@/app/dashboard/admin/pairings/actions";
 import type { ConversationPreference, PersonKey } from "@/server/data/types";
 import { generateOneToOne } from "@/server/pairings";
-import { groupPairKeys, movePerson, type PairingGroup, type PairingPerson, type PairingPlan } from "@/lib/pairing-planner";
+import { findPairingRepeats, groupPairKeys, movePerson, type PairingGroup, type PairingHistory, type PairingPerson, type PairingPlan } from "@/lib/pairing-planner";
 import PhotoSlot from "./PhotoSlot";
 
 type Props = {
@@ -14,7 +14,7 @@ type Props = {
   people: PairingPerson[];
   initial: PairingPlan;
   preferences: ConversationPreference[];
-  history: { key: string; label: string }[];
+  history: PairingHistory[];
   times: string[];
   storageReady: boolean;
   hasDraft: boolean;
@@ -38,6 +38,9 @@ export default function PairingPlanner({ sessionId, people, initial, preferences
   const unpaired = round.eligible.filter((key) => !assigned.has(key));
   const incomplete = plan.some((r) => r.groups.some((g) => g.members.length === 1));
   const totalPaired = plan.reduce((sum, r) => sum + r.groups.reduce((n, g) => n + (g.members.length >= 2 ? g.members.length : 0), 0), 0);
+  const repeats = findPairingRepeats(plan, history, times);
+  const repeatCount = new Set(repeats.map((issue) => issue.key)).size;
+  const repeatsPerHalf = [0, 1].map((i) => new Set(repeats.filter((issue) => issue.half === i).map((issue) => issue.key)).size);
 
   useEffect(() => {
     if (!dirty) return;
@@ -97,12 +100,6 @@ export default function PairingPlanner({ sessionId, people, initial, preferences
       </select>
     </article>;
   }
-  function warnings(group: PairingGroup) {
-    const keys = groupPairKeys(group.members);
-    const repeats = history.filter((h) => keys.includes(h.key)).map((h) => h.label);
-    if (plan[1 - half].groups.some((g) => groupPairKeys(g.members).some((key) => keys.includes(key)))) repeats.push("the other half of this block");
-    return [...new Set(repeats)];
-  }
   function requests(group: PairingGroup) {
     return preferences.filter((p) => group.members.includes(p.sourceKey) && group.members.includes(p.targetKey))
       .map((p) => `${byKey.get(p.sourceKey)?.name} requested ${byKey.get(p.targetKey)?.name} (#${p.rank})`);
@@ -115,7 +112,8 @@ export default function PairingPlanner({ sessionId, people, initial, preferences
       <button type="button" disabled={saving || !storageReady} onClick={() => edit((prev) => prev.map((r, i) => i === half ? { ...r, groups: [...r.groups, { id: crypto.randomUUID(), members: [], location: "NET" }] } : r) as PairingPlan)}>+ Add pair</button>
     </div>
     <p className="pairing-help">Drag people into a pair, or select a person and click an empty slot. Each card also has a Move menu. Search highlights matching people.</p>
-    <div className="pairing-tabs" aria-label="Choose 1:1 half">{[0, 1].map((i) => <button key={i} type="button" aria-pressed={half === i} onClick={() => { setHalf(i); setSelected(null); }}><strong>{i === 0 ? "First half" : "Second half"}</strong><span>{times[i]}</span></button>)}</div>
+    <div className="pairing-tabs" aria-label="Choose 1:1 half">{[0, 1].map((i) => <button key={i} type="button" aria-pressed={half === i} onClick={() => { setHalf(i); setSelected(null); }}><strong>{i === 0 ? "First half" : "Second half"}</strong><span>{times[i]}</span>{repeatsPerHalf[i] ? <span className="pairing-repeat-count">{repeatsPerHalf[i]} repeat{repeatsPerHalf[i] === 1 ? "" : "s"}</span> : null}</button>)}</div>
+    <div aria-live="polite" aria-atomic="true">{repeatCount ? <p className="pairing-repeat-summary"><strong>{repeatCount} repeated pairing{repeatCount === 1 ? "" : "s"} across slots.</strong> Highlighted pairs are also scheduled in another half or day. Change a partner to resolve the issue.</p> : null}</div>
     <p className="pairing-summary" role="status">{assigned.size} of {round.eligible.length} placed · {unpaired.length} unpaired{selected ? ` · Moving ${byKey.get(selected)?.name}` : ""}</p>
     <div className="pairing-workspace">
       <aside className={`pairing-roster ${over === "roster" ? "is-over" : ""}`} aria-label="Unpaired people" onDragOver={(e) => { e.preventDefault(); setOver("roster"); }} onDragLeave={() => setOver(null)} onDrop={(e) => drop(e, "")}>
@@ -124,16 +122,16 @@ export default function PairingPlanner({ sessionId, people, initial, preferences
         <div className="pairing-roster-list">{unpaired.map((key) => card(key))}{!unpaired.length ? <p className="pairing-empty">Everyone is placed in this half.</p> : null}</div>
       </aside>
       <div className="pairing-pairs">{round.groups.map((group, index) => {
-        const repeats = warnings(group);
+        const groupRepeats = repeats.filter((issue) => issue.half === half && issue.groupId === group.id);
         const requestLabels = requests(group);
-        return <section key={group.id} className={`pairing-pair ${repeats.length || group.members.length === 1 ? "has-warning" : ""}`} aria-label={`Pair ${index + 1}`}>
+        return <section key={group.id} className={`pairing-pair ${groupRepeats.length || group.members.length === 1 ? "has-warning" : ""}`} aria-label={`Pair ${index + 1}`}>
           <header><h3>Pair {String(index + 1).padStart(2, "0")}</h3><button type="button" disabled={saving || !storageReady} aria-label={`Remove pair ${index + 1}`} onClick={() => edit((prev) => prev.map((r, i) => i === half ? { ...r, groups: r.groups.filter((g) => g.id !== group.id) } : r) as PairingPlan)}>Remove</button></header>
           <div className="pairing-slots">{[0, 1, 2].map((slot) => <div key={slot} className={`pairing-slot ${over === `${group.id}-${slot}` ? "is-over" : ""}`} onDragOver={(e) => { e.preventDefault(); setOver(`${group.id}-${slot}`); }} onDragLeave={() => setOver(null)} onDrop={(e) => drop(e, group.id, slot)}>
             {group.members[slot] ? card(group.members[slot], group.id) : <button type="button" aria-disabled={!selected || saving || !storageReady} onClick={() => { if (selected && !saving && storageReady) move(selected, group.id, slot); }}>{slot === 2 ? "+ Optional third person" : `Drop person ${slot + 1} here`}</button>}
           </div>)}</div>
           {requestLabels.length ? <p className="pairing-request">{preferences.some((p) => group.members.includes(p.sourceKey) && group.members.includes(p.targetKey) && preferences.some((r) => r.sourceKey === p.targetKey && r.targetKey === p.sourceKey)) ? "Mutual requests · " : "Requested · "}{requestLabels.join("; ")}</p> : null}
           {group.members.length === 1 ? <p className="pairing-warning">Needs a partner before release.</p> : null}
-          {repeats.length ? <p className="pairing-warning">Repeat pairing: also in {repeats.join("; ")}.</p> : null}
+          {groupRepeats.map((issue) => <p key={issue.key} className="pairing-warning"><strong>Repeat pairing:</strong> {issue.members.map((key) => byKey.get(key)?.name ?? "Unknown person").join(" and ")} are also in {issue.slots.join("; ")}.</p>)}
         </section>;
       })}{!round.groups.length ? <p className="pairing-empty">Add a pair to start arranging people, or use Pair everyone.</p> : null}</div>
     </div>

@@ -18,16 +18,17 @@ export default async function AdminPairings({ searchParams }: {
   const flags = await searchParams;
   const [sessions, assignments, participants, guests] = await Promise.all([getSessions(), getAssignments(), getParticipants(), getGuests()]);
   const blocks = sessions.filter((s) => s.type === "one-to-one");
+  const draftSlotsById = new Map(await Promise.all(blocks.map(async (block) => [block.id, await getPairingDraftSlots(block.id)] as const)));
   const selectedId = flags.session ?? flags.generated ?? flags.published ?? flags.hidden;
   const session = blocks.find((s) => s.id === selectedId) ?? blocks[0];
   const storageReady = !airtableConfigured() || Boolean(ASSIGNMENTS_TABLE);
   const rowsFor = (id: string) => assignments.filter((a) => a.sessionId === id && a.group !== PAIRING_EXCLUDED);
   const workingFor = (id: string) => {
     const rows = rowsFor(id);
-    return rows.some((a) => a.state === "draft") ? rows.filter((a) => a.state === "draft") : rows.filter((a) => a.state === "published");
+    return draftSlotsById.get(id) || rows.some((a) => a.state === "draft") ? rows.filter((a) => a.state === "draft") : rows.filter((a) => a.state === "published");
   };
   const roster = session ? pairingRoster(session, participants, guests, assignments) : null;
-  const draftSlots = session ? await getPairingDraftSlots(session.id) : null;
+  const draftSlots = session ? draftSlotsById.get(session.id) ?? null : null;
   const working = session ? (draftSlots ? rowsFor(session.id).filter((a) => a.state === "draft") : workingFor(session.id)) : [];
   const initial = roster?.halves.map((eligible, half) => {
     const groups = new Map<string, PairingGroup>();
@@ -53,7 +54,8 @@ export default async function AdminPairings({ searchParams }: {
   const history = blocks.filter((s) => s.id !== session?.id).flatMap((s) => {
     const groups = new Map<string, string[]>();
     for (const row of workingFor(s.id)) groups.set(row.group, [...(groups.get(row.group) ?? []), row.personKey]);
-    return [...groups].flatMap(([group, members]) => groupPairKeys(members).map((key) => ({ key, label: `${s.title}, ${longDayLabel(s.day)}, ${group.startsWith("S2") ? "second" : "first"} half` })));
+    const ranges = pairingRoster(s, [], [], []).times;
+    return [...groups].flatMap(([group, members]) => groupPairKeys(members).map((key) => ({ key, label: `${longDayLabel(s.day)} · ${formatRange(...ranges[group.startsWith("S2") ? 1 : 0] as [number, number])}` })));
   });
   return <PortalShell role="admin" active="pairings">
     <PageHeading title="Pairings" lead="Arrange 1:1 conversations visually. Review both halves, save a private draft, then release it to attendee schedules. Guests appear during their submitted availability." />

@@ -16,6 +16,27 @@ export function groupPairKeys(members: string[]): string[] {
   return members.flatMap((a, i) => members.slice(i + 1).map((b) => pairingKey(a, b)));
 }
 
+export type PairingHistory = { key: string; label: string };
+export type PairingRepeat = { key: string; half: number; groupId: string; members: [PersonKey, PersonKey]; slots: string[] };
+
+/** Compare the editable plan with both halves and the other saved blocks. */
+export function findPairingRepeats(plan: PairingPlan, history: PairingHistory[], times: string[]): PairingRepeat[] {
+  const elsewhere = new Map<string, Set<string>>();
+  for (const { key, label } of history) {
+    if (!elsewhere.has(key)) elsewhere.set(key, new Set());
+    elsewhere.get(key)!.add(label);
+  }
+  const roundKeys = plan.map((round) => new Set(round.groups.flatMap((group) => groupPairKeys(group.members))));
+  return plan.flatMap((round, half) => round.groups.flatMap((group) =>
+    group.members.flatMap((a, i) => group.members.slice(i + 1).flatMap((b) => {
+      const key = pairingKey(a, b);
+      const slots = new Set(elsewhere.get(key));
+      if (roundKeys[1 - half].has(key)) slots.add(`${times[1 - half]} (other half of this block)`);
+      return slots.size ? [{ key, half, groupId: group.id, members: [a, b] as [PersonKey, PersonKey], slots: [...slots] }] : [];
+    })),
+  ));
+}
+
 /** Moving into an occupied slot returns its previous occupant to the roster. */
 export function movePerson(round: PairingRound, person: PersonKey, destination: string, slot?: number): PairingRound {
   const source = round.groups.find((g) => g.members.includes(person));

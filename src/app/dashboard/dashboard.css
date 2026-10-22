@@ -1405,6 +1405,8 @@ body.schedule-expanded {
 .pairing-tabs button{display:grid;gap:2px;text-align:left;min-height:48px;padding:7px 16px;border-bottom:2px solid transparent}
 .pairing-tabs button[aria-pressed=true]{border-color:var(--color-accent);color:var(--color-accent)}
 .pairing-tabs span{font-size:11px;color:var(--muted)}
+.pairing-tabs .pairing-repeat-count{color:#885a16;font-weight:600;font-variant-numeric:tabular-nums}
+.pairing-repeat-summary{margin-top:12px;padding:10px 12px;border-left:3px solid #b78a42;border-radius:4px;background:#fff4dd;color:#68420e;font-size:12px;line-height:1.6}
 .pairing-summary{font-size:12px;color:var(--muted);padding:10px 0;font-variant-numeric:tabular-nums}
 .pairing-workspace{display:grid;grid-template-columns:minmax(190px,220px) minmax(0,1fr);gap:12px;align-items:start}
 .pairing-roster{position:sticky;top:90px;border:1px solid var(--rule);background:var(--sand);border-radius:12px;overflow:hidden}
@@ -1428,7 +1430,7 @@ body.schedule-expanded {
 .pairing-avatar img,.pairing-avatar .plate{height:100%;width:100%;object-fit:cover}.pairing-avatar img{outline:1px solid rgba(0,0,0,.1);outline-offset:-1px}.pairing-avatar .plate{display:grid;place-items:center;font-size:11px}
 .pairing-grip{display:none}
 .pairing-person select{grid-column:2;grid-row:1;width:100%;min-width:0;min-height:40px;border-left:1px solid var(--rule);padding:4px 2px;background:transparent;color:var(--muted);font-size:10px}.pairing-person>.pairing-warning{grid-column:1/-1;padding:4px 6px}
-.pairing-pair.has-warning{border-color:#b78a42}.pairing-warning{font-size:12px;line-height:1.6;color:#885a16}.pairing-pair .pairing-warning,.pairing-pair .pairing-request{padding:0 8px 6px;font-size:10px;line-height:1.4}
+.pairing-pair.has-warning{border-color:#b78a42}.pairing-pair.has-warning>header{background:#fff4dd}.pairing-warning{font-size:12px;line-height:1.6;color:#885a16}.pairing-pair .pairing-warning,.pairing-pair .pairing-request{padding:0 8px 6px;font-size:10px;line-height:1.4}
 .pairing-request{font-size:12px;line-height:1.6}.pairing-empty{padding:16px;font-size:12px;color:var(--muted)}
 .pairing-slot.is-over,.pairing-roster.is-over{background:var(--red-50);border-color:var(--color-accent)}
 .pairing-preferences{margin-top:24px;padding:16px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);font-size:12px}

@@ -517,6 +517,33 @@ const planner = load('lib/pairing-planner.ts');
 const availability = load('server/availability.ts', { './schedule': scheduleHelpers });
 const pairingRosterHelpers = load('server/pairing-roster.ts', { './pairings': pairings, './availability': availability, './schedule': scheduleHelpers });
 
+test('repeat detection covers both halves and other days regardless of member order', () => {
+  const group = (id, members) => ({ id, members, location: 'NET' });
+  const plan = [
+    { eligible: roster, groups: [group('first', [roster[0], roster[1]]), group('unrelated', [roster[2], roster[3]])] },
+    { eligible: roster, groups: [group('second', [roster[1], roster[0]])] },
+  ];
+  const label = 'Saturday, Oct 24 · 12pm – 12:30pm';
+  const history = [{ key: planner.pairingKey(roster[1], roster[0]), label }];
+  const issues = planner.findPairingRepeats(plan, [...history, ...history], ['1:30pm – 2pm', '2pm – 2:30pm']);
+  assert.equal(issues.length, 2, 'flag both occurrences, not unrelated pairs');
+  assert.equal(new Set(issues.map(i => i.key)).size, 1, 'one distinct repeated relationship');
+  assert.deepEqual(Array.from(issues[0].slots), [label, '2pm – 2:30pm (other half of this block)']);
+  assert.deepEqual(Array.from(issues[1].slots), [label, '1:30pm – 2pm (other half of this block)']);
+});
+
+test('repeat issues follow edits, identify the repeated subset of a trio, and clear when resolved', () => {
+  const group = { id: 'trio', members: [roster[0], roster[1], roster[2]], location: 'NET' };
+  const plan = [{ eligible: roster, groups: [group] }, { eligible: roster, groups: [] }];
+  const history = [{ key: planner.pairingKey(roster[0], roster[2]), label: 'Friday, Oct 23 · 2pm – 2:30pm' }];
+  const issues = planner.findPairingRepeats(plan, history, ['11:30am – 12pm', '12pm – 12:30pm']);
+  assert.equal(issues.length, 1);
+  assert.deepEqual(Array.from(issues[0].members), [roster[0], roster[2]], 'name only the two people repeating');
+  const edited = [planner.movePerson(plan[0], roster[3], 'trio', 2), plan[1]];
+  assert.equal(planner.findPairingRepeats(edited, history, ['first', 'second']).length, 0);
+  assert.equal(planner.findPairingRepeats(plan, [], ['first', 'second']).length, 0, 'one person meeting different partners is not a repeat');
+});
+
 test('visual moves displace occupied slots, preserve the roster, and do not erase a neighbor on a self-drop', () => {
   const round = { eligible: roster, groups: [
     { id: 'a', members: [roster[0], roster[1]], location: 'Lobby' },
