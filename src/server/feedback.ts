@@ -1,5 +1,6 @@
 import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { organizers } from "@/content/dashboard";
 import {
   getAssignments,
   getGuests,
@@ -241,7 +242,7 @@ export type OneToOneGuestOption = {
   person?: OneToOneCandidate;
 };
 
-export async function oneToOneGuestOptions(form: string): Promise<OneToOneGuestOption[]> {
+export async function oneToOneGuestOptions(form: string, includeOrganizers = false): Promise<OneToOneGuestOption[]> {
   if (form !== "friday") return [];
   const [guests, sessions] = await Promise.all([getGuests(), getSessions()]);
   const nextDay = new Date(`${feedbackForm(form)!.day}T12:00:00Z`);
@@ -251,6 +252,7 @@ export async function oneToOneGuestOptions(form: string): Promise<OneToOneGuestO
   const names: string[] = [...ONE_TO_ONE_GUESTS.saturday];
   // New guests enabled for either conversation also become request options.
   for (const guest of guests) {
+    if (!includeOrganizers && organizers.some((organizer) => normalizePreferenceName(organizer.name) === normalizePreferenceName(guest.name))) continue;
     const windows = parseAvailability(guest.availability ?? "");
     const eligible = blocks.some((session) => {
       const start = minutesOf(session.start), end = minutesOf(session.end);
@@ -282,7 +284,7 @@ export async function oneToOneGuestOptions(form: string): Promise<OneToOneGuestO
 /** Resolve written requests against all attendees and that form's guests. */
 export async function oneToOneCandidates(excludeParticipantId: string, form: string): Promise<OneToOneCandidate[]> {
   if (form !== "friday") return [];
-  const [participants, options] = await Promise.all([getParticipants(), oneToOneGuestOptions(form)]);
+  const [participants, options] = await Promise.all([getParticipants(), oneToOneGuestOptions(form, true)]);
   return [
     ...participants.filter((person) => person.id !== excludeParticipantId).map((person) => ({
       key: `participant:${person.id}` as PersonKey,

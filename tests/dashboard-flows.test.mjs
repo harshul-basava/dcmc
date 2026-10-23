@@ -54,6 +54,7 @@ test('1:1 generator respects each half roster and prioritizes mutual requests', 
 
 function feedbackHarness(data = {}) {
   return load('server/feedback.ts', {
+    '@/content/dashboard': load('content/dashboard.ts'),
     'node:crypto': {}, 'next/headers': {}, './data': { getSessions:async()=>[], ...data }, './people': {}, './schedule': load('server/schedule.ts'), './availability':load('server/availability.ts',{'./schedule':load('server/schedule.ts')}),
   });
 }
@@ -693,6 +694,7 @@ test('conversation identities survive rerelease, renumbering and location change
   const session = { id:'block', title:'1:1s', type:'one-to-one', personalized:true, day:'2026-10-23', start:'2026-10-23T13:30', end:'2026-10-23T14:30', location:'NET', speaker:'', description:'' };
   const people = new Map(roster.map((key,i) => [key, {name:['Alice','Bob','Cara','Guest'][i]}]));
   const conversations = load('server/feedback.ts', {
+    '@/content/dashboard': load('content/dashboard.ts'),
     'node:crypto':crypto, 'next/headers':{}, './data': { ...h.data, getSessions:async()=>[session] },
     './people': { personLookup:async()=>people }, './schedule':scheduleHelpers, './availability':availability,
   });
@@ -750,7 +752,7 @@ test('admin lifecycle saves, releases, adds people, swaps partners and hides wit
     '@/server/pairing-roster':pairingRosterHelpers, '@/lib/pairing-planner':planner,
   });
   const peopleHelpers = load('server/people.ts', {'./data':data});
-  const f = load('server/feedback.ts', { 'node:crypto':crypto, 'next/headers':{}, './data':data, './people':peopleHelpers, './schedule':scheduleHelpers, './availability':availability });
+  const f = load('server/feedback.ts', { '@/content/dashboard': load('content/dashboard.ts'), 'node:crypto':crypto, 'next/headers':{}, './data':data, './people':peopleHelpers, './schedule':scheduleHelpers, './availability':availability });
   const ownId = roster[0].split(':')[1];
   const conversations = () => f.oneToOneConversations(ownId);
   const currentTitle = async () => scheduleHelpers.buildSchedule({ sessions:[session], assignments:await data.getAssignments(), people:await peopleHelpers.personLookup(), viewerKey:roster[0] }).flatMap(d=>d.blocks).find(b=>b.key==='block-S1').title;
@@ -798,11 +800,17 @@ test('new guests enabled for a Saturday 1:1 half become Friday request options w
     {id:'new',name:'New Guest',availability:'date,start,end\n2026-10-24,12:00,12:30',bio:'New profile',organization:'New organization'},
     {id:'partial',name:'Too brief',availability:'date,start,end\n2026-10-24,12:15,12:30'},
     {id:'wrong-day',name:'Friday only',availability:'date,start,end\n2026-10-23,11:30,12:30'},
-  ], getSessions:async()=>[{type:'one-to-one',day:'2026-10-24',start:'2026-10-24T11:30',end:'2026-10-24T12:30'}] });
+    ...['Harshul Basava', 'Liam Robins', 'Isel Neira', 'Seth Lifland'].map((name, i) => ({id:`organizer${i}`,name,availability:'date,start,end\n2026-10-24,11:30,12:30',bio:'Organizer bio'})),
+  ], getParticipants:async()=>[], getSessions:async()=>[{type:'one-to-one',day:'2026-10-24',start:'2026-10-24T11:30',end:'2026-10-24T12:30'}] });
   const options=await f.oneToOneGuestOptions('friday');
   assert.equal(options.find(o=>o.name==='New Guest').person.key,'guest:new');
   assert.equal(options.find(o=>o.name==='New Guest').person.bio,'New profile');
   assert.ok(!options.some(o=>o.name==='Too brief'||o.name==='Friday only'));
+  assert.ok(!options.some(o=>['Harshul Basava', 'Liam Robins', 'Isel Neira', 'Seth Lifland'].includes(o.name)));
+  const candidates = await f.oneToOneCandidates('self', 'friday');
+  for (const name of ['Harshul Basava', 'Liam Robins', 'Isel Neira', 'Seth Lifland']) {
+    assert.ok(candidates.some(person => person.name === name), `${name} can still be requested by name`);
+  }
 });
 
 test('unfinished and entirely empty drafts retain their slot layout while the existing release remains unchanged', async () => {
@@ -830,7 +838,7 @@ test('final feedback lists each released 1:1 half as a session for that attendee
   const h=assignmentStorageHarness();
   const session={id:'block',title:'1:1s',type:'one-to-one',personalized:true,day:'2026-10-23',start:'2026-10-23T13:30',end:'2026-10-23T14:30',location:'NET',speaker:'',description:''};
   const people=new Map(roster.map((key,i)=>[key,{name:['Alice','Bob','Cara','Guest'][i]}]));
-  const f=load('server/feedback.ts',{'node:crypto':crypto,'next/headers':{},'./data':{...h.data,getSessions:async()=>[session]},'./people':{personLookup:async()=>people},'./schedule':scheduleHelpers,'./availability':availability});
+  const f=load('server/feedback.ts',{'@/content/dashboard': load('content/dashboard.ts'),'node:crypto':crypto,'next/headers':{},'./data':{...h.data,getSessions:async()=>[session]},'./people':{personLookup:async()=>people},'./schedule':scheduleHelpers,'./availability':availability});
   const options=async id=>sessionRatings.buildSessionRatingOptions([session],await f.oneToOneConversations(id),'Kuhan').filter(o=>o.id.startsWith('conv-'));
   await h.data.replaceAssignments(['block'],[assignmentRow(roster[0])],'draft',[1,1]);
   assert.equal((await options(roster[0].split(':')[1])).length,0);

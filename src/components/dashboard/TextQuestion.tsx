@@ -12,7 +12,7 @@ export default function TextQuestion({
   aside,
 }: {
   name: string;
-  label: string;
+  label: ReactNode;
   description?: string;
   required?: boolean;
   rows?: number;

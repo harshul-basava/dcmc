@@ -57,7 +57,7 @@ const defaults: Record<EditableForm, FeedbackQuestion[]> = {
   anytime: [question("comment", "Feedback", 1, "text", true)],
 };
 
-defaults.friday.splice(3, 0, question("one-on-one-picks", "List up to 10 attendees and guests you would like to have 1:1s with tomorrow (Saturday), in order of preference.", 4, "ranked", true));
+defaults.friday.splice(3, 0, question("one-on-one-picks", "List up to 10 attendees, guests, or organizers you would like to have 1:1s with tomorrow (Saturday), in order of preference.", 4, "ranked", true));
 defaults.friday.forEach((q, index) => { q.position = index + 1; });
 defaults.overall.forEach((q, index) => { q.position = index + 1; });
 
@@ -110,7 +110,7 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
           if ((form === "friday" || form === "saturday") && q.key === "most-value" && q.label === "Who have you gotten the most value from talking to?") {
             q.label = "Who did you get the most value from talking to today?";
           }
-          if (q.key === "one-on-one-picks" && ["List up to 10 people you would like to have 1:1s with tomorrow.", "List up to 10 attendees and guests you would like to have 1:1s with tomorrow, in order of preference."].includes(q.label)) {
+          if (q.key === "one-on-one-picks" && ["List up to 10 people you would like to have 1:1s with tomorrow.", "List up to 10 attendees and guests you would like to have 1:1s with tomorrow, in order of preference.", "List up to 10 attendees and guests you would like to have 1:1s with tomorrow (Saturday), in order of preference."].includes(q.label)) {
             q.label = defaults.friday.find((item) => item.key === q.key)!.label;
           }
         }
