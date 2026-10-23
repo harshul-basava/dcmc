@@ -71,8 +71,8 @@ and ranked requests are also synchronized to Conversation Preferences.
   Both the page and the individual form must be enabled. Anytime remains open
   whenever the Feedback page is enabled. Other daily forms require an explicit
   admin release; they do not open automatically by date.
-- `/dashboard/feedback/goals` has five required questions: motivation for working
-  in AI governance, questions to resolve, the best possible three-day outcome,
+- `/dashboard/feedback/goals` has five required questions: factors pushing towards
+  and against a career in AI governance, questions to resolve, the best possible three-day outcome,
   actions, and obstacles. Saved goals reload for review and updating. Goal
   responses are stored in Portal Feedback and visible to organizers, unlike the
   attendee-only goal responses in the original Lateral Workshop dashboard.
