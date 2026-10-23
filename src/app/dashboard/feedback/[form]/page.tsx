@@ -56,7 +56,7 @@ export default async function FeedbackFormPage({ params, searchParams }: {
         <PageHeading title={form.title} lead={form.description} />
         {testing ? <p className="mb-6 rounded-card border border-rule bg-card p-4 text-sm text-muted">Feedback test: closed forms are available. Submitting checks your answers without saving a response or changing pairing requests. <a href="/dashboard/admin/feedback" className="text-accent underline">Back to admin feedback</a></p> : null}
         {testing && tested ? <p role="status" className="mb-6 text-sm text-[color:var(--color-success)]">Test passed. Your answers were valid. Nothing was saved.</p> : null}
-        {key === "goals" ? <p className="mb-6 text-sm text-muted">You can return to review and update your goals. Your responses are also visible to conference organizers.</p> : null}
+        {key === "goals" ? <p className="mb-6 text-sm text-muted">You can return to review and update your goals.</p> : null}
         {error ? <p role="alert" className="mb-6 rounded-card border border-accent bg-[color:var(--red-50)] p-4 text-sm text-accent">{error === "save" ? "Your response could not be saved. Please try again." : error === "options" ? "The session list could not be verified. Please use this refreshed form." : "Please answer the required questions before submitting."}</p> : null}
         <form action={submitFeedback} className="grid gap-8">
           <input type="hidden" name="form" value={key} />

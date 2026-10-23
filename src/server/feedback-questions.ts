@@ -30,7 +30,7 @@ const daily = [
 
 const defaults: Record<EditableForm, FeedbackQuestion[]> = {
   goals: [
-    question("goal-blockers", "What are your biggest blockers to working in AI governance?", 1, "text", true),
+    question("goal-blockers", "What draws you to working in AI governance?", 1, "text", true),
     question("goal-questions", "What questions do you want answered before you leave?", 2, "text", true),
     question("goal-outcome", "If these three days go as well as they possibly could, what happens?", 3, "text", true),
     question("goal-actions", "What can you do to make this happen?", 4, "text", true),
@@ -101,6 +101,9 @@ export async function getFeedbackQuestions(form: string): Promise<FeedbackQuesti
       const parsed = validateQuestions(current, form)?.filter((q) => q.type !== "conversations" && !(form === "overall" && q.key === "one-on-ones-overall"));
       if (parsed) {
         for (const q of parsed) {
+          if (form === "goals" && q.key === "goal-blockers" && q.label === "What are your biggest blockers to working in AI governance?") {
+            q.label = defaults.goals.find((item) => item.key === q.key)!.label;
+          }
           if (form === "overall" && q.key === "scale-clarity-uncertainties" && q.label === "During this conference, I gained clarity on my main uncertainties, questions, or disagreements about working in AI governance.") {
             q.label = defaults.overall.find((item) => item.key === q.key)!.label;
           }
