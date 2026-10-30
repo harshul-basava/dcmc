@@ -7,7 +7,8 @@ import { FEEDBACK_FORMS } from "@/server/feedback";
 import { startLiveTest, startPreview } from "../actions";
 import MetricCard from "@/components/dashboard/MetricCard";
 import { requireAdmin } from "@/server/auth";
-import { getFeedback, getParticipants } from "@/server/data";
+import { getFeedback, getParticipants, getSessions } from "@/server/data";
+import { formatRange, minutesOf } from "@/server/schedule";
 
 /** `2026-10-23T14:05:00Z` -> `23 Oct, 14:05`. */
 function formatWhen(value: string): string {
@@ -36,7 +37,22 @@ export default async function AdminFeedback({
   const { saved, oneToOnes } = await searchParams;
   const showOneToOnes = oneToOnes !== "hidden";
 
-  const [allResponses, participants] = await Promise.all([getFeedback({ includeTests: true }), getParticipants()]);
+  const [allResponses, participants, sessions] = await Promise.all([
+    getFeedback({ includeTests: true }), getParticipants(), getSessions(),
+  ]);
+  const rotatingSessions = sessions
+    .filter((session) => /rotating\s+q\s*&\s*a/i.test(session.title) && !/introduction|norms/i.test(session.title))
+    .sort((a, b) => a.start.localeCompare(b.start));
+  const rotatingLabels = new Map(rotatingSessions.map((session) => {
+    const day = new Date(`${session.day}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
+    const sameDay = rotatingSessions.filter((other) => other.day === session.day);
+    const label = day === "Friday" && sameDay.length === 2
+      ? `Friday ${sameDay[0].id === session.id ? "early" : "late"} afternoon`
+      : sameDay.length > 1
+        ? `${day} · ${formatRange(minutesOf(session.start), minutesOf(session.end))}`
+        : day;
+    return [session.id, label];
+  }));
   const testResponses = allResponses.filter((response) => response.isTest || isTestParticipant(response.participantId));
   const responses = allResponses.filter((response) => !response.isTest && !isTestParticipant(response.participantId));
   const testPassword = testAttendeePassword();
@@ -230,12 +246,15 @@ export default async function AdminFeedback({
             </thead>
             <tbody>
               {!bySession.size ? <tr><td colSpan={3} className="px-4 py-6 text-center text-muted">No session ratings{showOneToOnes ? " yet" : " with 1-1s hidden"}.</td></tr> : null}
-              {[...bySession.values()]
-                .map((entry) => ({ ...entry, average: mean(entry.ratings) ?? 0 }))
+              {[...bySession.entries()]
+                .map(([id, entry]) => ({ ...entry, id, label: rotatingLabels.get(id.split("-guest-")[0]), average: mean(entry.ratings) ?? 0 }))
                 .sort((a, b) => a.average - b.average)
                 .map((entry) => (
-                  <tr key={entry.title} className="border-b border-rule last:border-0">
-                    <td className="px-4 py-3 text-foreground">{entry.title}</td>
+                  <tr key={entry.id} className="border-b border-rule last:border-0">
+                    <td className="px-4 py-3 text-foreground">
+                      {entry.title}
+                      {entry.label ? <span className="mt-1 block text-xs text-muted">{entry.label}</span> : null}
+                    </td>
                     <td className="px-4 py-3 tabular-nums text-muted">{entry.average.toFixed(2)}</td>
                     <td className="px-4 py-3 tabular-nums text-muted">{entry.ratings.length}</td>
                   </tr>
