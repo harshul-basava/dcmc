@@ -10,11 +10,11 @@ rows = [
 'Now is the best time to pause AI',
 'The benefits of open-weight frontier AI outweigh the risks.',
 'The US government can be trusted with superintelligence',
-'AI safety research currently accelerates capabilities more than it improves safety.',
+'AI safety will remain bipartisan in the near future.',
 'AI will be the most important issue in the 2028 elections',
 ],
 [
-'Future AI systems could deserve moral consideration.',
+'The government should give agentic AI systems legal rights.',
 'Chinese progress is mostly distillation',
 'Grassroots advocacy is more important than any other political strategy for AI safety',
 'There will be a significant software-only singularity',
@@ -31,7 +31,7 @@ rows = [
 'We should focus on state regulations more than federal regulations for AI',
 'AGI by 2030',
 'Lab CEOs are disingenuous with their calls for regulation',
-'AI welfare concerns should influence how we train advanced systems.',
+'Middle powers will play an important role in the future.',
 'Authoritarian governments reaching transformative AI before democratic governments is a bigger risk than losing control of AI',
 ],
 [

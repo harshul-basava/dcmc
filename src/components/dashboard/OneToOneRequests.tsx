@@ -24,6 +24,7 @@ export default function OneToOneRequests({ question, guests }: {
         name="one-on-one-picks"
         label={<>
           {question.label}{" "}
+          We recommend listing at least some attendees, because not all guest requests can be fulfilled.{" "}
           <a href="/dashboard/directory" target="_blank" rel="noreferrer" className="text-accent underline underline-offset-2">Browse attendee bios</a>.
         </>}
         required={question.required}

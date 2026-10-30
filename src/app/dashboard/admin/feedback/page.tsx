@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { TEST_PARTICIPANT_ID, isTestParticipant, testAttendeePassword } from "@/server/test-attendee";
 import { FEEDBACK_TABLE } from "@/server/airtable";
 import PortalShell from "@/components/dashboard/PortalShell";
@@ -29,10 +30,11 @@ function mean(values: number[]): number | null {
 export default async function AdminFeedback({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; oneToOnes?: string }>;
 }) {
   await requireAdmin();
-  const { saved } = await searchParams;
+  const { saved, oneToOnes } = await searchParams;
+  const showOneToOnes = oneToOnes !== "hidden";
 
   const [allResponses, participants] = await Promise.all([getFeedback({ includeTests: true }), getParticipants()]);
   const testResponses = allResponses.filter((response) => response.isTest || isTestParticipant(response.participantId));
@@ -44,9 +46,15 @@ export default async function AdminFeedback({
     .filter((response) => response.form === "anytime" && Object.values(response.answers).some((value) => value.trim()))
     .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
 
-  const sessionRatings = responses.flatMap((r) =>
-    r.sessions.map((s) => s.rating).filter((n): n is number => typeof n === "number"),
+  const visibleSessions = responses.flatMap((response) => response.sessions).filter(
+    (session) => showOneToOnes || !session.sessionId.startsWith("conv-"),
   );
+  const sessionRatings = visibleSessions
+    .map((session) => session.rating).filter((n): n is number => typeof n === "number");
+  const ratingToggleParams = new URLSearchParams(
+    { oneToOnes: showOneToOnes ? "hidden" : "visible" },
+  );
+  if (saved) ratingToggleParams.set("saved", saved);
   const sessionAverage = mean(sessionRatings);
   const respondents = new Set(
     responses.map((r) => r.participantId).filter(Boolean),
@@ -54,14 +62,12 @@ export default async function AdminFeedback({
 
   // Per-session averages, so the weakest sessions are visible at a glance.
   const bySession = new Map<string, { title: string; ratings: number[] }>();
-  for (const response of responses) {
-    for (const session of response.sessions) {
-      if (typeof session.rating !== "number") continue;
-      if (!bySession.has(session.sessionId)) {
-        bySession.set(session.sessionId, { title: session.title, ratings: [] });
-      }
-      bySession.get(session.sessionId)!.ratings.push(session.rating);
+  for (const session of visibleSessions) {
+    if (typeof session.rating !== "number") continue;
+    if (!bySession.has(session.sessionId)) {
+      bySession.set(session.sessionId, { title: session.title, ratings: [] });
     }
+    bySession.get(session.sessionId)!.ratings.push(session.rating);
   }
 
   const histogram = [1, 2, 3, 4, 5].map((score) => ({
@@ -164,9 +170,19 @@ export default async function AdminFeedback({
         </a>
         .
       </p>
-
-
-
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-display text-lg tracking-tight text-foreground">Session ratings</h2>
+        <Link
+          href={`/dashboard/admin/feedback?${ratingToggleParams}`}
+          scroll={false}
+          className="inline-flex min-h-11 items-center rounded-card border border-rule bg-card px-4 text-sm font-medium text-foreground hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          {showOneToOnes ? "Hide 1-1s" : "Show 1-1s"}
+        </Link>
+      </div>
+      <p className="mb-4 text-sm text-muted">
+        {showOneToOnes ? "Including 1-1s" : "Excluding 1-1s"} in the session average, rating spread, and session table.
+      </p>
       <div className="grid gap-4 sm:grid-cols-3">
         <MetricCard label="Responses" value={responses.length} />
         <MetricCard
@@ -177,7 +193,7 @@ export default async function AdminFeedback({
         <MetricCard
           label="Session rating"
           value={sessionAverage ? sessionAverage.toFixed(2) : "—"}
-          detail="Mean across every rated session"
+          detail={showOneToOnes ? "Mean across every rated session" : "Mean across rated sessions, excluding 1-1s"}
         />
       </div>
 
@@ -213,6 +229,7 @@ export default async function AdminFeedback({
               </tr>
             </thead>
             <tbody>
+              {!bySession.size ? <tr><td colSpan={3} className="px-4 py-6 text-center text-muted">No session ratings{showOneToOnes ? " yet" : " with 1-1s hidden"}.</td></tr> : null}
               {[...bySession.values()]
                 .map((entry) => ({ ...entry, average: mean(entry.ratings) ?? 0 }))
                 .sort((a, b) => a.average - b.average)

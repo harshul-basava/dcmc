@@ -1,0 +1,317 @@
+[
+  {
+    "date": "2026-10-23",
+    "weekday": "Friday",
+    "label": "Oct 23",
+    "blocks": [
+      {
+        "title": "Informal Breakfast and Coworking Time",
+        "time": "8am \u2013 9:15am",
+        "type": "meal",
+        "overlay": false
+      },
+      {
+        "title": "Transition Time",
+        "time": "9:15am \u2013 9:30am",
+        "type": "break",
+        "overlay": false
+      },
+      {
+        "title": "Opening remarks",
+        "time": "9:30am \u2013 10am",
+        "type": "talk",
+        "overlay": false
+      },
+      {
+        "title": "Goal-setting and Speaker Preparation",
+        "time": "10am \u2013 10:45am",
+        "type": "working-session",
+        "overlay": false
+      },
+      {
+        "title": "Why AI Governance? Crash Course",
+        "time": "10:45am \u2013 11:45am",
+        "type": "talk",
+        "overlay": false
+      },
+      {
+        "title": "Q&A / Transition Period",
+        "time": "11:30am \u2013 11:45am",
+        "type": "break",
+        "overlay": true
+      },
+      {
+        "title": "Prompt Circling",
+        "time": "11:45am \u2013 12:30pm",
+        "type": "small-group",
+        "overlay": false
+      },
+      {
+        "title": "Lunch",
+        "time": "12:30pm \u2013 1:30pm",
+        "type": "meal",
+        "overlay": false
+      },
+      {
+        "title": "1:1s",
+        "time": "1:30pm \u2013 2:30pm",
+        "type": "one-to-one",
+        "overlay": false
+      },
+      {
+        "title": "Rotating Q&A Introductions and Norms",
+        "time": "2:30pm \u2013 2:45pm",
+        "type": "panel",
+        "overlay": false
+      },
+      {
+        "title": "Rotating Q&As",
+        "time": "2:45pm \u2013 3:45pm",
+        "type": "small-group",
+        "overlay": false
+      },
+      {
+        "title": "Break",
+        "time": "3:45pm \u2013 4pm",
+        "type": "break",
+        "overlay": false
+      },
+      {
+        "title": "Talk: US-China Competition",
+        "time": "4pm \u2013 5pm",
+        "type": "talk",
+        "overlay": false
+      },
+      {
+        "title": "Q&A / Transition Period",
+        "time": "4:45pm \u2013 5pm",
+        "type": "break",
+        "overlay": true
+      },
+      {
+        "title": "Break",
+        "time": "5pm \u2013 5:15pm",
+        "type": "break",
+        "overlay": false
+      },
+      {
+        "title": "Rotating Q&As",
+        "time": "5:15pm \u2013 6:15pm",
+        "type": "small-group",
+        "overlay": false
+      },
+      {
+        "title": "Daily Reflection",
+        "time": "6:15pm \u2013 6:30pm",
+        "type": "working-session",
+        "overlay": false
+      },
+      {
+        "title": "Dinner",
+        "time": "6:30pm \u2013 7:30pm",
+        "type": "meal",
+        "overlay": false
+      },
+      {
+        "title": "Happy Hour Prep Session",
+        "time": "7:30pm \u2013 8pm",
+        "type": "working-session",
+        "overlay": false
+      },
+      {
+        "title": "Happy Hour",
+        "time": "8pm \u2013 11pm",
+        "type": "social",
+        "overlay": false
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
+    "weekday": "Saturday",
+    "label": "Oct 24",
+    "blocks": [
+      {
+        "title": "Informal Breakfast and Coworking Time",
+        "time": "8am \u2013 9:30am",
+        "type": "meal",
+        "overlay": false
+      },
+      {
+        "title": "Morning Reflection and Preparation",
+        "time": "9:30am \u2013 10am",
+        "type": "working-session",
+        "overlay": false
+      },
+      {
+        "title": "Talk: Overview of the AI Policy Landscape",
+        "time": "10am \u2013 11am",
+        "type": "talk",
+        "overlay": false
+      },
+      {
+        "title": "Q&A / Transition Period",
+        "time": "10:45am \u2013 11am",
+        "type": "break",
+        "overlay": true
+      },
+      {
+        "title": "Break",
+        "time": "11am \u2013 11:15am",
+        "type": "break",
+        "overlay": false
+      },
+      {
+        "title": "1:1s",
+        "time": "11:30am \u2013 12:30pm",
+        "type": "one-to-one",
+        "overlay": false
+      },
+      {
+        "title": "Lunch",
+        "time": "12:30pm \u2013 1:30pm",
+        "type": "meal",
+        "overlay": false
+      },
+      {
+        "title": "Rotating Q&As",
+        "time": "1:30pm \u2013 2:30pm",
+        "type": "small-group",
+        "overlay": false
+      },
+      {
+        "title": "Break",
+        "time": "2:30pm \u2013 2:45pm",
+        "type": "break",
+        "overlay": false
+      },
+      {
+        "title": "Talk: Technical AI Policy in the US Government",
+        "time": "2:45pm \u2013 3:45pm",
+        "type": "talk",
+        "overlay": false
+      },
+      {
+        "title": "Q&A / Transition Period",
+        "time": "3:30pm \u2013 3:45pm",
+        "type": "break",
+        "overlay": true
+      },
+      {
+        "title": "Long break",
+        "time": "3:45pm \u2013 4:30pm",
+        "type": "break",
+        "overlay": false
+      },
+      {
+        "title": "Talk: The Case for Policy Fieldbuilding",
+        "time": "4:30pm \u2013 5:30pm",
+        "type": "talk",
+        "overlay": false
+      },
+      {
+        "title": "Q&A / Transition Period",
+        "time": "5:15pm \u2013 5:30pm",
+        "type": "break",
+        "overlay": true
+      },
+      {
+        "title": "Speed Updating",
+        "time": "5:30pm \u2013 6:15pm",
+        "type": "social",
+        "overlay": false
+      },
+      {
+        "title": "Daily reflection",
+        "time": "6:15pm \u2013 6:30pm",
+        "type": "working-session",
+        "overlay": false
+      },
+      {
+        "title": "Dinner",
+        "time": "6:30pm \u2013 8pm",
+        "type": "meal",
+        "overlay": false
+      },
+      {
+        "title": "Free-form Social Time and Activities",
+        "time": "8pm \u2013 10pm",
+        "type": "social",
+        "overlay": false
+      }
+    ]
+  },
+  {
+    "date": "2026-10-25",
+    "weekday": "Sunday",
+    "label": "Oct 25",
+    "blocks": [
+      {
+        "title": "Informal Breakfast and Coworking",
+        "time": "8am \u2013 9:30am",
+        "type": "meal",
+        "overlay": false
+      },
+      {
+        "title": "Talk: Career Guide and How to Make Your Output Useful",
+        "time": "9:30am \u2013 10:30am",
+        "type": "talk",
+        "overlay": false
+      },
+      {
+        "title": "Q&A / Transition Period",
+        "time": "10:15am \u2013 10:30am",
+        "type": "break",
+        "overlay": true
+      },
+      {
+        "title": "Career Memo Workshop",
+        "time": "10:30am \u2013 12:15pm",
+        "type": "workshop",
+        "overlay": false
+      },
+      {
+        "title": "Career memo red-teaming",
+        "time": "11:45am \u2013 12:15pm",
+        "type": "talk",
+        "overlay": true
+      },
+      {
+        "title": "Group Photo",
+        "time": "12:15pm \u2013 12:30pm",
+        "type": "social",
+        "overlay": false
+      },
+      {
+        "title": "Lunch",
+        "time": "12:30pm \u2013 1:30pm",
+        "type": "meal",
+        "overlay": false
+      },
+      {
+        "title": "Talk: Frontier AI and Robotics Policy",
+        "time": "1:30pm \u2013 2pm",
+        "type": "talk",
+        "overlay": false
+      },
+      {
+        "title": "Break",
+        "time": "2pm \u2013 2:30pm",
+        "type": "break",
+        "overlay": false
+      },
+      {
+        "title": "Closing Session and Feedback",
+        "time": "2:30pm \u2013 3:30pm",
+        "type": "talk",
+        "overlay": false
+      },
+      {
+        "title": "Optional Monument Trip and Headshots",
+        "time": "3:30pm \u2013 4:30pm",
+        "type": "social",
+        "overlay": false
+      }
+    ]
+  }
+]
