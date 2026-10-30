@@ -76,7 +76,7 @@ export default async function AdminFeedback({
     responses.map((r) => r.participantId).filter(Boolean),
   ).size;
 
-  // Per-session averages, so the weakest sessions are visible at a glance.
+  // Per-session averages, ranked highest first in the table below.
   const bySession = new Map<string, { title: string; ratings: number[] }>();
   for (const session of visibleSessions) {
     if (typeof session.rating !== "number") continue;
@@ -248,7 +248,7 @@ export default async function AdminFeedback({
               {!bySession.size ? <tr><td colSpan={3} className="px-4 py-6 text-center text-muted">No session ratings{showOneToOnes ? " yet" : " with 1-1s hidden"}.</td></tr> : null}
               {[...bySession.entries()]
                 .map(([id, entry]) => ({ ...entry, id, label: rotatingLabels.get(id.split("-guest-")[0]), average: mean(entry.ratings) ?? 0 }))
-                .sort((a, b) => a.average - b.average)
+                .sort((a, b) => b.average - a.average)
                 .map((entry) => (
                   <tr key={entry.id} className="border-b border-rule last:border-0">
                     <td className="px-4 py-3 text-foreground">
