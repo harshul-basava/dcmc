@@ -102,7 +102,12 @@ test('slide download checks authorization before fetching private data and preve
     '@/server/speaker-contacts-access': { requireSpeakerContactsViewer: async () => {
       if (!allowed) throw Error('denied');
     } },
-  }, { Response, AbortSignal, fetch: async () => { fetches++; return new Response('%PDF-test'); } });
+  }, { Response, AbortSignal, fetch: async () => {
+    fetches++;
+    const upstream = new Response('%PDF-test');
+    upstream.arrayBuffer = () => { throw Error('Must stream the PDF without buffering'); };
+    return upstream;
+  } });
   await assert.rejects(GET(), /denied/);
   assert.equal(reads, 0);
   assert.equal(fetches, 0);
