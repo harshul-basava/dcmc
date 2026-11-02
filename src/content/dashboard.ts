@@ -201,6 +201,11 @@ export const resourceGroups: ResourceGroup[] = [];
 
 export const handbookLinks = [
   {
+    title: "Speaker contacts",
+    body: "Stay in touch with speakers and guests, and download the slides they’ve shared with attendees.",
+    href: "/dashboard/handbook/speaker-contacts",
+  },
+  {
     title: "Logistics",
     body: "Dates, locations, and how to submit reimbursements.",
     // Short enough to read in place: this opens a dialog rather than a page.

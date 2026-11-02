@@ -25,6 +25,7 @@ const LOGIN_RETURN_PATHS = new Set([
   "/dashboard/feedback",
   "/dashboard/readings",
   "/dashboard/handbook",
+  "/dashboard/handbook/speaker-contacts",
 ]);
 
 function safeReturnTo(value: FormDataEntryValue | null): string | null {

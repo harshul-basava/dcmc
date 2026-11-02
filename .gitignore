@@ -42,3 +42,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 _originals/
+
+# Private speaker sharing assets and screenshots must never enter the public repository.
+/private-assets/
+/output/playwright/speaker-contacts/

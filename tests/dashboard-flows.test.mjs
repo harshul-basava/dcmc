@@ -21,6 +21,103 @@ const types = load('server/data/types.ts');
 const pairings = load('server/pairings.ts', { './data/types': types });
 const roster = ['participant:recAAAAAAAAAAAAAA', 'participant:recBBBBBBBBBBBBBB', 'participant:recCCCCCCCCCCCCCC', 'guest:recDDDDDDDDDDDDDD'];
 
+test('speaker contact access requires an attendee with an open handbook or an organizer', async () => {
+  let role = 'admin', open = false;
+  const access = load('server/speaker-contacts-access.ts', {
+    './auth': {
+      requireSession: async returnTo => {
+        assert.equal(returnTo, '/dashboard/handbook/speaker-contacts');
+        if (!role) throw Error('sign-in-required');
+        return { role };
+      },
+      requireParticipant: async page => {
+        assert.equal(page, 'handbook');
+        if (role !== 'participant') throw Error('attendee-required');
+        if (!open) throw Error('handbook-closed');
+      },
+    },
+  });
+  assert.equal((await access.requireSpeakerContactsViewer()).role, 'admin');
+  role = 'guest';
+  await assert.rejects(access.requireSpeakerContactsViewer(), /attendee-required/);
+  role = 'participant';
+  await assert.rejects(access.requireSpeakerContactsViewer(), /handbook-closed/);
+  open = true;
+  assert.equal((await access.requireSpeakerContactsViewer()).role, 'participant');
+  role = null;
+  await assert.rejects(access.requireSpeakerContactsViewer(), /sign-in-required/);
+});
+
+test('speaker contacts only expose approved private rows and reject extra postal fields', async () => {
+  let rows = [];
+  const contacts = load('server/speaker-contacts.ts', {
+    'server-only': {},
+    './airtable': { airtableConfigured: () => true, listTableRecords: async () => rows },
+  }, { URL });
+  const record = { id: 'example', fields: {
+    Name: 'Example Speaker', 'Approved for attendees': true,
+    'Approved contacts': JSON.stringify({ organization: 'Example', email: 'speaker@example.test', signal: { value: 'example.11' } }),
+  } };
+  rows = [record];
+  assert.equal((await contacts.getSpeakerContacts())[0].email, 'speaker@example.test');
+  assert.equal((await contacts.getSpeakerContacts())[0].signal.href, undefined);
+  record.fields['Approved for attendees'] = false;
+  assert.equal((await contacts.getSpeakerContacts()).length, 0);
+  record.fields['Approved for attendees'] = true;
+  record.fields['Approved contacts'] = JSON.stringify({ email: 'speaker@example.test', mailingAddress: 'EXCLUDED' });
+  assert.equal((await contacts.getSpeakerContacts()).length, 0);
+  record.fields['Approved contacts'] = 'not valid JSON';
+  assert.equal((await contacts.getSpeakerContacts()).length, 0);
+  record.fields['Approved contacts'] = JSON.stringify({ email: 'not-an-email' });
+  assert.equal((await contacts.getSpeakerContacts()).length, 0);
+});
+
+test('slide URLs remain private, require approval, and reject untrusted file hosts', async () => {
+  const record = { id: 'example', fields: {
+    Name: 'Caleb Knapp', 'Approved for attendees': true,
+    'Approved contacts': JSON.stringify({ email: 'speaker@example.test' }),
+    'Slides title': 'Example slides',
+    Slides: [{ url: 'https://v5.airtableusercontent.com/private-example', size: 100, filename: 'example.pdf', type: 'application/pdf' }],
+  } };
+  const contacts = load('server/speaker-contacts.ts', {
+    'server-only': {},
+    './airtable': { airtableConfigured: () => true, listTableRecords: async () => [record] },
+  }, { URL });
+  assert.equal((await contacts.getSpeakerSlides('caleb-knapp')).filename, 'example.pdf');
+  assert.ok(!JSON.stringify(await contacts.getSpeakerContacts()).includes('airtableusercontent'));
+  record.fields['Approved for attendees'] = false;
+  assert.equal(await contacts.getSpeakerSlides('caleb-knapp'), null);
+  record.fields['Approved for attendees'] = true;
+  record.fields.Slides[0].url = 'https://untrusted.example/file';
+  assert.equal(await contacts.getSpeakerSlides('caleb-knapp'), null);
+});
+
+test('slide download checks authorization before fetching private data and prevents caching', async () => {
+  let allowed = false, available = true, reads = 0, fetches = 0;
+  const { GET } = load('app/dashboard/handbook/speaker-contacts/slides/caleb-knapp/route.ts', {
+    '@/server/speaker-contacts': { getSpeakerSlides: async () => {
+      reads++;
+      return available ? { url: 'https://v5.airtableusercontent.com/private-example' } : null;
+    } },
+    '@/server/speaker-contacts-access': { requireSpeakerContactsViewer: async () => {
+      if (!allowed) throw Error('denied');
+    } },
+  }, { Response, AbortSignal, fetch: async () => { fetches++; return new Response('%PDF-test'); } });
+  await assert.rejects(GET(), /denied/);
+  assert.equal(reads, 0);
+  assert.equal(fetches, 0);
+  allowed = true;
+  const response = await GET();
+  assert.equal(response.headers.get('content-type'), 'application/pdf');
+  assert.match(response.headers.get('cache-control'), /private, no-store/);
+  assert.match(response.headers.get('content-disposition'), /^attachment;/);
+  assert.equal(await response.text(), '%PDF-test');
+  assert.equal(reads, 1);
+  available = false;
+  assert.equal((await GET()).status, 404);
+  assert.equal(fetches, 1);
+});
+
 test('1:1 generator produces two distinct conflict-free rounds for even and odd rosters', () => {
   for (let n = 0; n <= 30; n++) {
     const people = Array.from({ length: n }, (_, i) => `participant:person${i}`);

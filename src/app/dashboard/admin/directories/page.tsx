@@ -38,6 +38,9 @@ export default async function AdminDirectories({
   return (
     <PortalShell role="admin" active="directories" framed>
       <div id="directory">
+        <a href="/dashboard/handbook/speaker-contacts" className="mb-6 inline-flex min-h-11 items-center text-sm text-accent underline underline-offset-2">
+          Speaker contacts &amp; approved slides →
+        </a>
         {view === "guests" ? (
           <p role="status" className="mb-6 rounded-card border border-rule bg-card p-4 text-sm text-muted">
             Organizer preview · {guestDirectoryOpen ? "Open to attendees" : "Hidden from attendees"}.
