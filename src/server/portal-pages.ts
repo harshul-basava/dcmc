@@ -14,13 +14,13 @@ export type PortalPage = {
 };
 
 export const PORTAL_PAGES: PortalPage[] = [
+  { role: "participant", key: "handbook", path: "/dashboard/handbook", label: "Handbook" },
   { role: "participant", key: "schedule", path: "/dashboard/schedule", label: "Schedule" },
   { role: "participant", key: "profile", path: "/dashboard/profile", label: "Your profile" },
   { role: "participant", key: "directory", path: "/dashboard/directory", label: "Attendee directory" },
   { role: "participant", key: "guests", path: "/dashboard/guests", label: "Guest directory" },
   { role: "participant", key: "feedback", path: "/dashboard/feedback", label: "Feedback" },
   { role: "participant", key: "readings", path: "/dashboard/readings", label: "Reading list" },
-  { role: "participant", key: "handbook", path: "/dashboard/handbook", label: "Handbook" },
   { role: "guest", key: "program", path: "/dashboard/guest", label: "Schedule" },
   { role: "guest", key: "directory", path: "/dashboard/directory", label: "Attendee directory" },
 ];

@@ -25,14 +25,10 @@ export default async function SpeakerContactsPage() {
       <BackLink href={admin ? "/dashboard/admin/directories" : "/dashboard/handbook"}>
         {admin ? "Directories" : "Handbook"}
       </BackLink>
-      <PageHeading
-        title="Speaker contacts"
-        lead="Keep the conversation going. Speakers and guests who are happy to hear from DCMC attendees."
-      />
-      <div className="speaker-contacts-intro">
-        <p>Shared with permission for DCMC attendees. Please keep these details and slides within the conference community.</p>
-        <span>{speakerContacts.length} contacts · Updated November 2, 2026</span>
-      </div>
+      <PageHeading title="Speaker contacts" />
+      <p className="speaker-contacts-intro">
+        Shared with permission for DCMC attendees. Please keep these details and slides within the conference community.
+      </p>
       {speakerContacts.length === 0 ? <p className="text-sm text-muted">Approved speaker contacts will appear here as they are added.</p> : null}
       <ul className="speaker-contacts-list" aria-label="Speaker and guest contacts">
         {speakerContacts.map((person) => {

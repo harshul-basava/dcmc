@@ -1,6 +1,4 @@
-.speaker-contacts-intro { display:flex; flex-wrap:wrap; justify-content:space-between; gap:1rem 2rem; margin-bottom:1.75rem; color:var(--muted); font-size:.8125rem; line-height:1.65; }
-.speaker-contacts-intro p { max-width:36rem; text-wrap:pretty; }
-.speaker-contacts-intro>span { font-size:.75rem; font-variant-numeric:tabular-nums; }
+.speaker-contacts-intro { max-width:36rem; margin-bottom:1.75rem; color:var(--muted); font-size:.8125rem; line-height:1.65; text-wrap:pretty; }
 .speaker-contacts-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.25rem; }
 .speaker-contact-card { display:grid; grid-template-columns:76px minmax(0,1fr); column-gap:1.25rem; align-content:start; padding:1.5rem; border-radius:12px; background:var(--surface); box-shadow:0 0 0 1px var(--rule),0 2px 5px rgb(0 0 0 / 3%); }
 .speaker-contact-photo { width:76px; height:95px; border-radius:6px; overflow:hidden; background:var(--sand-deep); }

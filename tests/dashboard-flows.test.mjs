@@ -21,6 +21,16 @@ const types = load('server/data/types.ts');
 const pairings = load('server/pairings.ts', { './data/types': types });
 const roster = ['participant:recAAAAAAAAAAAAAA', 'participant:recBBBBBBBBBBBBBB', 'participant:recCCCCCCCCCCCCCC', 'guest:recDDDDDDDDDDDDDD'];
 
+test('attendees land on Handbook, respecting closed pages and the guest home', async () => {
+  let settings = [];
+  const pages = load('server/portal-pages.ts', { './data': { getPortalPageSettings: async () => settings } });
+  assert.equal(await pages.portalHome('participant'), '/dashboard/handbook');
+  assert.equal((await pages.portalPagesFor('participant'))[0].key, 'handbook');
+  assert.equal(await pages.portalHome('guest'), '/dashboard/guest');
+  settings = [{ audience: 'participant', key: 'handbook', enabled: false }];
+  assert.equal(await pages.portalHome('participant'), '/dashboard/schedule');
+});
+
 test('speaker contact access requires an attendee with an open handbook or an organizer', async () => {
   let role = 'admin', open = false;
   const access = load('server/speaker-contacts-access.ts', {
