@@ -16,8 +16,9 @@ logins and the separate shared directory password grant no access.
 Only create or enable a row after reading an affirmative attendee-sharing reply.
 Store the speaker's name, the consent message link, and only the channels they
 expressly choose in `Approved contacts`, a JSON object with these allowed keys:
-`organization`, `email`, optional `signal` (`value` and optional `href`), and
-optional `shareLinkedin`. Do not import RSVP email fields or message signatures.
+`organization`, optional `email`, optional `signal` (`value` and optional `href`),
+and optional `shareLinkedin`. At least one approved email or Signal contact is
+required. Do not import RSVP email fields or message signatures.
 Set `Approved for attendees` only once verified. Unknown JSON properties cause
 the row to be omitted, so postal fields cannot be silently rendered.
 
@@ -27,8 +28,8 @@ served through his authenticated download route. Airtable's signed file URL
 stays on the server and the response disables caching. Removing approval also
 revokes the download. The public repository contains neither the PDF nor its URL.
 
-All eight current opt-ins (including Govind and Rahul) were checked on November 2, 2026.
-The private table contains the individual consent sources. No mailing addresses
+Initial opt-ins were checked on November 2, 2026; subsequent organizer-approved
+additions use the same private table. It contains the individual consent sources. No mailing addresses
 were copied; those are solely for organizer thank-you notes.
 
 Roster enrichment supplies profile photos, titles, organizations, and an approved

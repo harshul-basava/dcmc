@@ -44,13 +44,13 @@ export default async function SpeakerContactsPage() {
                 <p>{guest?.organization || person.organization}</p>
               </div>
               <dl className="speaker-contact-channels">
-                <div className="speaker-contact-channel">
+                {person.email ? <div className="speaker-contact-channel">
                   <div>
                     <dt>Email</dt>
                     <dd><a href={`mailto:${person.email}`}>{person.email}</a></dd>
                   </div>
                   <CopyContact value={person.email} label={`${person.name}’s email`} />
-                </div>
+                </div> : null}
                 {person.signal ? (
                   <div className="speaker-contact-channel">
                     <div>

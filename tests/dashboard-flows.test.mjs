@@ -80,6 +80,12 @@ test('speaker contacts only expose approved private rows and reject extra postal
   assert.equal((await contacts.getSpeakerContacts()).length, 0);
   record.fields['Approved contacts'] = JSON.stringify({ email: 'not-an-email' });
   assert.equal((await contacts.getSpeakerContacts()).length, 0);
+  record.fields['Approved contacts'] = JSON.stringify({ signal: { value: 'example.11' } });
+  const signalOnly = (await contacts.getSpeakerContacts())[0];
+  assert.equal(signalOnly.signal.value, 'example.11');
+  assert.equal(signalOnly.email, undefined);
+  record.fields['Approved contacts'] = JSON.stringify({ organization: 'Example' });
+  assert.equal((await contacts.getSpeakerContacts()).length, 0);
 });
 
 test('slide URLs remain private, require approval, and reject untrusted file hosts', async () => {

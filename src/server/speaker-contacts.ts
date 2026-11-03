@@ -5,7 +5,7 @@ import { airtableConfigured, listTableRecords, type AirtableRecord } from "./air
 export type SpeakerContact = {
   name: string;
   organization: string;
-  email: string;
+  email?: string;
   signal?: { value: string; href?: string };
   shareLinkedin?: boolean;
   slides?: { title: string; href: string; sizeBytes: number };
@@ -37,12 +37,12 @@ export function contactFromRecord(record: AirtableRecord): SpeakerContact | null
   try { data = JSON.parse(String(fields["Approved contacts"])); } catch { return null; }
   if (!data || typeof data !== "object" || Array.isArray(data)) return null;
   if (Object.keys(data).some((key) => !["organization", "email", "signal", "shareLinkedin"].includes(key))) return null;
-  if (typeof data.email !== "string" || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(data.email)) return null;
+  if (data.email !== undefined && (typeof data.email !== "string" || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(data.email))) return null;
   const contact: SpeakerContact = {
     name: fields.Name,
     organization: typeof data.organization === "string" ? data.organization : "",
-    email: data.email,
   };
+  if (typeof data.email === "string") contact.email = data.email;
   if (data.signal && typeof data.signal === "object" && !Array.isArray(data.signal)) {
     const signal = data.signal as Record<string, unknown>;
     if (Object.keys(signal).some((key) => !["value", "href"].includes(key))) return null;
@@ -50,6 +50,7 @@ export function contactFromRecord(record: AirtableRecord): SpeakerContact | null
     contact.signal = { value: signal.value };
     if (typeof signal.href === "string" && /^https:\/\/signal\.me\/#p\/\+\d+$/.test(signal.href)) contact.signal.href = signal.href;
   }
+  if (!contact.email && !contact.signal) return null;
   if (data.shareLinkedin === true) contact.shareLinkedin = true;
   const pdf = attachment(record);
   // The single approved slide deck currently has its own authenticated route.
