@@ -17,14 +17,15 @@ Only create or enable a row after reading an affirmative attendee-sharing reply.
 Store the speaker's name, the consent message link, and only the channels they
 expressly choose in `Approved contacts`, a JSON object with these allowed keys:
 `organization`, optional `email`, optional `signal` (`value` and optional `href`),
-and optional `shareLinkedin`. At least one approved email or Signal contact is
-required. Do not import RSVP email fields or message signatures.
+and optional `shareLinkedin`. At least one approved email, Signal contact, or
+slide attachment is required. A slides-only card has no contact fields.
+Do not import RSVP email fields or message signatures.
 Set `Approved for attendees` only once verified. Unknown JSON properties cause
 the row to be omitted, so postal fields cannot be silently rendered.
 
 Store separately approved slides in the `Slides` attachment field, with their
-name in `Slides title`. Caleb's authorized original 17-page PDF is currently
-served through his authenticated download route. Airtable's signed file URL
+name in `Slides title`. Each speaker's PDF is served through an authenticated
+download route. Airtable's signed file URL
 stays on the server and the response disables caching. Removing approval also
 revokes the download. The public repository contains neither the PDF nor its URL.
 

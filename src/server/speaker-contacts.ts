@@ -50,17 +50,16 @@ export function contactFromRecord(record: AirtableRecord): SpeakerContact | null
     contact.signal = { value: signal.value };
     if (typeof signal.href === "string" && /^https:\/\/signal\.me\/#p\/\+\d+$/.test(signal.href)) contact.signal.href = signal.href;
   }
-  if (!contact.email && !contact.signal) return null;
   if (data.shareLinkedin === true) contact.shareLinkedin = true;
   const pdf = attachment(record);
-  // The single approved slide deck currently has its own authenticated route.
-  if (slug(contact.name) === "caleb-knapp" && pdf && typeof fields["Slides title"] === "string") {
+  if (pdf && typeof fields["Slides title"] === "string") {
     contact.slides = {
       title: fields["Slides title"],
-      href: "/dashboard/handbook/speaker-contacts/slides/caleb-knapp",
+      href: `/dashboard/handbook/speaker-contacts/slides/${slug(contact.name)}`,
       sizeBytes: pdf.size ?? 0,
     };
   }
+  if (!contact.email && !contact.signal && !contact.slides) return null;
   return contact;
 }
 

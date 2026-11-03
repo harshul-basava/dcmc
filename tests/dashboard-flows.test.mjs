@@ -90,8 +90,8 @@ test('speaker contacts only expose approved private rows and reject extra postal
 
 test('slide URLs remain private, require approval, and reject untrusted file hosts', async () => {
   const record = { id: 'example', fields: {
-    Name: 'Caleb Knapp', 'Approved for attendees': true,
-    'Approved contacts': JSON.stringify({ email: 'speaker@example.test' }),
+    Name: 'Example Speaker', 'Approved for attendees': true,
+    'Approved contacts': JSON.stringify({ organization: 'Example' }),
     'Slides title': 'Example slides',
     Slides: [{ url: 'https://v5.airtableusercontent.com/private-example', size: 100, filename: 'example.pdf', type: 'application/pdf' }],
   } };
@@ -99,21 +99,27 @@ test('slide URLs remain private, require approval, and reject untrusted file hos
     'server-only': {},
     './airtable': { airtableConfigured: () => true, listTableRecords: async () => [record] },
   }, { URL });
-  assert.equal((await contacts.getSpeakerSlides('caleb-knapp')).filename, 'example.pdf');
-  assert.ok(!JSON.stringify(await contacts.getSpeakerContacts()).includes('airtableusercontent'));
+  assert.equal((await contacts.getSpeakerSlides('example-speaker')).filename, 'example.pdf');
+  const card = (await contacts.getSpeakerContacts())[0];
+  assert.equal(card.email, undefined);
+  assert.equal(card.signal, undefined);
+  assert.equal(card.slides.href, '/dashboard/handbook/speaker-contacts/slides/example-speaker');
+  assert.ok(!JSON.stringify(card).includes('airtableusercontent'));
+  assert.equal(await contacts.getSpeakerSlides('unknown-speaker'), null);
   record.fields['Approved for attendees'] = false;
-  assert.equal(await contacts.getSpeakerSlides('caleb-knapp'), null);
+  assert.equal(await contacts.getSpeakerSlides('example-speaker'), null);
   record.fields['Approved for attendees'] = true;
   record.fields.Slides[0].url = 'https://untrusted.example/file';
-  assert.equal(await contacts.getSpeakerSlides('caleb-knapp'), null);
+  assert.equal(await contacts.getSpeakerSlides('example-speaker'), null);
 });
 
 test('slide download checks authorization before fetching private data and prevents caching', async () => {
   let allowed = false, available = true, reads = 0, fetches = 0;
-  const { GET } = load('app/dashboard/handbook/speaker-contacts/slides/caleb-knapp/route.ts', {
-    '@/server/speaker-contacts': { getSpeakerSlides: async () => {
+  const { GET } = load('app/dashboard/handbook/speaker-contacts/slides/[speaker]/route.ts', {
+    '@/server/speaker-contacts': { getSpeakerSlides: async speaker => {
+      assert.equal(speaker, 'example-speaker');
       reads++;
-      return available ? { url: 'https://v5.airtableusercontent.com/private-example' } : null;
+      return available ? { url: 'https://v5.airtableusercontent.com/private-example', filename: 'Example slides.pdf' } : null;
     } },
     '@/server/speaker-contacts-access': { requireSpeakerContactsViewer: async () => {
       if (!allowed) throw Error('denied');
@@ -124,18 +130,19 @@ test('slide download checks authorization before fetching private data and preve
     upstream.arrayBuffer = () => { throw Error('Must stream the PDF without buffering'); };
     return upstream;
   } });
-  await assert.rejects(GET(), /denied/);
+  const invoke = () => GET(undefined, { params: Promise.resolve({ speaker: 'example-speaker' }) });
+  await assert.rejects(invoke(), /denied/);
   assert.equal(reads, 0);
   assert.equal(fetches, 0);
   allowed = true;
-  const response = await GET();
+  const response = await invoke();
   assert.equal(response.headers.get('content-type'), 'application/pdf');
   assert.match(response.headers.get('cache-control'), /private, no-store/);
   assert.match(response.headers.get('content-disposition'), /^attachment;/);
   assert.equal(await response.text(), '%PDF-test');
   assert.equal(reads, 1);
   available = false;
-  assert.equal((await GET()).status, 404);
+  assert.equal((await invoke()).status, 404);
   assert.equal(fetches, 1);
 });
 

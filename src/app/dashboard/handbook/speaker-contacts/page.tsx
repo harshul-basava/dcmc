@@ -33,6 +33,7 @@ export default async function SpeakerContactsPage() {
       <ul className="speaker-contacts-list" aria-label="Speaker and guest contacts">
         {speakerContacts.map((person) => {
           const guest = guests.get(person.name);
+          const hasContacts = person.email || person.signal || (person.shareLinkedin && guest?.linkedin);
           return (
             <li key={person.name} className="speaker-contact-card">
               <div className="speaker-contact-photo">
@@ -43,7 +44,7 @@ export default async function SpeakerContactsPage() {
                 {guest?.title ? <p>{guest.title}</p> : null}
                 <p>{guest?.organization || person.organization}</p>
               </div>
-              <dl className="speaker-contact-channels">
+              {hasContacts ? <dl className="speaker-contact-channels">
                 {person.email ? <div className="speaker-contact-channel">
                   <div>
                     <dt>Email</dt>
@@ -70,7 +71,7 @@ export default async function SpeakerContactsPage() {
                     </div>
                   </div>
                 ) : null}
-              </dl>
+              </dl> : null}
               {person.slides ? (
                 <a className="speaker-contact-slides" href={person.slides.href} download>
                   <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.4">
